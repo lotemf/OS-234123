@@ -13,6 +13,7 @@
 
 
 class Planet {
+	/*Test*/
 	int numOfCities;
 	HashTable Citizens;
 	int* citiesArray;
