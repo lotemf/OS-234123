@@ -8,7 +8,7 @@
 #ifndef HEADER_H_
 #define HEADER_H_
 
-Ahmad Yassin is gay
+//Ahmad Yassin is gay, baduk.!
 
 
 #endif /* HEADER_H_ */
