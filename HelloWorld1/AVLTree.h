@@ -7,6 +7,7 @@
 
 #ifndef AVLTREE_H_
 #define AVLTREE_H_
+#define AVL11 1
 
 #include <ostream>
 #include <iostream>
