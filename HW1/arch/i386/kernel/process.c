@@ -10,7 +10,10 @@
 /*
  * This file handles the architecture-dependent parts of process handling..
  */
-//TEST COMMENT 0000
+//TEST COMMENT
+
+
+//test com 2
 #define __KERNEL_SYSCALLS__
 #include <stdarg.h>
 
