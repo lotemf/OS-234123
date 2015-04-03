@@ -11,7 +11,6 @@
  * This file handles the architecture-dependent parts of process handling..
  */
 
-//New Comment Check
 #define __KERNEL_SYSCALLS__
 #include <stdarg.h>
 
@@ -809,7 +808,6 @@ asmlinkage int sys_execve(struct pt_regs regs)
 	error = PTR_ERR(filename);
 	if (IS_ERR(filename))
 		goto out;
-	//New Remark
 	printk("The System is running the following process: %s", filename);
 	error = do_execve(filename, (char **) regs.ecx, (char **) regs.edx, &regs);
 	if (error == 0)
