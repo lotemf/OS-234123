@@ -1,4 +1,5 @@
-
+#include <asm/errno.h>
+extern int errno;
 
 //wrappers for the following system calls
 //general comments
@@ -8,8 +9,10 @@
 		//what is errno
 	//change entry.S to have #243,#244,#245 syscall number
 
-int set_child_max_proc(int maxp){
-//comments for implementation on syscall_set_child_max_proc
+/*******************************************************************************
+ * get_max_proc() - Returns the max_proc field of the running process.
+ * Complexity- o(n) - while n is the number of ancestors the process has
+ * //comments for implementation on syscall_set_child_max_proc
 	//validation checks
 		//check negative number
 			//check if father max_proc <> -1
@@ -23,23 +26,17 @@ int set_child_max_proc(int maxp){
 		//goal to verify our preserved env works (enough to check father value)
 	//negative parameter
 		//goal to check if max_proc values in path to root are not broken
-}
-
-/*******************************************************************************
- * get_max_proc() - Returns the max_proc field.
- * Complexity- o(1)
  ******************************************************************************/
-int get_max_proc(){
+int set_child_max_proc(int maxp){
 	long __res;
 	__asm__ volatile (
-	"movl $245, %%eax;"
-	"movl %1, %%ebx;"
-	"movl %2, %%ecx;"
-	"int $0x80;"
+	"movl $243, %%eax;"
+	/*Needs Verification*/"movl %1, %%ebx;"						//Moving the int value of maxp -> maybe there is a need to edit this part
+	"int $0x80;"												//because the size of the registers might not match
 	"movl %%eax,%0"
 	: "=m" (__res)
-	: "m" ((long)array), "m" (count)
-	: "%eax","%ebx","%ecx"
+	: "m" (maxp)												//This is the output operand for the maxP
+	: "%eax","%ebx"
 	);
 	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
 	errno = -(__res); __res = -1;
@@ -48,8 +45,45 @@ int get_max_proc(){
 
 }
 
-int get_subproc_count(){
-//o(1) return the offspring field.
+/*******************************************************************************
+ * get_max_proc() - Returns the max_proc field of the running process.
+ * Complexity- o(1)
+ ******************************************************************************/
+int get_max_proc(){
+	long __res;
+	__asm__ volatile (
+	"movl $244, %%eax;"
+//	"movl %1, %%ebx;"		//Because there are no input values there
+//	"movl %2, %%ecx;"		//is no need to store them in the stack
+	"int $0x80;"
+	"movl %%eax,%0"
+	: "=m" (__res)
+//	: "m" ((long)array), "m" (count)	   //There is no need for these return values
+	: "%eax"             //,"%ebx","%ecx" //Because we are not using any more vars
+	);
+	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
+	errno = -(__res); __res = -1;							//This code takes the error value
+	}														//and stores it inside errno by using the unsigned
+	return (int)(__res);									//value returned from the get_max_proc func
 
 }
-`
+
+/*******************************************************************************
+ * get_max_proc() - Returns the offspring field of the running process.
+ * Complexity- o(1)
+ ******************************************************************************/
+int get_subproc_count(){
+	long __res;
+	__asm__ volatile (
+	"movl $245, %%eax;"
+	"int $0x80;"
+	"movl %%eax,%0"
+	: "=m" (__res)
+	: "%eax"
+	);
+	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
+	errno = -(__res); __res = -1;
+	}
+	return (int)(__res);
+}
+
