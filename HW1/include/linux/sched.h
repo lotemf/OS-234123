@@ -452,7 +452,7 @@ struct task_struct {
 /* journalling filesystem info */
 	void *journal_info;
 
-/* New HW1 Fields */
+/* New HW1 Fields  - Edited By Lotem 3.4.2015 12.55 */
 	int offspring_num;
 	int max_proc_num;
 };
