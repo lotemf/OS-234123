@@ -30,20 +30,21 @@ int set_child_max_proc(int maxp){
  * Complexity- o(1)
  ******************************************************************************/
 int get_max_proc(){
-	unsigned int res;
-	        __asm__
-	        (
-	                        "int $0x80;"
-	                        : "=a" (res)
-	                        : "0" (244) ,"b" (pid)
-	                        : "memory"
-	        );
-	        if (res>=(unsigned long)(-125))
-	        {
-	                errno = -res;
-	                res = -1;
-	        }
-	        return (int) res;
+	long __res;
+	__asm__ volatile (
+	"movl $245, %%eax;"
+	"movl %1, %%ebx;"
+	"movl %2, %%ecx;"
+	"int $0x80;"
+	"movl %%eax,%0"
+	: "=m" (__res)
+	: "m" ((long)array), "m" (count)
+	: "%eax","%ebx","%ecx"
+	);
+	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
+	errno = -(__res); __res = -1;
+	}
+	return (int)(__res);
 
 }
 
