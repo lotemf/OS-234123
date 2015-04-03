@@ -10,9 +10,17 @@
 
 int set_child_max_proc(int maxp){
 //comments for implementation on syscall_set_child_max_proc
-	//check negative number
+	//validation checks
+		//check negative number
+			//check if father max_proc <> -1
+				//set max_proc to (father-1)
+			//else put -1
+		//set max proc to higher than father max proc -1
+		//
 	//update offspring field on PCB
 	//update max_proc field on PCB
+//tests
+	//
 }
 
 int get_max_proc(){
