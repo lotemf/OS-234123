@@ -454,7 +454,7 @@ struct task_struct {
 
 /* New HW1 Fields  - Edited By Lotem 3.4.2015 12.55 */
 	int offspring_num;
-	int max_proc_num;
+	int max_proc_num = -1;					//Make Sure the -1 doesn't collide further on
 };
 
 /*
