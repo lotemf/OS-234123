@@ -614,8 +614,19 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	*p = *current;
 	p->tux_info = NULL;
 	p->cpus_allowed_mask &= p->cpus_allowed;
-	p->offspring_num = 0;   				//HW1 - Lotem
-	p->p_pptr->								//HW1 - Lotem
+//	p->offspring_num = 0;   							//HW1 - Lotem
+//	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
+//	p->max_proc_num =  father_ptr->max_proc_num;		//HW1 - Lotem
+//
+//
+//	/* New Test Code*/
+//	struct task_struct* iter_ptr = p->p_pptr;			//HW1 - Lotem
+//	while (iter_ptr->max_proc_num != -1){
+//		if ((iter_ptr->offspring_num) < (iter_ptr->max_proc_num)){
+//
+//		}
+//	}
+//	/* New Test Code*/
 
 
 	retval = -EAGAIN;
