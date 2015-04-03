@@ -452,8 +452,13 @@ struct task_struct {
 /* journalling filesystem info */
 	void *journal_info;
 
-/* New HW1 Fields  - Edited By Lotem 3.4.2015 12.55 */
+/* New HW1 Fields  - Edited By Lotem 3.4.2015 12.55
+ *  max_proc_set - The last known set_child_max_proc value
+ *  max_proc_num - The maximum number of child processes allowed for the current process
+ *  			    -According to one of his ancestor's demands
+ */
 	int offspring_num;
+	int max_proc_set;
 	int max_proc_num = -1;					//Make Sure the -1 doesn't collide further on
 };
 

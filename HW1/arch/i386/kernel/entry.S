@@ -656,6 +656,6 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_get_subproc_count)
 	//New Code HW1 - Lotem - 3.4.2015 14.00
 
-	.rept NR_syscalls-(.-sys_call_table)/4
+	.rept (NR_syscalls-(.-sys_call_table)/4 - 3)		//HW1 - Lotem 3.4.2015 15.00 - Not sure why it is done
 		.long SYMBOL_NAME(sys_ni_syscall)
 	.endr
