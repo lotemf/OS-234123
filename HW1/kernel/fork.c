@@ -614,6 +614,9 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	*p = *current;
 	p->tux_info = NULL;
 	p->cpus_allowed_mask &= p->cpus_allowed;
+	p->offspring_num = 0;   				//HW1 - Lotem
+	p->p_pptr->								//HW1 - Lotem
+
 
 	retval = -EAGAIN;
 	/*
