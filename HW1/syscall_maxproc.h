@@ -25,8 +25,25 @@ int set_child_max_proc(int maxp){
 		//goal to check if max_proc values in path to root are not broken
 }
 
+/*******************************************************************************
+ * get_max_proc() - Returns the max_proc field.
+ * Complexity- o(1)
+ ******************************************************************************/
 int get_max_proc(){
-//o(1) return the max_proc field.
+	unsigned int res;
+	        __asm__
+	        (
+	                        "int $0x80;"
+	                        : "=a" (res)
+	                        : "0" (244) ,"b" (pid)
+	                        : "memory"
+	        );
+	        if (res>=(unsigned long)(-125))
+	        {
+	                errno = -res;
+	                res = -1;
+	        }
+	        return (int) res;
 
 }
 
