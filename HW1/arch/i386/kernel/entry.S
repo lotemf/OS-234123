@@ -650,12 +650,12 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_sched_setaffinity)
 	.long SYMBOL_NAME(sys_sched_getaffinity)
 
-	//New Code HW1 - Lotem - 3.4.2015 14.00
+	/*New Code HW1 - Lotem - 3.4.2015 14.00*/
 	.long SYMBOL_NAME(sys_set_child_max_proc)
 	.long SYMBOL_NAME(sys_get_max_proc)
 	.long SYMBOL_NAME(sys_get_subproc_count)
-	//New Code HW1 - Lotem - 3.4.2015 14.00
+	/*New Code HW1 - Lotem - 3.4.2015 14.00* - Not sure what is the meaning of .rept 2 rows down*/
 
-	.rept (NR_syscalls-(.-sys_call_table)/4 - 3)		//HW1 - Lotem 3.4.2015 15.00 - Not sure why it is done
+	.rept (NR_syscalls-(.-sys_call_table)/4 - 3)
 		.long SYMBOL_NAME(sys_ni_syscall)
 	.endr
