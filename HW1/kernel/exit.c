@@ -647,6 +647,7 @@ repeat:
 						grandf_ptr->child_counter--;
 						grandf_ptr = grandf_ptr->actual_father_ptr;
 					}
+				//update init child counter field
 					grandf_ptr->child_counter--;
 				//end of chen's additions
 					release_task(p);
