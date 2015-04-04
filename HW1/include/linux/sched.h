@@ -457,9 +457,10 @@ struct task_struct {
  *  max_proc_num - The maximum number of child processes allowed for the current process
  *  			    -According to one of his ancestor's demands
  */
-	int offspring_num;
-	int max_proc_set;
-	int max_proc_num;					//Make Sure the -1 doesn't collide further on
+	int set_limit;
+	int my_limit;
+	int child_counter;
+	struct task_struct* actual_father_ptr;
 };
 
 /*
@@ -565,9 +566,10 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
-	offspring_num: 	0,							\
-	max_proc_set: 	-1,							\
-	max_proc_num: 	-1,							\
+	set_limit: 	-1,							\
+	my_limit: 	-1,							\
+	child_counter: 	0,							\
+	actual_father_ptr: &tsk, \
 }
 
 /*The last 3 lines in TASK_INIT Macro were added by Lotem - HW1*/
