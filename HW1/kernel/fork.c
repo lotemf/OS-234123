@@ -622,24 +622,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * friends to set the per-user process limit to something lower
 	 * than the amount of processes root is running. -- Rik
 	 */
-	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
-	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
-		goto bad_fork_free;
-
-	atomic_inc(&p->user->__count);
-	atomic_inc(&p->user->processes);
-
-	/*
-	 * Counter increases are protected by
-	 * the kernel lock so nr_threads can't
-	 * increase under us (but it may decrease).
-	 */
-	if (nr_threads >= max_threads)
-		goto bad_fork_cleanup_count;
 	
-	get_exec_domain(p->exec_domain);
-
-	/* New Test Code*/
+/* New Test Code*/
 	p->offspring_num = 0;   							//HW1 - Lotem
 	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
 	if (father_ptr == 0){							//This means its the Init() process
@@ -655,8 +639,26 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 		}
 	}
-	/* New Test Code*/
+/* New Test Code*/
 
+
+
+	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
+	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
+		goto bad_fork_free;
+
+	atomic_inc(&p->user->__count);
+	atomic_inc(&p->user->processes);
+
+	/*
+	 * Counter increases are protected by
+	 * the kernel lock so nr_threads can't
+	 * increase under us (but it may decrease).
+	 */
+	if (nr_threads >= max_threads)
+		goto bad_fork_cleanup_count;
+
+	get_exec_domain(p->exec_domain);
 
 	if (p->binfmt && p->binfmt->module)
 		__MOD_INC_USE_COUNT(p->binfmt->module);
