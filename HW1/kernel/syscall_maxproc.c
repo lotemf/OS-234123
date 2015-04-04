@@ -32,19 +32,18 @@ int sys_set_child_max_proc(int maxproc){
 	//opt 2 - father has a limit - error
 	if (maxproc >= (father_proc->max_proc_num)-1){
 		if (father_proc->max_proc_num == -1){
-			curr_proc->max_proc_set = max_proc;
-			curr_proc->max_proc_num = max_proc;
+			curr_proc->max_proc_set = maxproc;
+			curr_proc->max_proc_num = maxproc;
 			return 0;
 		}
 		else{
-			errno = - EPERM;
-			return -1;
+			return - EPERM;
 		}
 	}
 //if father maxproc val is lower than the set value of son
 	if (father_proc->max_proc_num <= maxproc){
 		curr_proc->max_proc_num = father_proc->max_proc_num - 1;
-		curr_proc->max_proc_set = max_proc;
+		curr_proc->max_proc_set = maxproc;
 		return 0;
 	}
 //if father maxproc val is not defined then just define ours
@@ -52,7 +51,7 @@ int sys_set_child_max_proc(int maxproc){
 			(father_proc->max_proc_set == -1)){
 		curr_proc->max_proc_num = maxproc;
 		curr_proc->max_proc_set = maxproc;
-		return 0
+		return 0;
 	}
 }
 
