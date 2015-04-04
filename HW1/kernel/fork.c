@@ -624,14 +624,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 */
 	
 /* New Test Code*/
-//	p->offspring_num = 0;   							//HW1 - Lotem
 	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-//	if (father_ptr->pid == 0){							//This means its the Init() process
-//		p->max_proc_num = -1;						//So we set the value of init to an unusable defualt one
-//	}
-//	else{
 	p->max_proc_num = father_ptr->max_proc_num;		//HW1 - Lotem
-//	}
 
 	struct task_struct* iter_ptr = p->p_pptr;			//HW1 - Lotem
 	while (iter_ptr->pid != 1){
@@ -640,8 +634,6 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		}
 		else{
 			return -EINVAL;
-			//Decide what is the error value we want to return
-			//because there are more sub-processes than allowed by the OS to this process
 		}
 		iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
 	}
