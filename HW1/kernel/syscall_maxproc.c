@@ -7,6 +7,11 @@
 int sys_set_child_max_proc(int maxproc){
 	printk("in CR0, system call set_child_max_proc\n");
 	printk("maxproc promped value is:\t%d\n", maxproc);
+
+	struct task_struct *p;
+
+
+
 }
 
 int sys_get_max_proc(){
