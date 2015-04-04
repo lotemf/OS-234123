@@ -31,11 +31,11 @@ int set_child_max_proc(int maxp){
 	long __res;
 	__asm__ volatile (
 	"movl $243, %%eax;"
-	/*Needs Verification*/"movl %1, %%ebx;"						//Moving the int value of maxp -> maybe there is a need to edit this part
-	"int $0x80;"												//because the size of the registers might not match
+	/*Needs Verification*/"movl %1, %%ebx;"						/*Moving the int value of maxp -> maybe there is a need to edit this part*/
+	"int $0x80;"												/*because the size of the registers might not match*/
 	"movl %%eax,%0"
 	: "=m" (__res)
-	: "m" (maxp)												//This is the output operand for the maxP
+	: "m" (maxp)												/*This is the output operand for the maxP*/
 	: "%eax","%ebx"
 	);
 	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
@@ -53,18 +53,18 @@ int get_max_proc(){
 	long __res;
 	__asm__ volatile (
 	"movl $244, %%eax;"
-//	"movl %1, %%ebx;"		//Because there are no input values there
-//	"movl %2, %%ecx;"		//is no need to store them in the stack
+/*	"movl %1, %%ebx;"		Because there are no input values there */
+/*	"movl %2, %%ecx;"		is no need to store them in the stack*/
 	"int $0x80;"
 	"movl %%eax,%0"
 	: "=m" (__res)
-//	: "m" ((long)array), "m" (count)	   //There is no need for these return values
-	: "%eax"             //,"%ebx","%ecx" //Because we are not using any more vars
+/*	: "m" ((long)array), "m" (count)	   //There is no need for these return values*/
+	: "%eax"             /*,"%ebx","%ecx" //Because we are not using any more vars*/
 	);
 	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
-	errno = -(__res); __res = -1;							//This code takes the error value
-	}														//and stores it inside errno by using the unsigned
-	return (int)(__res);									//value returned from the get_max_proc func
+	errno = -(__res); __res = -1;							/*This code takes the error value */
+	}														/*and stores it inside errno by using the unsigned*/
+	return (int)(__res);									/*value returned from the get_max_proc func*/
 
 }
 
