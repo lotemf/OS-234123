@@ -64,6 +64,10 @@ int sys_set_child_max_proc(int maxproc){
 	if (maxproc > ((curr_proc->my_limit) - 1)){
 		return -EPERM;
 	}
+	//reset child limit to no limit
+	if (maxproc < 0){
+		maxproc = -1;
+	}
 	curr_proc->set_limit = maxproc;
 	return 0;
 }
