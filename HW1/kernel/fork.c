@@ -614,20 +614,6 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	*p = *current;
 	p->tux_info = NULL;
 	p->cpus_allowed_mask &= p->cpus_allowed;
-//	p->offspring_num = 0;   							//HW1 - Lotem
-//	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-//	p->max_proc_num =  father_ptr->max_proc_num;		//HW1 - Lotem
-//
-//
-//	/* New Test Code*/
-//	struct task_struct* iter_ptr = p->p_pptr;			//HW1 - Lotem
-//	while (iter_ptr->max_proc_num != -1){
-//		if ((iter_ptr->offspring_num) < (iter_ptr->max_proc_num)){
-//
-//		}
-//	}
-//	/* New Test Code*/
-
 
 	retval = -EAGAIN;
 	/*
@@ -652,6 +638,25 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		goto bad_fork_cleanup_count;
 	
 	get_exec_domain(p->exec_domain);
+
+	/* New Test Code*/
+	p->offspring_num = 0;   							//HW1 - Lotem
+	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
+	if (father_ptr == 0){							//This means its the Init() process
+		p->max_proc_num = -1;						//So we set the value of init to an unusable defualt one
+	}
+	else{
+	p->max_proc_num =  father_ptr->max_proc_num;		//HW1 - Lotem
+	}
+
+	struct task_struct* iter_ptr = p->p_pptr;			//HW1 - Lotem
+	while (iter_ptr->max_proc_num != -1){
+		if ((iter_ptr->offspring_num) < (iter_ptr->max_proc_num)){
+
+		}
+	}
+	/* New Test Code*/
+
 
 	if (p->binfmt && p->binfmt->module)
 		__MOD_INC_USE_COUNT(p->binfmt->module);
