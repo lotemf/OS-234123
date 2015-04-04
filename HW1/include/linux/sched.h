@@ -565,6 +565,9 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
+	offspring_num: 	0,							\
+	max_proc_set: 	-1,							\
+	max_proc_num: 	-1,							\
 }
 
 

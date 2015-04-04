@@ -625,17 +625,24 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	
 /* New Test Code*/
 	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-	p->max_proc_num = father_ptr->max_proc_num;		//HW1 - Lotem
+	p->max_proc_num = father_ptr->max_proc_set;		//HW1 - Lotem
 
-	struct task_struct* iter_ptr = p->p_pptr;			//HW1 - Lotem
-	while (iter_ptr->pid != 1){
-		if ((iter_ptr->offspring_num) < (iter_ptr->max_proc_num)){
-			(iter_ptr->offspring_num)++;
+	if (p->pid == 1){
+		printk("YES!!! - init() process running \r");
+	}
+	printk("I am about to enter to the iter_ptr loop... \n\r");
+	if (father_ptr->pid){						//That means we are not inside init() process
+		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
+		while (iter_ptr->pid != 1){
+			printk("I am inside the iter_ptr loop... \n\r");
+			if (iter_ptr->max_proc_num != -1){					//If there is a limit on the amount of offspring
+				if ((iter_ptr->offspring_num) > (iter_ptr->max_proc_num)){		//If this limit is violated
+					return -EINVAL;
+				}
+			}
+			iter_ptr->offspring_num++;				//A new process was created in the sub-tree
+			iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
 		}
-		else{
-			return -EINVAL;
-		}
-		iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
 	}
 /* New Test Code*/
 
