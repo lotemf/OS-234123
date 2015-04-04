@@ -629,7 +629,29 @@ repeat:
 					do_notify_parent(p, SIGCHLD);
 					write_unlock_irq(&tasklist_lock);
 				} else
+				//HW1 chen changes except release_task(p)
+				//update actual father ptr field for all children
+				//update child counter  (decrease in 1) till init process
+				//TODO should we update init child counter too?
+					struct task_struct *grandf_ptr = p->actual_father_ptr; //grandfather
+					struct task_struct *child_iter_ptr = p->p_cptr; //youngest child
+					if (child_iter_ptr){
+						// has children
+						while (child_iter_ptr){
+							//iterate through all children, till its null
+							child_iter_ptr->actual_father_ptr =grandf_ptr;
+							child_iter_ptr = child_iter_ptr->p_osptr;
+						}
+					}
+					while (grandf_ptr->pid != 1){
+						grandf_ptr->child_counter--;
+						grandf_ptr = grandf_ptr->actual_father_ptr;
+					}
+					grandf_ptr->child_counter--;
+				//end of chen's additions
 					release_task(p);
+
+
 				goto end_wait4;
 			default:
 				continue;
