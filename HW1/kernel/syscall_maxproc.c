@@ -77,5 +77,5 @@ int sys_get_max_proc(){
 int sys_get_subproc_count(){
 	printk("in CR0, system call get_subproc_count\n");
 	struct task_struct *curr_proc = current;
-	return current->my_subproc;
+	return current->child_counter;
 }
