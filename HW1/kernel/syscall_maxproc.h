@@ -63,7 +63,7 @@ int set_child_max_proc(int maxp){
 	/*}		*/												/*and stores it inside errno by using the unsigned*/
 	/*return (int)(__res);	*/								/*value returned from the get_max_proc func*/
 
-/*}**/
+/*}*/
 
 /*******************************************************************************
  * get_max_proc() - Returns the offspring field of the running process.
