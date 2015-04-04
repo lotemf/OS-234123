@@ -570,7 +570,7 @@ extern struct exec_domain	default_exec_domain;
 	max_proc_num: 	-1,							\
 }
 
-
+/*The last 3 lines in TASK_INIT Macro were added by Lotem - HW1*/
 #ifndef INIT_TASK_SIZE
 # define INIT_TASK_SIZE	2048*sizeof(long)
 #endif
