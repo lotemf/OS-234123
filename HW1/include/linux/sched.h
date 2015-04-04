@@ -457,9 +457,9 @@ struct task_struct {
  *  max_proc_num - The maximum number of child processes allowed for the current process
  *  			    -According to one of his ancestor's demands
  */
-//	int offspring_num;
-//	int max_proc_set;
-//	int max_proc_num = -1;					//Make Sure the -1 doesn't collide further on
+	int offspring_num;
+	int max_proc_set;
+	int max_proc_num;					//Make Sure the -1 doesn't collide further on
 };
 
 /*
