@@ -5,14 +5,14 @@
 
 
 int sys_set_child_max_proc(int maxproc){
-	printk("in CR0, system call set_child_max_proc\n");
-	printk("maxproc promped value is:\t%d\n");
+	printf("in CR0, system call set_child_max_proc\n");
+	printf("maxproc promped value is:\t%d\n", maxproc);
 }
 
 int sys_get_max_proc(){
-	printk("in CR0, system call get_max_proc\n");
+	printf("in CR0, system call get_max_proc\n");
 }
 
 int sys_get_subproc_count(){
-	printk("in CR0, system call get_subproc_count\n");
+	printf("in CR0, system call get_subproc_count\n");
 }
