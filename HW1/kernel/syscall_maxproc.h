@@ -49,30 +49,27 @@ int set_child_max_proc(int maxp){
  * get_max_proc() - Returns the max_proc field of the running process.
  * Complexity- o(1)
  ******************************************************************************/
-int get_max_proc(){
+/*int get_max_proc(){
 	long __res;
 	__asm__ volatile (
 	"movl $244, %%eax;"
-/*	"movl %1, %%ebx;"		Because there are no input values there */
-/*	"movl %2, %%ecx;"		is no need to store them in the stack*/
 	"int $0x80;"
 	"movl %%eax,%0"
 	: "=m" (__res)
-/*	: "m" ((long)array), "m" (count)	   //There is no need for these return values*/
-	: "%eax"             /*,"%ebx","%ecx" //Because we are not using any more vars*/
+	: "%eax"
 	);
 	if ((unsigned long)(__res) >= (unsigned long)(-125)) {
-	errno = -(__res); __res = -1;							/*This code takes the error value */
-	}														/*and stores it inside errno by using the unsigned*/
-	return (int)(__res);									/*value returned from the get_max_proc func*/
+	errno = -(__res); __res = -1;	*/						/*This code takes the error value */
+	/*}		*/												/*and stores it inside errno by using the unsigned*/
+	/*return (int)(__res);	*/								/*value returned from the get_max_proc func*/
 
-}
+/*}*/
 
 /*******************************************************************************
  * get_max_proc() - Returns the offspring field of the running process.
  * Complexity- o(1)
  ******************************************************************************/
-int get_subproc_count(){
+/*int get_subproc_count(){
 	long __res;
 	__asm__ volatile (
 	"movl $245, %%eax;"
@@ -85,5 +82,5 @@ int get_subproc_count(){
 	errno = -(__res); __res = -1;
 	}
 	return (int)(__res);
-}
+}*/
 
