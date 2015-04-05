@@ -628,7 +628,7 @@ repeat:
 					SET_LINKS(p);
 					do_notify_parent(p, SIGCHLD);
 					write_unlock_irq(&tasklist_lock);
-				} else
+				} else {
 				//HW1 chen changes except release_task(p)
 				//update actual father ptr field for all children
 				//update child counter  (decrease in 1) till init process
@@ -652,7 +652,7 @@ repeat:
 				//end of chen's additions
 					release_task(p);
 
-
+				}
 				goto end_wait4;
 			default:
 				continue;
