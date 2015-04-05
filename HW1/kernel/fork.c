@@ -623,23 +623,48 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * than the amount of processes root is running. -- Rik
 	 */
 	
-/* New Code - HW1 - Lotem 4.4.2015 -  20:30 */
+/* New Code - HW1 - Lotem 4.4.2015 -  22:30 */
+//	struct task_struct* father_ptr = p->p_pptr;
+//	p->actual_father_ptr = father_ptr;			//Initializing the "real father pointer"
+//	p->my_limit = father_ptr->set_limit;		//Setting the max child-processes prohibited
+//
+//	if (p->pid == 1){
+//		printk("YES!!! - Init() is running...\n\r");
+//	}
+//	if (father_ptr->pid){						//That means we are not inside init() process
+//		printk("about to enter the ptr loop \n\r");
+//		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
+//		while (iter_ptr->pid != 1){
+//			printk("I am inside the ptr loop \n\r");
+//			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of child-processes
+//				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
+//					return -EINVAL;
+//				}
+//			}
+//			iter_ptr->child_counter++;				//A new process was created in the sub-tree
+//			iter_ptr=iter_ptr->actual_father_ptr;				//Going "Up" the process tree
+//		}
+//	}
+/* New Code - HW1 - Lotem 4.4.2015 -  22:30 */
+
+
+/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
 	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-	p->max_proc_num = father_ptr->max_proc_set;		//HW1 - Lotem
+	p->my_limit = father_ptr->set_limit;		//HW1 - Lotem
 
 	if (father_ptr->pid){						//That means we are not inside init() process
 		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
 		while (iter_ptr->pid != 1){
-			if (iter_ptr->max_proc_num != -1){					//If there is a limit on the amount of offspring
-				if ((iter_ptr->offspring_num) > (iter_ptr->max_proc_num)){		//If this limit is violated
+			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of offspring
+				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
 					return -EINVAL;
 				}
 			}
-			iter_ptr->offspring_num++;				//A new process was created in the sub-tree
+			iter_ptr->child_counter++;				//A new process was created in the sub-tree
 			iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
 		}
 	}
-	/* New Code - HW1 - Lotem 4.4.2015 -  20:30 */
+	/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
 
 
 
