@@ -662,18 +662,30 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	//step5
 	if (father_ptr->pid){								//If it's init() there is no need to touch it
-											/*Test Code*/printk("about to enter the ptr loop \n\r");
 		struct task_struct* iter_ptr = father_ptr;
+		int legal_child_amount_flag = 0;
+
 		while (iter_ptr->pid != 1){
-											/*Test Code*/printk("I am inside the ptr loop \n\r");
+										/*Test Code*/printk("I am inside the child_counter Validation loop \n\r");
 			if (iter_ptr->my_limit != -1){
 				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){
-					return -EINVAL;
+					while_flag=1;
+					break;
 				}
 			}
+			iter_ptr=iter_ptr->HW1_pptr;
+///*Test-Fix*/iter_ptr=iter_ptr->p_pptr;
+		}
+
+		if (legal_child_amount_flag){
+			return -EINVAL;						//Because one of the processes violated it's child-processes limit
+		}
+
+		while (iter_ptr->pid != 1){
+										/*Test Code*/printk("I am inside the child_counter increase loop \n\r");
 			iter_ptr->child_counter++;
 			iter_ptr=iter_ptr->HW1_pptr;
-//			/*Fix-Check*/iter_ptr=iter_ptr->p_pptr;
+///*Test-Fix*/iter_ptr=iter_ptr->p_pptr;
 		}
 	}
 /*Test Code*/else{
