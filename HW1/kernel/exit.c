@@ -630,44 +630,41 @@ repeat:
 					write_unlock_irq(&tasklist_lock);
 				} else {
 				//HW1 chen changes except release_task(p)
-				//update actual father ptr field for all children
-				//update child counter  (decrease in 1) till init process
+				//step 1 update actual father ptr field for all children
+				//step 2 update children/uncles(new siblings) family relations
+				//step 3 update child counter  (decrease in 1) till init process
 				//TODO should we update init child counter too?
 
+				//step 1
+					struct task_struct *child_iter_ptr = p->HW1_ycptr;
+					struct task_struct *grandf_ptr = p->HW1_pptr;
 
+					if (child_iter_ptr) {
+						while (child_iter_ptr){
+						//iterate through all children
+							child_iter_ptr->HW1_pptr = grandf_ptr;
+							child_iter_ptr = child_iter_ptr->HW1_osptr;
+						}
+				//step 2
+						struct task_struct *p_eldest_child = p->HW1_ecptr;
+						struct task_struct *p_youngest_child = p->HW1_ycptr;
+						struct task_struct *grandf_eldest_child = grandf_ptr->HW1_ecptr;
 
-
-
-					struct task_struct *grandf_ptr = p->HW1_pptr; //grandfather
-					struct task_struct *child_iter_ptr = p->HW1_ycptr; //youngest child of the dying process (father)
-					if (child_iter_ptr){
-
-
-					//Updating the family-ties
-					struct task_struct *oldest_uncle_ptr = grandf_ptr->HW1_ecptr;			 //grandfather's oldest son
-					child_iter_ptr->HW1_ysptr = oldest_uncle_ptr;
-					oldest_uncle_ptr->HW1_osptr = child_iter_ptr;
-
-
-
-					while (child_iter_ptr){
-																//iterate through all children, till its null
-						child_iter_ptr->HW1_pptr =grandf_ptr;
-						child_iter_ptr = child_iter_ptr->HW1_pptr;
+						grandf_eldest_child->HW1_osptr = p_youngest_child;
+						p_youngest_child->HW1_ysptr = grandf_eldest_child;
+						grandf_ptr->HW1_ecptr = p_eldest_child;
 					}
+				//step 3
+					struct task_struct *iter_ptr = grandf_ptr;
 
-																//Setting the eldest son of the dying process to be the eldest son of the grandfather
-					grandf_ptr->HW1_ecptr = child_iter_ptr;
+					while (iter_ptr->pid != 1){
+						iter_ptr->child_counter--;
+						iter_ptr = iter_ptr->HW1_pptr;
 					}
-					while (grandf_ptr->pid != 1){
-						grandf_ptr->child_counter--;
-						grandf_ptr = grandf_ptr->HW1_pptr;
-					}
-
-
 					//update init child counter field
-					grandf_ptr->child_counter--;
-					//end of chen's additions
+					iter_ptr->child_counter--;
+
+				//end of chen and lotem's additions
 					release_task(p);
 
 				}
