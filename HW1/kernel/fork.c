@@ -672,8 +672,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 				}
 			}
 			iter_ptr->child_counter++;
-//			iter_ptr=iter_ptr->HW1_pptr;
-			/*Fix-Check*/iter_ptr=iter_ptr->p_pptr;
+			iter_ptr=iter_ptr->HW1_pptr;
+//			/*Fix-Check*/iter_ptr=iter_ptr->p_pptr;
 		}
 	}
 /*Test Code*/else{
