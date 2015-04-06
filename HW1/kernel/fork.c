@@ -669,7 +669,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 										/*Test Code*/printk("I am inside the child_counter Validation loop \n\r");
 			if (iter_ptr->my_limit != -1){
 				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){
-					while_flag=1;
+					legal_child_amount_flag=1;
 					break;
 				}
 			}
