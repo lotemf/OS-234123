@@ -624,62 +624,71 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 */
 	
 
-/*New Code - HW1 - Lotem 5.4.2015 -  20:30 */
-	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-	p->my_limit = father_ptr->set_limit;		//HW1 - Lotem
+	/**********************************************************************/
+	/*********New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
+	//step 1 inhere limit value from father  - set_limit of father becomes my_limit
+	//step 2 update new pointers to "Free" kernel pointers - because fork() values are legit
+	//step 3 update the older brother's pointer (if the older brother exists)
+	//step 4 update father's process new eldest child ptr - makes the code run faster
+	//step 5 update the amount of children up the process tree
 
 
 
-/*** Beginning of New Code 6.4.2015 13.00   ***/
+	//step1
+	struct task_struct* father_ptr = p->p_pptr;
+	p->my_limit = father_ptr->set_limit;
 
-	//Initializing the "real pointers" - According to HW1
+	//step 2
 	p->HW1_pptr = father_ptr;
 	p->HW1_osptr = p->p_osptr;
 	p->HW1_ysptr = p->p_ysptr;
 	p->HW1_ycptr = p->p_cptr;
-	p->HW1_ecptr = NULL;				//Making sure there is no oldest child when the process is created
+	p->HW1_ecptr = NULL;								//Making sure there is no oldest child when the process is created
 
-	//Setting the eldest son pointer (HW1_osptr) is a bit more complicated
-	//because it's a pointer that doesn't usually exist in the family-relationship
-
-	//Setting the HW1_father ,children pointers
-	if (!(p->p_osptr)){
-		father_ptr->HW1_ecptr = p;			//It is a single-child process - Because it has no older sibling
-		father_ptr->HW1_ycptr = p;
-	}
-	else{
-		father_ptr->HW1_ycptr = p;
-	}
-
-	//Setting the HW1_brother pointer
+	//step3
 	struct task_struct* older_brother_ptr = father_ptr->HW1_ycptr;
-	older_brother_ptr->HW1_ysptr = p;		//Adding the new process as the youngest brother of his older brother
+	if (older_brother_ptr){
+		older_brother_ptr->HW1_ysptr = p;
+	}
 
-/*** End of New Code 6.4.2015 13.00   ***/
+	//step4
+	if (!(older_brother_ptr)){
+		father_ptr->HW1_ecptr = p;							//It is a single-child process - Because it has no older sibling
+		father_ptr->HW1_ycptr = p;
+	} else {
+		father_ptr->HW1_ycptr = p;
+	}
 
 
-
-	if (father_ptr->pid){						//That means we are not inside init() process
-/*Test Code*/printk("about to enter the ptr loop \n\r");
-		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
+	//step5
+	if (father_ptr->pid){								//If it's init() there is no need to touch it
+											/*Test Code*/printk("about to enter the ptr loop \n\r");
+		struct task_struct* iter_ptr = father_ptr;
 		while (iter_ptr->pid != 1){
-			//As long as it's not the Init() process
-/*Test Code*/printk("I am inside the ptr loop \n\r");
-			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of offspring
-				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
+											/*Test Code*/printk("I am inside the ptr loop \n\r");
+			if (iter_ptr->my_limit != -1){
+				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){
 					return -EINVAL;
 				}
 			}
-			iter_ptr->child_counter++;				//A new process was created in the sub-tree
-//			iter_ptr=iter_ptr->HW1_pptr;			//Going "Up" the process tree
-/*Test-Fix*/iter_ptr=iter_ptr->p_opptr;			//Going "Up" the process tree
+			iter_ptr->child_counter++;
+//			iter_ptr=iter_ptr->HW1_pptr;
+			/*Fix-Check*/iter_ptr=iter_ptr->p_pptr;
 		}
 	}
-	else{
-/*Test Code*/printk("Init() process is running...\n\r");
-	}
+/*Test Code*/else{
+/*Test Code*/	printk("Init() process is running...\n\r");
+/*Test Code*/}
 
-/* End of New Code - HW1 - Lotem 5.4.2015 -  20:30 */
+
+	/*********End of New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
+	/**********************************************************************/
+
+
+
+
+
+
 
 
 /* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
