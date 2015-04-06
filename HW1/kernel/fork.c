@@ -623,47 +623,86 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * than the amount of processes root is running. -- Rik
 	 */
 	
-/* New Code - HW1 - Lotem 4.4.2015 -  22:30 */
-//	struct task_struct* father_ptr = p->p_pptr;
-//	p->actual_father_ptr = father_ptr;			//Initializing the "real father pointer"
-//	p->my_limit = father_ptr->set_limit;		//Setting the max child-processes prohibited
-//
-//	if (p->pid == 1){
-//		printk("YES!!! - Init() is running...\n\r");
-//	}
-//	if (father_ptr->pid){						//That means we are not inside init() process
-//		printk("about to enter the ptr loop \n\r");
-//		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
-//		while (iter_ptr->pid != 1){
-//			printk("I am inside the ptr loop \n\r");
-//			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of child-processes
-//				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
-//					return -EINVAL;
-//				}
-//			}
-//			iter_ptr->child_counter++;				//A new process was created in the sub-tree
-//			iter_ptr=iter_ptr->actual_father_ptr;				//Going "Up" the process tree
-//		}
-//	}
-/* New Code - HW1 - Lotem 4.4.2015 -  22:30 */
 
-
-/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
+/*New Code - HW1 - Lotem 5.4.2015 -  20:30 */
 	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
 	p->my_limit = father_ptr->set_limit;		//HW1 - Lotem
 
+
+
+/*** Beginning of New Code 6.4.2015 13.00   ***/
+
+	//Initializing the "real pointers" - According to HW1
+	p->HW1_pptr = father_ptr;
+	p->HW1_osptr = p->p_osptr;
+	p->HW1_ysptr = p->p_ysptr;
+	p->HW1_ycptr = p->p_cptr;
+	p->HW1_ecptr = NULL;				//Making sure there is no oldest child when the process is created
+
+	//Setting the eldest son pointer (HW1_osptr) is a bit more complicated
+	//because it's a pointer that doesn't usually exist in the family-relationship
+
+	//Setting the HW1_father ,children pointers
+	if (!(p->p_osptr)){
+		father_ptr->HW1_ecptr = p;			//It is a single-child process - Because it has no older sibling
+		father_ptr->HW1_ycptr = p;
+	}
+	else{
+		father_ptr->HW1_ycptr = p;
+	}
+
+	//Setting the HW1_brother pointer
+	struct task_struct* older_brother_ptr = father_ptr->HW1_ycptr;
+	older_brother_ptr->HW1_ysptr = p;		//Adding the new process as the youngest brother of his older brother
+
+/*** End of New Code 6.4.2015 13.00   ***/
+
+
+
 	if (father_ptr->pid){						//That means we are not inside init() process
+/*Test Code*/printk("about to enter the ptr loop \n\r");
 		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
 		while (iter_ptr->pid != 1){
+			//As long as it's not the Init() process
+/*Test Code*/printk("I am inside the ptr loop \n\r");
 			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of offspring
 				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
 					return -EINVAL;
 				}
 			}
 			iter_ptr->child_counter++;				//A new process was created in the sub-tree
-			iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
+//			iter_ptr=iter_ptr->HW1_pptr;			//Going "Up" the process tree
+/*Test-Fix*/iter_ptr=iter_ptr->p_opptr;			//Going "Up" the process tree
 		}
 	}
+	else{
+/*Test Code*/printk("Init() process is running...\n\r");
+	}
+
+/* End of New Code - HW1 - Lotem 5.4.2015 -  20:30 */
+
+
+/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
+//	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
+//	p->my_limit = father_ptr->set_limit;		//HW1 - Lotem
+//
+//	if (p->pid == 1){
+///*Test Code*/printk("YES!!! - Init() is running...\n\r");
+//	}
+//	if (father_ptr->pid){						//That means we are not inside init() process
+///*Test Code*/printk("about to enter the ptr loop \n\r");
+//		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
+//		while (iter_ptr->pid != 1){
+///*Test Code*/printk("I am inside the ptr loop \n\r");
+//			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of offspring
+//				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
+//					return -EINVAL;
+//				}
+//			}
+//			iter_ptr->child_counter++;				//A new process was created in the sub-tree
+//			iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
+//		}
+//	}
 	/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
 
 

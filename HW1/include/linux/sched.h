@@ -453,14 +453,24 @@ struct task_struct {
 	void *journal_info;
 
 /* New HW1 Fields  - Edited By Lotem 3.4.2015 12.55
- *  max_proc_set - The last known set_child_max_proc value
- *  max_proc_num - The maximum number of child processes allowed for the current process
- *  			    -According to one of his ancestor's demands
+ *  set_limit - The last known set_child_max_proc value - The maximum amount of sons for each one of the child processes
+ *  my_limit -  The maximum number of child processes allowed for the current process
+ *  child_counter - The amount of sub-processes in the family tree of the current process
+ *  HW1_pptr  - The original pointer to the father process
+ *  HW1_osptr - The original pointer to the older brother process
+ *  HW1_ysptr - The original pointer to youngest brother process
+ *  HW1_ecptr - The original pointer to the eldest child process - The oldest among his children
+ *  HW1_ycptr - The original pointer to the youngest child process
  */
 	int set_limit;
 	int my_limit;
 	int child_counter;
-	struct task_struct* actual_father_ptr;
+	struct task_struct* HW1_pptr;
+	struct task_struct* HW1_osptr;
+	struct task_struct* HW1_ysptr;
+	struct task_struct* HW1_ecptr;
+	struct task_struct* HW1_ycptr;
+
 };
 
 /*
@@ -566,13 +576,17 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
-	set_limit: 	-1,							\
-	my_limit: 	-1,							\
-	child_counter: 	0,							\
-	actual_father_ptr: &tsk, \
+	set_limit: 				-1,						\
+	my_limit: 				-1,						\
+	child_counter:  		 0,						\
+	HW1_pptr: 				 &tsk, 					\
+	HW1_osptr: 		 		 &tsk, 					\
+	HW1_ysptr: 				 &tsk, 					\
+	HW1_ecptr: 				 &tsk, 					\
+	HW1_ycptr: 				 &tsk, 					\
 }
 
-/*The last 3 lines in TASK_INIT Macro were added by Lotem - HW1*/
+/*The last 4 lines in TASK_INIT Macro were added by Lotem - HW1*/
 #ifndef INIT_TASK_SIZE
 # define INIT_TASK_SIZE	2048*sizeof(long)
 #endif
