@@ -633,19 +633,29 @@ repeat:
 				//update actual father ptr field for all children
 				//update child counter  (decrease in 1) till init process
 				//TODO should we update init child counter too?
-					struct task_struct *grandf_ptr = p->actual_father_ptr; //grandfather
-					struct task_struct *child_iter_ptr = p->p_cptr; //youngest child
+					struct task_struct *grandf_ptr = p->HW1_pptr; //grandfather
+					struct task_struct *child_iter_ptr = p->HW1_ycptr; //youngest child
 					if (child_iter_ptr){
-						// has children
-						while (child_iter_ptr){
-							//iterate through all children, till its null
-							child_iter_ptr->actual_father_ptr =grandf_ptr;
-							child_iter_ptr = child_iter_ptr->p_osptr;
-						}
+/*** New Code Lotem 6.4.2015 13.00 ***/
+					//Making the youngest sibling of the dying process's children to be the older brother
+					//of his "Uncle"
+					struct task_struct *oldest_uncle_ptr = grandf_ptr->HW1_ecptr; //grandfather's oldest son
+					child_iter_ptr->HW1_ysptr = oldest_uncle_ptr;
+					oldest_uncle_ptr->HW1_osptr = child_iter_ptr;
+
+
+					while (child_iter_ptr){
+						//iterate through all children, till its null
+						child_iter_ptr->HW1_pptr =grandf_ptr;
+						child_iter_ptr = child_iter_ptr->HW1_pptr;
+					}
+
+					//Setting the eldest son of the dying process to be the eldest son of the grandfather
+					grandf_ptr->HW1_ecptr = child_iter_ptr;
 					}
 					while (grandf_ptr->pid != 1){
 						grandf_ptr->child_counter--;
-						grandf_ptr = grandf_ptr->actual_father_ptr;
+						grandf_ptr = grandf_ptr->HW1_pptr;
 					}
 				//update init child counter field
 					grandf_ptr->child_counter--;
