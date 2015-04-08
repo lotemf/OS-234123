@@ -527,7 +527,9 @@ fake_volatile:
 		__MOD_DEC_USE_COUNT(tsk->binfmt->module);
 
 	tsk->exit_code = code;
-	/*New Code - Lotem 8.4.2015 HW1*/
+
+	/**********************************************************************/
+	/****New Code - Lotem 8.4.2015 HW1****/
 	//Decreasing the amount of children all the way up to init() , because they are removed from the tree
 	struct task_struct *p;
 	p = current;
@@ -540,7 +542,9 @@ fake_volatile:
 	}
 	//update init child counter field "manually"
 	iter_ptr->child_counter-=num_of_children_to_remove;
-	/*End of New Code - Lotem 8.4.2015 HW1*/
+	/***End of New Code - Lotem 8.4.2015 HW1***/
+	/**********************************************************************/
+
 
 	exit_notify();
 	schedule();
@@ -644,23 +648,22 @@ repeat:
 					do_notify_parent(p, SIGCHLD);
 					write_unlock_irq(&tasklist_lock);
 				} else {
-				//HW1 chen changes except release_task(p)
-				//step 1 update set_limit field for all children
-				//step 2 update child counter  (decrease in 1) till init() process
+				/**********************************************************************/
+				/***HW1 chen changes except release_task(p) ***/
+				//part 1 update set_limit field for all children
+				//part 2 update child counter  (decrease in 1) till init() process
 				//TODO should we update init child counter too?
 
-				//step 1
+				//part 1
 					struct task_struct *child_iter_ptr = p->p_cptr;
 
-					if (child_iter_ptr) {
-						//has children
-						while (child_iter_ptr){
-						//iterate through all children
+					if (child_iter_ptr) {						//has children
+						while (child_iter_ptr){						//iterate through all children
 							child_iter_ptr->my_limit = -1;						//New Addition by the course's staff
 							child_iter_ptr = child_iter_ptr->p_osptr;
 						}
 					}
-				//step 3
+				//part 2
 					struct task_struct *iter_ptr = p->p_opptr;
 
 					while (iter_ptr->pid != 1){
@@ -671,6 +674,8 @@ repeat:
 					iter_ptr->child_counter--;
 
 				//end of chen and lotem's additions
+				/**********************************************************************/
+
 					release_task(p);
 
 				}
