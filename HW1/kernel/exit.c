@@ -527,6 +527,21 @@ fake_volatile:
 		__MOD_DEC_USE_COUNT(tsk->binfmt->module);
 
 	tsk->exit_code = code;
+	/*New Code - Lotem 8.4.2015 HW1*/
+	//Decreasing the amount of children all the way up to init() , because they are removed from the tree
+	struct task_struct *p;
+	p = current;
+	struct task_struct *iter_ptr = p->p_opptr;
+	int num_of_children_to_remove = p->child_counter;
+
+	while (iter_ptr->pid != 1){
+		iter_ptr->child_counter-=num_of_children_to_remove;
+		iter_ptr = iter_ptr->p_opptr;
+	}
+	//update init child counter field "manually"
+	iter_ptr->child_counter-=num_of_children_to_remove;
+	/*End of New Code - Lotem 8.4.2015 HW1*/
+
 	exit_notify();
 	schedule();
 	BUG();
@@ -630,38 +645,29 @@ repeat:
 					write_unlock_irq(&tasklist_lock);
 				} else {
 				//HW1 chen changes except release_task(p)
-				//step 1 update actual father ptr field for all children
-				//step 2 update children/uncles(new siblings) family relations
-				//step 3 update child counter  (decrease in 1) till init process
+				//step 1 update set_limit field for all children
+				//step 2 update child counter  (decrease in 1) till init() process
 				//TODO should we update init child counter too?
 
 				//step 1
-					struct task_struct *child_iter_ptr = p->HW1_ycptr;
-					struct task_struct *grandf_ptr = p->HW1_pptr;
+					struct task_struct *child_iter_ptr = p->p_cptr;
 
 					if (child_iter_ptr) {
+						//has children
 						while (child_iter_ptr){
 						//iterate through all children
-							child_iter_ptr->HW1_pptr = grandf_ptr;
-							child_iter_ptr = child_iter_ptr->HW1_osptr;
+							child_iter_ptr->my_limit = -1;						//New Addition by the course's staff
+							child_iter_ptr = child_iter_ptr->p_osptr;
 						}
-				//step 2
-						struct task_struct *p_eldest_child = p->HW1_ecptr;
-						struct task_struct *p_youngest_child = p->HW1_ycptr;
-						struct task_struct *grandf_eldest_child = grandf_ptr->HW1_ecptr;
-
-						grandf_eldest_child->HW1_osptr = p_youngest_child;
-						p_youngest_child->HW1_ysptr = grandf_eldest_child;
-						grandf_ptr->HW1_ecptr = p_eldest_child;
 					}
 				//step 3
-					struct task_struct *iter_ptr = grandf_ptr;
+					struct task_struct *iter_ptr = p->p_opptr;
 
 					while (iter_ptr->pid != 1){
 						iter_ptr->child_counter--;
-						iter_ptr = iter_ptr->HW1_pptr;
+						iter_ptr = iter_ptr->p_opptr;
 					}
-					//update init child counter field
+					//update init child counter field "manually"
 					iter_ptr->child_counter--;
 
 				//end of chen and lotem's additions

@@ -627,65 +627,40 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	/**********************************************************************/
 	/*********New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
 	//step 1 inhere limit value from father  - set_limit of father becomes my_limit
-	//step 2 update new pointers to "Free" kernel pointers - because fork() values are legit
-	//step 3 update the older brother's pointer (if the older brother exists)
-	//step 4 update father's process new eldest child ptr - makes the code run faster
-	//step 5 update the amount of children up the process tree
-
+	//step 2 checking if
+	//step 3 update the amount of children up the process tree
 
 
 	//step1
-	struct task_struct* father_ptr = p->p_pptr;
+	struct task_struct* father_ptr = p->p_opptr;
 	p->my_limit = father_ptr->set_limit;
 
 	//step 2
-	p->HW1_pptr = father_ptr;
-	p->HW1_osptr = p->p_osptr;
-	p->HW1_ysptr = p->p_ysptr;
-	p->HW1_ycptr = p->p_cptr;
-	p->HW1_ecptr = NULL;								//Making sure there is no oldest child when the process is created
-
-	//step3
-	struct task_struct* older_brother_ptr = father_ptr->HW1_ycptr;
-	if (older_brother_ptr){
-		older_brother_ptr->HW1_ysptr = p;
-	}
-
-	//step4
-	if (!(older_brother_ptr)){
-		father_ptr->HW1_ecptr = p;							//It is a single-child process - Because it has no older sibling
-		father_ptr->HW1_ycptr = p;
-	} else {
-		father_ptr->HW1_ycptr = p;
-	}
-
-
-	//step5
 	if (father_ptr->pid){								//If it's init() there is no need to touch it
 		struct task_struct* iter_ptr = father_ptr;
-		int legal_child_amount_flag = 0;
+		int illegal_child_amount_flag = 0;
 
 		while (iter_ptr->pid != 1){
 										/*Test Code*/printk("I am inside the child_counter Validation loop \n\r");
 			if (iter_ptr->my_limit != -1){
-				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){
-					legal_child_amount_flag=1;
+				if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){			//Because we want to increase it
+					illegal_child_amount_flag=1;
 					break;
 				}
 			}
-			iter_ptr=iter_ptr->HW1_pptr;
-///*Test-Fix*/iter_ptr=iter_ptr->p_pptr;
+			iter_ptr=iter_ptr->p_opptr;
 		}
 
-		if (legal_child_amount_flag){
+		if (illegal_child_amount_flag){
 			return -EINVAL;						//Because one of the processes violated it's child-processes limit
 		}
 
+		//step 3
+		iter_ptr = father_ptr;
 		while (iter_ptr->pid != 1){
 										/*Test Code*/printk("I am inside the child_counter increase loop \n\r");
 			iter_ptr->child_counter++;
-			iter_ptr=iter_ptr->HW1_pptr;
-///*Test-Fix*/iter_ptr=iter_ptr->p_pptr;
+			iter_ptr=iter_ptr->p_opptr;
 		}
 	}
 /*Test Code*/else{

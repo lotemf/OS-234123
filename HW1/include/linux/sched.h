@@ -456,20 +456,10 @@ struct task_struct {
  *  set_limit - The last known set_child_max_proc value - The maximum amount of sons for each one of the child processes
  *  my_limit -  The maximum number of child processes allowed for the current process
  *  child_counter - The amount of sub-processes in the family tree of the current process
- *  HW1_pptr  - The original pointer to the father process
- *  HW1_osptr - The original pointer to the older brother process
- *  HW1_ysptr - The original pointer to youngest brother process
- *  HW1_ecptr - The original pointer to the eldest child process - The oldest among his children
- *  HW1_ycptr - The original pointer to the youngest child process
  */
 	int set_limit;
 	int my_limit;
 	int child_counter;
-	struct task_struct* HW1_pptr;
-	struct task_struct* HW1_osptr;
-	struct task_struct* HW1_ysptr;
-	struct task_struct* HW1_ecptr;
-	struct task_struct* HW1_ycptr;
 
 };
 
@@ -579,11 +569,6 @@ extern struct exec_domain	default_exec_domain;
 	set_limit: 				-1,						\
 	my_limit: 				-1,						\
 	child_counter:  		 0,						\
-	HW1_pptr: 				 &tsk, 					\
-	HW1_osptr: 		 		 &tsk, 					\
-	HW1_ysptr: 				 &tsk, 					\
-	HW1_ecptr: 				 &tsk, 					\
-	HW1_ycptr: 				 &tsk, 					\
 }
 
 /*The last 4 lines in TASK_INIT Macro were added by Lotem - HW1*/
