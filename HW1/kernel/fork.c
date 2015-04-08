@@ -626,22 +626,21 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	/**********************************************************************/
 	/*********New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
-	//step 1 inhere limit value from father  - set_limit of father becomes my_limit
-	//step 2 checking if
-	//step 3 update the amount of children up the process tree
+	//part 1 inhere limit value from father  - set_limit of father becomes my_limit
+	//part 2 checking if
+	//part 3 update the amount of children up the process tree
 
 
-	//step1
+	//part 1
 	struct task_struct* father_ptr = p->p_opptr;
 	p->my_limit = father_ptr->set_limit;
 
-	//step 2
+	//part 2
 	if (father_ptr->pid){								//If it's init() there is no need to touch it
 		struct task_struct* iter_ptr = father_ptr;
 		int illegal_child_amount_flag = 0;
 
 		while (iter_ptr->pid != 1){
-										/*Test Code*/printk("I am inside the child_counter Validation loop \n\r");
 			if (iter_ptr->my_limit != -1){
 				if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){			//Because we want to increase it
 					illegal_child_amount_flag=1;
@@ -652,56 +651,19 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		}
 
 		if (illegal_child_amount_flag){
-			return -EINVAL;						//Because one of the processes violated it's child-processes limit
+			return -EAGAIN;						//Because one of the processes violated it's child-processes limit
 		}
 
-		//step 3
+		//part 3
 		iter_ptr = father_ptr;
 		while (iter_ptr->pid != 1){
-										/*Test Code*/printk("I am inside the child_counter increase loop \n\r");
 			iter_ptr->child_counter++;
 			iter_ptr=iter_ptr->p_opptr;
 		}
 	}
-/*Test Code*/else{
-/*Test Code*/	printk("Init() process is running...\n\r");
-/*Test Code*/}
-
 
 	/*********End of New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
 	/**********************************************************************/
-
-
-
-
-
-
-
-
-/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
-//	struct task_struct* father_ptr = p->p_pptr;			//HW1 - Lotem
-//	p->my_limit = father_ptr->set_limit;		//HW1 - Lotem
-//
-//	if (p->pid == 1){
-///*Test Code*/printk("YES!!! - Init() is running...\n\r");
-//	}
-//	if (father_ptr->pid){						//That means we are not inside init() process
-///*Test Code*/printk("about to enter the ptr loop \n\r");
-//		struct task_struct* iter_ptr = father_ptr;			//HW1 - Lotem
-//		while (iter_ptr->pid != 1){
-///*Test Code*/printk("I am inside the ptr loop \n\r");
-//			if (iter_ptr->my_limit != -1){					//If there is a limit on the amount of offspring
-//				if ((iter_ptr->child_counter) > (iter_ptr->my_limit)){		//If this limit is violated
-//					return -EINVAL;
-//				}
-//			}
-//			iter_ptr->child_counter++;				//A new process was created in the sub-tree
-//			iter_ptr=iter_ptr->p_pptr;				//Going "Up" the process tree
-//		}
-//	}
-	/* Old Code - HW1 - Lotem 4.4.2015 -  20:30 */
-
-
 
 	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
 	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
