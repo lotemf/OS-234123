@@ -61,8 +61,11 @@ int sys_set_child_max_proc(int maxproc){
 	printk("maxproc promped value is:\t%d\n", maxproc);
 	struct task_struct *curr_proc = current;
 
-	if (maxproc > ((curr_proc->my_limit) - 1)){
-		return -EPERM;
+																//New Code Lotem - 9.4.15 -14.00
+	if (curr_proc->my_limit != -1){									//If it's -1 there is no limit on it so no need to check
+		if (maxproc > ((curr_proc->my_limit) - 1)){
+			return -EPERM;
+		}
 	}
 	//reset child limit to no limit
 	if (maxproc < 0){
@@ -72,14 +75,20 @@ int sys_set_child_max_proc(int maxproc){
 	return 0;
 }
 
-int sys_get_max_proc(){
+int sys_get_max_proc(void){
 	printk("in CR0, system call get_max_proc\n");
 	struct task_struct *curr_proc = current;
-	return current->my_limit;
+	    printk("The limit on this program is %d \n",curr_proc->my_limit);  //***newTestCode***
+	    printk("The limit on the child-processes of this program is %d \n",curr_proc->set_limit);  //***newTestCode***
+	if (curr_proc->my_limit == -1){ 					//New code lotem - 9.4.15 -14.00
+		return -EINVAL;										//Handles the case when there is no limit
+	}
+	return curr_proc->my_limit;
 }
 
-int sys_get_subproc_count(){
+int sys_get_subproc_count(void){
 	printk("in CR0, system call get_subproc_count\n");
 	struct task_struct *curr_proc = current;
-	return current->child_counter;
+	    printk("The amount of sub-processes this program has is %d \n",curr_proc->child_counter);//***newTestCode***
+	return curr_proc->child_counter;					//Fixed Chen's call for the Macro
 }
