@@ -633,8 +633,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	//part 1
 	struct task_struct* father_ptr = p->p_opptr;
-	p->set_limit = -1;								//New Code 9.4.2015 15.20 - Because the new son used to get the limit of his father
-	p->my_limit = father_ptr->set_limit;
+
+//New Code -  Lotem 9.4.15 - 16.00
+	int new_my_limit = p->set_limit;
+	p->set_limit = -1;
+	p->my_limit = new_my_limit;
+	p->child_counter = 0;
+//End of New Code -  Lotem 9.4.15 - 16.00
 
 	//part 2
 	if (father_ptr->pid){								//If it's init() there is no need to touch it
@@ -643,7 +648,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 		while (iter_ptr->pid != 1){
 			if (iter_ptr->my_limit != -1){
-				if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){			//Because we want to increase it
+				if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){			 //Because we want to increase it
 					illegal_child_amount_flag=1;
 					break;
 				}
@@ -652,7 +657,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		}
 
 		if (illegal_child_amount_flag){
-			return -EAGAIN;						//Because one of the processes violated it's child-processes limit
+			goto bad_fork_free;				//New Code lotem
 		}
 
 		//part 3
