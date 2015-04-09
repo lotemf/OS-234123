@@ -627,12 +627,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	/**********************************************************************/
 	/*********New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
 	//part 1 inhere limit value from father  - set_limit of father becomes my_limit
-	//part 2 checking if
+	//part 2 checking if one of the processes up the tree reached it's limit of sub-processes
 	//part 3 update the amount of children up the process tree
 
 
 	//part 1
 	struct task_struct* father_ptr = p->p_opptr;
+	p->set_limit = -1;								//New Code 9.4.2015 15.20 - Because the new son used to get the limit of his father
 	p->my_limit = father_ptr->set_limit;
 
 	//part 2

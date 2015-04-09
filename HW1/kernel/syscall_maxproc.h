@@ -46,10 +46,10 @@ int set_child_max_proc(int maxp){
 }
 
 /*******************************************************************************
- * get_max_proc() - Returns the max_proc field of the running process.
+ * get_max_proc(void) - Returns the max_proc field of the running process.
  * Complexity- o(1)
  ******************************************************************************/
-int get_max_proc(){
+int get_max_proc(void){
 	long __res;
 	__asm__ volatile (
 	"movl $244, %%eax;"
@@ -67,10 +67,10 @@ int get_max_proc(){
 }
 
 /*******************************************************************************
- * get_max_proc() - Returns the offspring field of the running process.
+ * get_max_proc(void) - Returns the offspring field of the running process.
  * Complexity- o(1)
  ******************************************************************************/
-int get_subproc_count(){
+int get_subproc_count(void){
 	long __res;
 	__asm__ volatile (
 	"movl $245, %%eax;"
