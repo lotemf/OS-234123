@@ -655,13 +655,10 @@ repeat:
 //					}
 				//part 2
 					struct task_struct *iter_ptr = p->p_opptr;
-					while (iter_ptr->pid != 1){
+					while (iter_ptr->pid){
 						iter_ptr->child_counter--;
 						iter_ptr = iter_ptr->p_opptr;
 					}
-					//update init child counter field "manually"
-					iter_ptr->child_counter--;
-
 
 					release_task(p);
 				}
