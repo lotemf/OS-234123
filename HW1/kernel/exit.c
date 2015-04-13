@@ -510,8 +510,6 @@ fake_volatile:
 		current->tux_exit();
 	}
 	__exit_mm(tsk);
-
-	lock_kernel();
 	sem_exit();
 	__exit_files(tsk);
 	__exit_fs(tsk);
@@ -528,23 +526,16 @@ fake_volatile:
 
 	tsk->exit_code = code;
 
-	/**********************************************************************/
-	/****New Code - Lotem 8.4.2015 HW1****/
-	//Decreasing the amount of children all the way up to init() , because they are removed from the tree
-	struct task_struct *p;
-	p = current;
-	struct task_struct *iter_ptr = p->p_opptr;
-	int num_of_children_to_remove = p->child_counter;
+/**********************************************************************/
+//Chen's addition until exit_notify();
+//update all children counter of my parents to same minus current->child_counter
+	struct task_struct *iter_ptr = current->p_opptr;
+	int children_to_remove = current->child_counter;
 
 	while (iter_ptr->pid != 1){
-		iter_ptr->child_counter-=num_of_children_to_remove;
+		iter_ptr->child_counter -= children_to_remove;
 		iter_ptr = iter_ptr->p_opptr;
 	}
-	//update init child counter field "manually"
-	iter_ptr->child_counter-=num_of_children_to_remove;
-	/***End of New Code - Lotem 8.4.2015 HW1***/
-	/**********************************************************************/
-
 
 	exit_notify();
 	schedule();
@@ -648,24 +639,22 @@ repeat:
 					do_notify_parent(p, SIGCHLD);
 					write_unlock_irq(&tasklist_lock);
 				} else {
-				/**********************************************************************/
-				/***HW1 chen changes except release_task(p) ***/
-				//part 1 update set_limit field for all children
-				//part 2 update child counter  (decrease in 1) till init() process
-				//TODO should we update init child counter too?
-
-				//part 1
-					struct task_struct *child_iter_ptr = p->p_cptr;
-
-					if (child_iter_ptr) {						//has children
-						while (child_iter_ptr){						//iterate through all children
-							child_iter_ptr->my_limit = -1;						//New Addition by the course's staff
-							child_iter_ptr = child_iter_ptr->p_osptr;
-						}
-					}
+/**********************************************************************/
+/***HW1 chen changes until release_task(p) ***/
+//part 1 update set_limit field (to limitless) for all children - ARE WE SURE ABOUT THIS?? TODO
+//part 2 update child counter  (decrease in 1) till init() process minus 1
+//part 1 is not needed - according to almog and others
+//				//part 1
+//					struct task_struct *child_iter_ptr = p->p_cptr;
+//
+//					if (child_iter_ptr) {						//has children
+//						while (child_iter_ptr){						//iterate through all children
+//							child_iter_ptr->my_limit = -1;						//New Addition by the course's staff
+//							child_iter_ptr = child_iter_ptr->p_osptr;
+//						}
+//					}
 				//part 2
 					struct task_struct *iter_ptr = p->p_opptr;
-
 					while (iter_ptr->pid != 1){
 						iter_ptr->child_counter--;
 						iter_ptr = iter_ptr->p_opptr;
@@ -673,11 +662,8 @@ repeat:
 					//update init child counter field "manually"
 					iter_ptr->child_counter--;
 
-				//end of chen and lotem's additions
-				/**********************************************************************/
 
 					release_task(p);
-
 				}
 				goto end_wait4;
 			default:

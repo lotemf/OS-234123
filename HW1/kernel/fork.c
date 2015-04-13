@@ -622,55 +622,34 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * friends to set the per-user process limit to something lower
 	 * than the amount of processes root is running. -- Rik
 	 */
-	
-
-	/**********************************************************************/
-	/*********New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
-	//part 1 inhere limit value from father  - set_limit of father becomes my_limit
-	//part 2 checking if one of the processes up the tree reached it's limit of sub-processes
-	//part 3 update the amount of children up the process tree
-
-
+/*
+ 	HW1 additions
+	part 1 inhere limit value from father  - set_limit of father becomes my_limit
+	part 2 checking if one of the processes up the tree reached it's limit of sub-processes
+	part 3 update the amount of children up the process tree
+*/
 	//part 1
-	struct task_struct* father_ptr = p->p_opptr;
-
-//New Code -  Lotem 9.4.15 - 16.00
-	int new_my_limit = p->set_limit;
+	p->my_limit = current->set_limit;
 	p->set_limit = -1;
-	p->my_limit = new_my_limit;
 	p->child_counter = 0;
-//End of New Code -  Lotem 9.4.15 - 16.00
-
 	//part 2
-	if (father_ptr->pid){								//If it's init() there is no need to touch it
-		struct task_struct* iter_ptr = father_ptr;
-		int illegal_child_amount_flag = 0;
-
-		while (iter_ptr->pid != 1){
-			if (iter_ptr->my_limit != -1){
-				if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){			 //Because we want to increase it
-					illegal_child_amount_flag=1;
-					break;
-				}
+	struct task_struct* iter_ptr = current;
+	int illegal_child_amount_flag = 0;
+	while ((iter_ptr->pid > 1) && (!illegal_child_amount_flag)){
+		if (iter_ptr->my_limit != -1){
+			if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){
+				illegal_child_amount_flag = 1;
 			}
-			iter_ptr=iter_ptr->p_opptr;
 		}
-
-		if (illegal_child_amount_flag){
-			goto bad_fork_free;				//New Code lotem
-		}
-
-		//part 3
-		iter_ptr = father_ptr;
-		while (iter_ptr->pid != 1){
-			iter_ptr->child_counter++;
-			iter_ptr=iter_ptr->p_opptr;
-		}
+		iter_ptr = iter_ptr->p_opptr;
 	}
-
-	/*********End of New Code - HW1 - Lotem 6.4.2015 -  17:30 *************/
-	/**********************************************************************/
-
+	if (illegal_child_amount_flag){
+		printk("in illegal if");
+		goto bad_fork_free;				//New Code lotem
+	}
+/*
+ * end of Chens additions
+ */
 	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
 	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
 		goto bad_fork_free;
@@ -835,6 +814,17 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		current->need_resched = 1;
 
 fork_out:
+/*
+	HW1 additions
+	//part 3
+*/
+	if ((retval > 0) && (current->pid > 1)){
+		struct task_struct* iter_ptr = current;
+		while (iter_ptr->pid){
+			iter_ptr->child_counter++;
+			iter_ptr=iter_ptr->p_opptr;
+		}
+	}
 	return retval;
 
 bad_fork_cleanup_namespace:
