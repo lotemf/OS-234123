@@ -1,0 +1,41 @@
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+process main has 1 subprocesses
+errno: Success
+process 2 has 1 subprocesses
+errno: Success
+process 3 has 0 subprocesses
+errno: Success
+errno: Success
+process 3 has 0 subprocesses
+errno: Success
+process main has 1 subprocesses
+errno: Success
+process already dead: 2
+errno: Success
+unknown zombie process: 2
+errno: Success
+process main has 0 subprocesses
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Resource temporarily unavailable
+process main has 0 subprocesses
+errno: Success
+process 3 has 2 subprocesses
+errno: Success
+errno: Invalid argument
+errno: Invalid argument
+process 5 has max_proc value of 0
+errno: Success
+errno: Success
+process 4 has 0 subprocesses
+errno: Success
+process 3 has 1 subprocesses
+errno: Success
+errno: Success
+process 5 has max_proc value of 0
+errno: Success

@@ -1,0 +1,12 @@
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Invalid argument
+errno: Success
+errno: Success
+process p2 has max_proc value of 0
+errno: Success
+errno: Resource temporarily unavailable
+process p2 has 0 subprocesses
+errno: Success

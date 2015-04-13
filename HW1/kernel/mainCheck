@@ -1,0 +1,28 @@
+get main
+set main 5
+get main
+fork main p0
+get p0
+set main -1
+count main
+count p0
+get p0
+get p1
+count main
+fork main p1
+get p1
+count p0
+fork p0 a
+fork p0 b
+fork p0 c
+fork p0 d
+count p0
+fork d e
+get d  
+get e
+fork e f
+kill d
+count p0
+fork e f
+count p0
+fork f g

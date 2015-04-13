@@ -1,0 +1,65 @@
+get main
+set main 5
+get main
+fork main a
+get a
+get main
+set main 0
+fork main a2
+get a2
+fork a2 a22
+set a2 3
+set a2 0
+set a2 -1
+set a2 33434
+set a2 -2123123
+set a 2
+set a 3
+set a -1
+set a 9
+set a 5
+set a 4
+set a 1
+fork a as
+get as
+set a 3
+set a -123
+fork a as2
+get as2
+count main
+count a
+count as2
+count as
+count a2
+fork as2 b
+count main
+fork b bb
+count a
+get a
+fork b bb2
+set bb 1
+fork bb c
+get a
+count a
+kill a
+get a2
+get as
+get as2
+get b
+get bb
+get bb2
+fork bb d
+count main
+count as
+fork as w
+fork as w2
+count as
+count as2
+count b
+count d
+count bb
+count bb2
+kill as
+fork w ws
+count w
+kill main

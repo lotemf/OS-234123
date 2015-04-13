@@ -1,0 +1,32 @@
+set main 3
+fork main 1
+fork main 2
+set main 2
+fork main 3
+set 1 -92
+fork 1 11
+fork 3 31
+fork 3 32
+get 31
+get 32
+zombie 31
+kill 32
+count 3
+count main
+set 3 1
+fork 3 32
+count 3
+count main
+count 1
+count 2
+fork 32 321
+get 32
+waitz 31
+count 3
+count main
+zombie 1
+count main
+fork 11 111
+count 11
+get 11
+zombie 11

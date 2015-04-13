@@ -1,0 +1,28 @@
+fork main 1
+fork 1 2
+fork 2 3
+zombie 1
+count main
+count 2
+count 3
+zombie 2
+count 3
+count main
+waitz 2
+waitz 2
+waitz 1
+count main
+fork 3 4
+set 4 0
+fork 4 5
+fork 5 6
+count main
+count 3
+get 4
+get 3
+get 5
+kill 5
+count 4
+count 3
+fork 4 5
+get 5

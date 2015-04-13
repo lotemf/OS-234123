@@ -1,0 +1,13 @@
+set main 8
+fork main p0
+fork p0 p1
+fork p1 p2
+fork p2 p3
+fork p3 nati
+fork nati n1
+fork nati n2
+fork nati n3
+fork nati n4
+count p0
+fork nati n5
+

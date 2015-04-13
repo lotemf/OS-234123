@@ -1,0 +1,15 @@
+set main 10
+get main
+fork main p0
+get p0
+set main 1
+fork main p1
+get p1
+set p1 20
+fork p1 p2
+get p2
+fork p2 p3
+count main
+count p0
+count p1
+count p2

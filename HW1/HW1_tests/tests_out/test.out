@@ -29,30 +29,30 @@ errno: Invalid argument
 errno: Invalid argument
 errno: Resource temporarily unavailable
 errno: Success
-process p0 has 4 subprocesses
+process p0 has 3 subprocesses
 errno: Success
 errno: Success
-process p0 has 5 subprocesses
-errno: Success
-errno: Resource temporarily unavailable
+process p0 has 3 subprocesses
 errno: Success
 errno: Success
-process p0 has 5 subprocesses
 errno: Success
-errno: Resource temporarily unavailable
+process g already exists
+process p0 has 3 subprocesses
 errno: Success
 errno: Success
-process main has 7 subprocesses
 errno: Success
-errno: Resource temporarily unavailable
-errno: Success
+process h already exists
+process main has 5 subprocesses
 errno: Success
 errno: Success
 errno: Success
 errno: Success
 errno: Success
 errno: Success
-process h has 6 subprocesses
+errno: Success
+errno: Success
+errno: Success
+process h has 7 subprocesses
 errno: Success
 errno: Invalid argument
 errno: Success
