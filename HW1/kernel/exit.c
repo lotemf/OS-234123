@@ -527,7 +527,7 @@ fake_volatile:
 	tsk->exit_code = code;
 
 /**********************************************************************/
-//Chen's addition until exit_notify();
+//Chen's additions until exit_notify();
 //update all children counter of my parents to same minus current->child_counter
 	struct task_struct *iter_ptr = current->p_opptr;
 	int children_to_remove = current->child_counter;
@@ -536,6 +536,8 @@ fake_volatile:
 		iter_ptr->child_counter -= children_to_remove;
 		iter_ptr = iter_ptr->p_opptr;
 	}
+//End of Chen's additions
+/**********************************************************************/
 
 	exit_notify();
 	schedule();
@@ -641,25 +643,13 @@ repeat:
 				} else {
 /**********************************************************************/
 /***HW1 chen changes until release_task(p) ***/
-//part 1 update set_limit field (to limitless) for all children - ARE WE SURE ABOUT THIS?? TODO
-//part 2 update child counter  (decrease in 1) till init() process minus 1
-//part 1 is not needed - according to almog and others
-//				//part 1
-//					struct task_struct *child_iter_ptr = p->p_cptr;
-//
-//					if (child_iter_ptr) {						//has children
-//						while (child_iter_ptr){						//iterate through all children
-//							child_iter_ptr->my_limit = -1;						//New Addition by the course's staff
-//							child_iter_ptr = child_iter_ptr->p_osptr;
-//						}
-//					}
-				//part 2
-					struct task_struct *iter_ptr = p->p_opptr;
-					while (iter_ptr->pid){
-						iter_ptr->child_counter--;
-						iter_ptr = iter_ptr->p_opptr;
-					}
+//Here we update the child counter  (decrease in 1) till init() process minus 1
 
+				struct task_struct *iter_ptr = p->p_opptr;
+				while (iter_ptr->pid){
+					iter_ptr->child_counter--;
+					iter_ptr = iter_ptr->p_opptr;
+				}
 					release_task(p);
 				}
 				goto end_wait4;

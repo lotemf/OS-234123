@@ -626,7 +626,6 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
  	HW1 additions
 	part 1 inhere limit value from father  - set_limit of father becomes my_limit
 	part 2 checking if one of the processes up the tree reached it's limit of sub-processes
-	part 3 update the amount of children up the process tree
 */
 	//part 1
 	p->my_limit = current->set_limit;
@@ -644,11 +643,10 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		iter_ptr = iter_ptr->p_opptr;
 	}
 	if (illegal_child_amount_flag){
-		printk("in illegal if");
-		goto bad_fork_free;				//New Code lotem
+		goto bad_fork_free;
 	}
 /*
- * end of Chens additions
+ * end of Chen and Lotem's additions
  */
 	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
 	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
@@ -816,7 +814,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 fork_out:
 /*
 	HW1 additions
-	//part 3
+	// Here update the amount of children up the process tree
 */
 	if ((retval > 0) && (current->pid > 1)){
 		struct task_struct* iter_ptr = current;
