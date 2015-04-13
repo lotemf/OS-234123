@@ -1,0 +1,89 @@
+errno: Invalid argument
+errno: Success
+errno: Invalid argument
+errno: Success
+process a has max_proc value of 5
+errno: Success
+errno: Invalid argument
+errno: Success
+errno: Success
+process a2 has max_proc value of 0
+errno: Success
+errno: Resource temporarily unavailable
+errno: Operation not permitted
+errno: Operation not permitted
+errno: Success
+errno: Operation not permitted
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Operation not permitted
+errno: Operation not permitted
+errno: Success
+errno: Success
+errno: Success
+process as has max_proc value of 1
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Invalid argument
+process main has 4 subprocesses
+errno: Success
+process a has 2 subprocesses
+errno: Success
+process as2 has 0 subprocesses
+errno: Success
+process as has 0 subprocesses
+errno: Success
+process a2 has 0 subprocesses
+errno: Success
+errno: Success
+process main has 5 subprocesses
+errno: Success
+errno: Success
+process a has 4 subprocesses
+errno: Success
+process a has max_proc value of 5
+errno: Success
+errno: Success
+errno: Success
+errno: Resource temporarily unavailable
+process a has max_proc value of 5
+errno: Success
+process a has 5 subprocesses
+errno: Success
+errno: Success
+process a2 has max_proc value of 0
+errno: Success
+process as has max_proc value of 1
+errno: Success
+errno: Invalid argument
+errno: Invalid argument
+errno: Invalid argument
+errno: Invalid argument
+errno: Success
+process main has 1 subprocesses
+errno: Success
+process as has 0 subprocesses
+errno: Success
+errno: Success
+errno: Resource temporarily unavailable
+process as has 1 subprocesses
+errno: Success
+process as2 has 4 subprocesses
+errno: Success
+process b has 3 subprocesses
+errno: Success
+process d has 0 subprocesses
+errno: Success
+process bb has 1 subprocesses
+errno: Success
+process bb2 has 0 subprocesses
+errno: Success
+errno: Success
+errno: Success
+process w has 1 subprocesses
+errno: Success
+errno: Success

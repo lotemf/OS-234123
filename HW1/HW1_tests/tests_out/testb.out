@@ -1,0 +1,43 @@
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Success
+errno: Invalid argument
+errno: Invalid argument
+errno: Success
+errno: Success
+process 3 has 1 subprocesses
+errno: Success
+process main has 5 subprocesses
+errno: Success
+errno: Success
+errno: Success
+process 3 has 2 subprocesses
+errno: Success
+process main has 6 subprocesses
+errno: Success
+process 1 has 1 subprocesses
+errno: Success
+process 2 has 0 subprocesses
+errno: Success
+errno: Resource temporarily unavailable
+process 32 has max_proc value of 1
+errno: Success
+errno: Success
+process 3 has 1 subprocesses
+errno: Success
+process main has 5 subprocesses
+errno: Success
+errno: Success
+process main has 4 subprocesses
+errno: Success
+errno: Success
+process 11 has 1 subprocesses
+errno: Success
+errno: Invalid argument
+errno: Success

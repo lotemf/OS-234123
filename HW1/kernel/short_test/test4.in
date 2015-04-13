@@ -1,0 +1,7 @@
+set main 12
+fork main p0
+set p0 5
+fork p0 p1
+set p0 12
+fork p0 p2
+get p2

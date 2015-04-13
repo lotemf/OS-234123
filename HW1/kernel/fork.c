@@ -637,7 +637,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	int illegal_child_amount_flag = 0;
 	while ((iter_ptr->pid > 1) && (!illegal_child_amount_flag)){
 		if (iter_ptr->my_limit != -1){
-			if ((iter_ptr->child_counter) = (iter_ptr->my_limit)){
+			if ((iter_ptr->child_counter) == (iter_ptr->my_limit)){
 				illegal_child_amount_flag = 1;
 			}
 		}

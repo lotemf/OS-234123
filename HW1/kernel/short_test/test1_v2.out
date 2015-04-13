@@ -1,0 +1,21 @@
+errno: Success
+errno: Invalid argument
+errno: Success
+process p0 has max_proc value of 10
+errno: Success
+errno: Success
+errno: Success
+process p1 has max_proc value of 1
+errno: Success
+errno: Operation not permitted
+errno: Success
+errno: Invalid argument
+errno: Resource temporarily unavailable
+process main has 3 subprocesses
+errno: Success
+process p0 has 0 subprocesses
+errno: Success
+process p1 has 1 subprocesses
+errno: Success
+process p2 has 0 subprocesses
+errno: Success

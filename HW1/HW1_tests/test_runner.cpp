@@ -18,7 +18,7 @@ enum Command {FORK,KILL,COUNT,SET,GET,WAIT};
 struct glob {
 	struct {
 		Command command;
-		pid_t pid,child;
+		pid_t pid, child;
 		bool ready;
 		int limit;
 	} in; //input
@@ -27,18 +27,19 @@ struct glob {
 		bool ready; //means 'done' here
 		int code;
 	} out; //output
-	bool exit;
+	bool exit; // test has completed, we should exit.
 } *shared;
 
 const struct timespec req={0,5000000}; //5ms
 
 void do_commands() {
 	pid_t pid=getpid();
-		pid_t child;
+	pid_t child;
 	while(true) {
 		while (!shared->in.ready) nanosleep(&req, NULL); //so this function won't take up all the CPU
 		if (shared->exit) exit(0); //when tests have completed
-		if (shared->in.pid!=pid) continue; 
+		if (shared->in.pid!=pid) 
+			continue; 
 		shared->in.ready=false;
 		switch (shared->in.command) {
 		case KILL:
@@ -52,7 +53,9 @@ void do_commands() {
 		case FORK:
 			child=fork();
 			if (child==0) { //child process
+				//cout << "*** " << pid;
 				pid=getpid(); //update pid
+				//cout << "->" << pid << " ***" << endl;
 				continue;
 			}
 			shared->out.result=child; //pid of child
@@ -73,8 +76,18 @@ void do_commands() {
 }
 
 void handle_input(pid_t first_child) {
+	/* Possible commands:
+	   kill <process>
+	   fork <father> <son>
+	   count <process>
+	   set <process> <lim>
+	   get <process>
+	   zombie <process>
+	   waitz <process>
+	*/
 	map<string,pid_t> m;
 	map<string,string> parent;
+	map<string,pid_t> zombies;
 	m["main"]=first_child;
 	string command,arg1,arg2;
 	while (cin>>command) {
@@ -89,7 +102,8 @@ void handle_input(pid_t first_child) {
 			shared->in.command=KILL;
 			shared->in.pid=m[arg1];
 			shared->in.ready=true;
-			while (!shared->out.ready) nanosleep(&req, NULL);
+			while (!shared->out.ready) 
+				nanosleep(&req, NULL);
 			if (arg1=="main") {
 				waitpid(m[arg1],NULL,0);
 			} else if (m.find(parent[arg1])!=m.end()) {
@@ -98,10 +112,47 @@ void handle_input(pid_t first_child) {
 				shared->in.child=m[arg1];
 				shared->in.command=WAIT;
 				shared->in.ready=true;
-				while (!shared->out.ready) nanosleep(&req, NULL);
+				while (!shared->out.ready) 
+					nanosleep(&req, NULL);
 			}
 			m.erase(arg1);
-			if (arg1!="main") parent.erase(arg1);
+			if (arg1!="main") 
+				parent.erase(arg1);
+		} else if (command=="zombie") {
+			cin>>arg1;
+			if (m.find(arg1)==m.end()) {
+				cout<<"unknown process: "<<arg1<<endl;
+				continue;
+			}
+			shared->in.command=KILL;
+			shared->in.pid=m[arg1];
+			shared->in.ready=true;
+			while (!shared->out.ready) 
+				nanosleep(&req, NULL);
+			zombies[arg1] = m[arg1];
+			m.erase(arg1);
+		} else if (command=="waitz") {
+			cin>>arg1;
+			if (zombies.find(arg1)==zombies.end()) {
+				cout<<"unknown zombie process: "<<arg1<<endl;
+				continue;
+			}
+			if (arg1=="main") {
+				waitpid(zombies[arg1],NULL,0);
+			} else if (m.find(parent[arg1])!=m.end()) {
+				shared->out.ready=false;
+				shared->in.pid=m[parent[arg1]];
+				shared->in.child=zombies[arg1];
+				shared->in.command=WAIT;
+				shared->in.ready=true;
+				while (!shared->out.ready) 
+					nanosleep(&req, NULL);
+			} else {
+				cout<<"process already dead: "<<arg1<<endl;
+			}
+			zombies.erase(arg1);
+			if (arg1!="main") 
+				parent.erase(arg1);
 		} else if (command=="fork") {
 			cin>>arg1>>arg2;
 			if (m.find(arg1)==m.end()) {
@@ -115,7 +166,8 @@ void handle_input(pid_t first_child) {
 			shared->in.command=FORK;
 			shared->in.pid=m[arg1];
 			shared->in.ready=true;
-			while (!shared->out.ready) nanosleep(&req, NULL);
+			while (!shared->out.ready) 
+				nanosleep(&req, NULL);
 			if (shared->out.code==0) {
 				m[arg2]=shared->out.result;
 				parent[arg2]=arg1;
