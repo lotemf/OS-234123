@@ -527,7 +527,7 @@ fake_volatile:
 	tsk->exit_code = code;
 
 /**********************************************************************/
-//Chen's additions until exit_notify();
+//HW1 Chen's additions until exit_notify();
 //update all children counter of my parents to same minus current->child_counter
 	struct task_struct *iter_ptr = current->p_opptr;
 	int children_to_remove = current->child_counter;
@@ -536,8 +536,6 @@ fake_volatile:
 		iter_ptr->child_counter -= children_to_remove;
 		iter_ptr = iter_ptr->p_opptr;
 	}
-//End of Chen's additions
-/**********************************************************************/
 
 	exit_notify();
 	schedule();

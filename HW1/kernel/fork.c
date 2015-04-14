@@ -623,7 +623,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * than the amount of processes root is running. -- Rik
 	 */
 /*
- 	HW1 additions
+ 	HW1 additions until if atomic..
 	part 1 inhere limit value from father  - set_limit of father becomes my_limit
 	part 2 checking if one of the processes up the tree reached it's limit of sub-processes
 */
@@ -645,9 +645,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (illegal_child_amount_flag){
 		goto bad_fork_free;
 	}
-/*
- * end of Chen and Lotem's additions
- */
+
 	if (atomic_read(&p->user->processes) >= p->rlim[RLIMIT_NPROC].rlim_cur
 	              && !capable(CAP_SYS_ADMIN) && !capable(CAP_SYS_RESOURCE))
 		goto bad_fork_free;
@@ -813,10 +811,10 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 fork_out:
 /*
-	HW1 additions
+	HW1 additions part 3
 	// Here update the amount of children up the process tree
 */
-	if ((retval > 0) && (current->pid > 1)){
+	if ((retval >= 0) && (current->pid > 1)){
 		struct task_struct* iter_ptr = current;
 		while (iter_ptr->pid){
 			iter_ptr->child_counter++;
