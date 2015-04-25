@@ -119,9 +119,12 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_OTHER		0
 #define SCHED_FIFO		1
 #define SCHED_RR		2
+#define SCHED_SHORT		4		/*HW2 - Lotem*/
 
 struct sched_param {
 	int sched_priority;
+	int requested_time;			/*HW2 - Lotem*/
+	int trial_num;				/*HW2 - Lotem*/
 };
 
 struct completion;
@@ -451,6 +454,11 @@ struct task_struct {
 
 /* journalling filesystem info */
 	void *journal_info;
+
+	int requested_time;				/*HW2 Addition - Lotem*/
+	int requested_trials;			/*HW2 Addition - Lotem*/
+	int trials_counter;				/*HW2 Addition - Lotem*/
+			/*Maybe additional fields are required...*/
 };
 
 /*
@@ -556,6 +564,12 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
+	/*HW2 - Lotem* - Initializing the new fields*/
+	requested_time:		0							\ /*HW2 - Lotem*/
+	requested_trials:	0							\ /*HW2 - Lotem*/
+	trials_counter:		0							\ /*HW2 - Lotem*/
+	/*HW2 - Lotem*/
+
 }
 
 
