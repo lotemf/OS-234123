@@ -139,6 +139,10 @@ struct runqueue {
 	signed long nr_uninterruptible;
 	task_t *curr, *idle;
 	prio_array_t *active, *expired, arrays[2];
+	/*Hw2 addition - adding alternative arrays for the new schedueling*/
+	prio_array_t *SHORT, *SHORT_OVERDUE, SHORTarrays[2];
+	/*Hw2 addition*/
+
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
 	list_t migration_queue;
