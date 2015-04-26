@@ -738,6 +738,18 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		current->time_slice = 1;
 		scheduler_tick(0,0);
 	}
+
+	if (IS_SHORT(current)) {  // HW2 - Alon
+		p->policy = current->policy;
+		if (!IS_OVERDUE(current)) {
+			p->static_prio = current->static_prio;
+			p->requested_time =  (current->requested_trials + 1) >> 1;
+			current->requested_trials >>= 1;
+		}
+		else {
+			p->static_prio = // some default value
+		}
+	}
 	__restore_flags(flags);
 
 	/*

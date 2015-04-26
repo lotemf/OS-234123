@@ -121,6 +121,10 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_RR		2
 #define SCHED_SHORT		4		/*HW2 - Lotem*/
 
+#define IS_SHORT(p) ((p)->policy == SCHED_SHORT)              /* HW2 - Alon */
+#define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->trials_counter >= (p)->requested_trials) \
+			|| (p)->time_slice == 0) ) /* HW2 - Alon */
+
 struct sched_param {
 	int sched_priority;
 	int requested_time;			/*HW2 - Lotem*/
