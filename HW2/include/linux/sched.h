@@ -455,10 +455,11 @@ struct task_struct {
 /* journalling filesystem info */
 	void *journal_info;
 
-/*HW2 Addition - Lotem*/
+/*New HW2 Additions - Lotem*/
 	int requested_time;
+	int used_time;
 	int requested_trials;
-	int trials_counter;
+	int used_trials;
 			/*Maybe additional fields are required...*/
 };
 
@@ -566,8 +567,10 @@ extern struct exec_domain	default_exec_domain;
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
 	requested_time:		0,							\
+	used_time:			0,							\
 	requested_trials:	0,							\
-	trials_counter:		0,							\
+	used_trials:		0,							\
+
 }
 
 
