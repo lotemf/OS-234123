@@ -651,10 +651,10 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_sched_getaffinity)
 
 	/*New Code HW2 - Lotem - 25.4.2015 17.00*/
-//	.long SYMBOL_NAME(sys_is_SHORT)						/* HW2 - Lotem */
-//	.long SYMBOL_NAME(sys_remaining_time)				/* HW2 - Lotem */
-//	.long SYMBOL_NAME(sys_remaining_trials)				/* HW2 - Lotem */
-//	.long SYMBOL_NAME(sys_get_scheduling_statistic)		/* HW2 - Lotem */
+	.long SYMBOL_NAME(sys_is_SHORT)						/* HW2 - Lotem */
+	.long SYMBOL_NAME(sys_remaining_time)				/* HW2 - Lotem */
+	.long SYMBOL_NAME(sys_remaining_trials)				/* HW2 - Lotem */
+	.long SYMBOL_NAME(sys_get_scheduling_statistic)		/* HW2 - Lotem */
 	/*New Code HW2 - Lotem - 25.4.2015 17.00*/
 
 	.rept NR_syscalls-(.-sys_call_table)/4
