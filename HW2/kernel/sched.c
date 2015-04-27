@@ -166,6 +166,36 @@ static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
 # define finish_arch_switch(rq)		spin_unlock_irq(&(rq)->lock)
 #endif
 
+
+/*------------------------------------------------------------------------------
+  	  	  	  	  	  	  HW2 Additions
+------------------------------------------------------------------------------*/
+
+/*******************************************************************************
+ ticks_to_ms(int ticks) - Converts the number of ticks that occured since the
+ 						  system booted to mili-seconds
+ *******************************************************************************/
+int ticks_to_ms(int ticks)
+{
+	return ((ticks * 1000) / HZ);
+}
+/*******************************************************************************
+ ms_to_ticks(int ms) - Converts the number of mili-seconds to ticks
+ *******************************************************************************/
+int ms_to_ticks(int ms)
+{
+	int ticks = (ms * HZ) / 1000;
+
+	if (((ticks * 1000) / HZ) < ms)
+	{
+		ticks += 1;
+	}
+	return ticks;
+}
+/*------------------------------------------------------------------------------
+  	  	  	  	  	  ***End of	HW2 Additions
+------------------------------------------------------------------------------*/
+
 /*
  * task_rq_lock - lock the runqueue a given task resides on and disable
  * interrupts.  Note the ordering: we can safely lookup the task_rq without
