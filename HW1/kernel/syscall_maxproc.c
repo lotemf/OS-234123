@@ -1,6 +1,5 @@
 #include <linux/kernel.h>
 #include <linux/sched.h>
-#include "syscall_maxproc.h"
 
 int sys_set_child_max_proc(int maxproc){
 	struct task_struct *curr_proc = current;

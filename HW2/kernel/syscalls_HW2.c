@@ -33,7 +33,7 @@ int sys_remaining_time(int pid){
 	task_t *p = NULL;
 	p = find_task_by_pid(pid);
 
-	time = jiffies_to_ms(REMAINING_TIME(p));
+	time = ticks_to_ms(REMAINING_TIME(p));
 	return (int)time;
 
 }

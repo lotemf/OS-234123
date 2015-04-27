@@ -121,15 +121,22 @@ extern unsigned long nr_uninterruptible(void);
 #define SCHED_RR		2
 #define SCHED_SHORT		4		/*HW2 - Lotem*/
 
-#define IS_SHORT(p) ((p)->policy == SCHED_SHORT)              /* HW2 - Alon */
-#define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->trials_counter >= (p)->requested_trials) \
-			|| (p)->time_slice == 0) ) /* HW2 - Alon */
-
 struct sched_param {
 	int sched_priority;
 	int requested_time;			/*HW2 - Lotem*/
 	int trial_num;				/*HW2 - Lotem*/
 };
+
+/*------------------------------------------------------------------------------
+ 	 	 	 	 	 	 	 * HW2	Macros	*					HW2 - Lotem
+ ------------------------------------------------------------------------------*/
+#define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
+#define REMAINING_TIME(p) (long)( (p->requested_time) - (p->used_time) )
+#define IS_SHORT(p) (p->policy == SCHED_SHORT)
+#define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
+			|| (p)->time_slice == 0) ) /* HW2 - Alon */
+ /*HW2 - Lotem*/
+
 
 struct completion;
 
@@ -574,7 +581,6 @@ extern struct exec_domain	default_exec_domain;
 	used_time:			0,							\
 	requested_trials:	0,							\
 	used_trials:		0,							\
-
 }
 
 

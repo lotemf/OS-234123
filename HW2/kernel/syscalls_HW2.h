@@ -2,20 +2,13 @@
 extern int errno;
 
 /*------------------------------------------------------------------------------
- 	 	 	 	 	 	 	 *	 Macros	*
+ 	 --Notes:
+			1.There's a big part of the code that's still missing here
+				(The part that has to do with the monitoring...)
+			2.We need to write here all of the fields of "struct switch_inf"
  ------------------------------------------------------------------------------*/
-#define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
-#define REMAINING_TIME(p) (long)( (p->requested_time) - (p->used_time) )
-#define OVERDUE_TIME(p) (REMAINING_TIME(p)*(-1))
-#define IS_SHORT(p) (p->policy == SCHED_SHORT)
-#define IS_OVERDUE(p) (IS_SHORT(p)) ? (OVERDUE_TIME(p) >= 0) : (0)
 
 
-struct sched_param {
-	int sched_priority;
-	int requested_time;			/*HW2 - Lotem*/
-	int trial_num;				/*HW2 - Lotem*/
-};
 
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 *	 The Wrappers	*
@@ -95,21 +88,21 @@ int remaining_trials(int pid){
 					Will be used for the monitoring...
  * Complexity- ???
  ******************************************************************************/
-int get_scheduling_statistics(struct switch_info * info){
-		long __res;
-		__asm__ volatile (
-		"movl $246, %%eax;"
-		"movl %1, %%ebx;"
-		"int $0x80;"
-		"movl %%eax,%0"
-		: "=m" (__res)
-		: "m" (info)
-		: "%eax","%ebx"
-		);
-		if ((unsigned long)(__res) >= (unsigned long)(-125)) {
-		errno = -(__res); __res = -1;
-		}
-		return (int)(__res);
-
-	}
-}
+//int get_scheduling_statistics(struct switch_info * info){
+//		long __res;
+//		__asm__ volatile (
+//		"movl $246, %%eax;"
+//		"movl %1, %%ebx;"
+//		"int $0x80;"
+//		"movl %%eax,%0"
+//		: "=m" (__res)
+//		: "m" (info)
+//		: "%eax","%ebx"
+//		);
+//		if ((unsigned long)(__res) >= (unsigned long)(-125)) {
+//		errno = -(__res); __res = -1;
+//		}
+//		return (int)(__res);
+//
+//	}
+//}
