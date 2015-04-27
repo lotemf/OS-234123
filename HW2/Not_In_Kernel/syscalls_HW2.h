@@ -8,7 +8,34 @@ extern int errno;
 			2.We need to write here all of the fields of "struct switch_inf"
  ------------------------------------------------------------------------------*/
 
+#include <asm/errno.h>
+extern int errno;
 
+/*------------------------------------------------------------------------------
+ 	 --Notes:
+			1.There's a big part of the code that's still missing here
+				(The part that has to do with the monitoring...)
+			2.We need to write here all of the fields of "struct switch_inf"
+ ------------------------------------------------------------------------------*/
+
+/*------------------------------------------------------------------------------
+ 	 	 	 	 	 	 	 * HW2	Macros	and param Struct*				HW2 - Lotem
+ -(For use in the Test Files...)
+ ------------------------------------------------------------------------------*/
+#define SCHED_SHORT    4
+
+#define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
+#define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
+#define IS_SHORT(p) (p->policy == SCHED_SHORT)
+#define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
+			|| (p)->time_slice == 0) ) /* HW2 - Alon */
+
+struct sched_param {
+	int sched_priority;
+	int requested_time;			/*HW2 - Lotem*/
+	int trial_num;				/*HW2 - Lotem*/
+};
+/*HW2 - Lotem*/
 
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 *	 The Wrappers	*
