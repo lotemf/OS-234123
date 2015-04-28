@@ -1087,6 +1087,13 @@ void set_user_nice(task_t *p, long nice)
 		dequeue_task(p, array);
 	p->static_prio = NICE_TO_PRIO(nice);
 	p->prio = NICE_TO_PRIO(nice);
+
+	/*************			HW2 addition   -Lotem 28.4.15 23.00			******/
+	if (IS_SHORT(p)){
+		p->prio=0;								//According to the PDF we should set the priority
+	}											//of SHORT processes to be 0
+	/*************			End of HW2 addition   -Lotem 28.4.15 23.00			******/
+
 	if (array) {
 		enqueue_task(p, array);
 		/*
@@ -1196,12 +1203,23 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 */
 	rq = task_rq_lock(p, &flags);
 
+
+	/***************************************************************************
+         HW2 - Preventing SHORT process from changing it's priority
+	 **************************************************************************/
+    if (p->policy == SCHED_SHORT) {
+    	retval = -EPERM;							// HW2 - Lotem 28.4.15 21.00
+    	goto out_unlock;
+    }
+    /***		End of HW2 Additions by Lotem			***/
+
+
 	if (policy < 0)
 		policy = p->policy;
 	else {
 		retval = -EINVAL;
 		if (policy != SCHED_FIFO && policy != SCHED_RR &&
-				policy != SCHED_OTHER)
+				policy != SCHED_OTHER  && policy != SCHED_SHORT)		// HW2 - Lotem 28.4.15 21.00
 			goto out_unlock;
 	}
 
@@ -1210,6 +1228,49 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 * 1..MAX_USER_RT_PRIO-1, valid priority for SCHED_OTHER is 0.
 	 */
 	retval = -EINVAL;
+
+
+	/*******************************************************************************
+	         HW2 - Setting the input values for a SHORT process, according to
+	         	   the HW demands
+	 *******************************************************************************/
+    if (policy == SCHED_SHORT) {
+            if ((p->uid != current->uid) && (current->uid != 0)) {				//If it's not root or if it's another user
+                    retval = -EPERM;
+                    goto out_unlock;
+            }
+            if ((lp.trial_num < 1) || (lp.trial_num > 50))
+                    goto out_unlock;											//Checking input values
+            if ((lp.requested_time <= 0)
+                            || (lp.requested_time > (5000000)))
+                    goto out_unlock;
+            current->need_resched = 1;
+//            current->reason = A_change_in_the_scheduling_parameters_of_a_task;	//Haven't added the reason for monitoring yet
+            array = p->array;
+            if (array)
+                    deactivate_task(p, task_rq(p));
+            p->requested_trials = lp.trial_num;
+            p->requested_time = ms_to_ticks(lp.requested_time);					// Converting requested time to ticks
+            int already_used_trials = p->used_trials;
+            if (!already_used_trials) {
+            	already_used_trials = 1;										//Making sure we are not dividing by zero
+            }
+            p->time_slice = ms_to_ticks(lp.requested_time)/already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
+            p->prio = 0;		/*According to the PDF...*/
+            p->policy = policy;
+            p->used_time = 0;
+            if (p->time_slice == 0) {							//Changing it to overdue...
+                    p->time_slice = 150 * HZ / 1000;
+                    p->prio = 0;
+            }
+            if (array) {
+                    activate_task(p, task_rq(p));
+            }
+            retval = 0;
+            goto out_unlock;
+    }
+    /*******				End of HW2 additions 				************/	//Lotem - 28.4.2015 - 22.00
+
 	if (lp.sched_priority < 0 || lp.sched_priority > MAX_USER_RT_PRIO-1)
 		goto out_unlock;
 	if ((policy == SCHED_OTHER) != (lp.sched_priority == 0))
@@ -1289,7 +1350,13 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 	retval = -ESRCH;
 	if (!p)
 		goto out_unlock;
-	lp.sched_priority = p->rt_priority;
+	//HW2 addition to work with new added parameters - Lotem 28.4.2015 23.00
+	if (!IS_SHORT(p)){
+		lp.sched_priority = p->rt_priority;
+	} else {
+		lp.trial_num = p->requested_trials;
+		lp.requested_time = ticks_to_ms(p->requested_time);
+	}
 	read_unlock(&tasklist_lock);
 
 	/*
