@@ -138,10 +138,9 @@ struct runqueue {
 	unsigned long nr_running, nr_switches, expired_timestamp;
 	signed long nr_uninterruptible;
 	task_t *curr, *idle;
-	prio_array_t *active, *expired, arrays[2];
-	/*Hw2 addition - adding alternative arrays for the new schedueling*/
-	prio_array_t *SHORT, *SHORT_OVERDUE, SHORTarrays[2];
-	/*Hw2 addition*/
+	//Hw2  - Lotem 29.4.15 	- Adding alternative arrays for the new schedueling policies
+	prio_array_t *active, *expired,*SHORT , *SHORT_OVERDUE, arrays[4];
+	//Hw2 addition - Lotem 29.4.15
 
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
@@ -773,8 +772,10 @@ void scheduler_tick(int user_tick, int system)
 	kstat.per_cpu_system[cpu] += system;
 
 	/* Task might have expired already, but not scheduled off yet */
-	if (p->array != rq->active) {
+	//hw2 -cz
+	if ((p->array != rq->active) && (!IS_SHORT(p))) {				//That means it must me expired
 		set_tsk_need_resched(p);
+		//todo hw2 - monitoring
 		return;
 	}
 	spin_lock(&rq->lock);
@@ -804,9 +805,25 @@ void scheduler_tick(int user_tick, int system)
 	 */
 	if (p->sleep_avg)
 		p->sleep_avg--;
-	if (!--p->time_slice) {
+
+	//HW2 - cz - start  - When a SHORT process uses all of it's time slice it becomes overdue
+	if (IS_SHORT(p)){
+		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){
+			p->used_trials++;
+			p->time_slice = (p->requested_trials)/p->used_trials;
+			if (IS_OVERDUE(p)){
+				dequeue_task(p, rq->SHORT);
+				enqueue_task(p, rq->SHORT_OVERDUE);
+			}
+			set_tsk_need_resched(p);
+		  // TODO hw2 monitoring
+		}
+	}
+	//End of HW2 -cz
+	else if (!--p->time_slice) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
+		//TODO hw2 -  monitoring		//Std Linux Code of Std process
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
 		p->time_slice = TASK_TIMESLICE(p);
@@ -872,22 +889,33 @@ pick_next_task:
 			goto pick_next_task;
 #endif
 		next = rq->idle;
+		//TODO hw2 - monitoring
 		rq->expired_timestamp = 0;
 		goto switch_tasks;
 	}
+	//HW2 - Lotem 29.4.15
+	//TODO pay attention to short/overdue arrays and not only active.
+	//TODO check what happens if a SHORT process yields the CPU
+	//TODO CHeck with YOgEv if SHORT processes run in RR without using the Expired prio_array_t
+	//TODO when a SHORT process uses it's quantum we dequeue/enqueue it to the end of the queue of the processes with the same priority
+	if (!IS_OVERDUE(p)) {								//It should get into RR
 
-	array = rq->active;
-	if (unlikely(!array->nr_active)) {
-		/*
-		 * Switch the active and expired arrays.
-		 */
-		rq->active = rq->expired;
-		rq->expired = array;
 		array = rq->active;
-		rq->expired_timestamp = 0;
+		if (unlikely(!array->nr_active)) {
+			/*
+			 * Switch the active and expired arrays.
+			 */
+			rq->active = rq->expired;
+			rq->expired = array;
+			array = rq->active;
+			rq->expired_timestamp = 0;
+		}
 	}
+	//End of HW2 additions - Lotem 29.4.15
 
 	idx = sched_find_first_bit(array->bitmap);
+
+
 	queue = array->queue + idx;
 	next = list_entry(queue->next, task_t, run_list);
 
