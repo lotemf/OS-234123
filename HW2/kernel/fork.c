@@ -742,12 +742,15 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (IS_SHORT(current)) {  // HW2 - Alon
 		p->policy = current->policy;
 		if (!IS_OVERDUE(current)) {
+			int left_trials = current->requested_trials - current->used_trials;
 			p->static_prio = current->static_prio;
-			p->requested_time =  (current->requested_trials + 1) >> 1;
-			current->requested_trials >>= 1;
+			p->requested_trials = (left_trials + 1) >> 1;
+			current->used_trials += left_trials/2;
+			p->used_trials = 1;
 		}
 		else {
-			p->static_prio = // some default value
+			p->requested_trials = current->requested_trials;
+			p->used_trials = p->requested_trials;
 		}
 	}
 	__restore_flags(flags);
