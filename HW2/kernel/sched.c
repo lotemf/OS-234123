@@ -773,7 +773,7 @@ void scheduler_tick(int user_tick, int system)
 
 	/* Task might have expired already, but not scheduled off yet */
 	//hw2 -cz
-	if ((p->array != rq->active) && (!IS_SHORT(p))) {				//That means it must me expired
+	if ((p->array != rq->active) && (!IS_SHORT(p))) {				//That means it must be expired
 		set_tsk_need_resched(p);
 		//todo hw2 - monitoring
 		return;
@@ -806,21 +806,37 @@ void scheduler_tick(int user_tick, int system)
 	if (p->sleep_avg)
 		p->sleep_avg--;
 
-	//HW2 - cz - start  - When a SHORT process uses all of it's time slice it becomes overdue
+	/***************************************************************************
+	 * 	HW2 Lotem -   -- Main change of the Schedueling Policy --
+
+	 	 1 - We first check if a SHORT process is indeed SHORT and not OVERDUE
+	 	     then we calculate it's new TimeSlice and Used Trials
+	 	     (**If the process is OVERDUE we DO NOTHING! - because it's FIFO)
+
+	 	 2 - If the next  TimeSlice is 0 or the Used Trials are at max value,
+	 	     we dequeue it from SHORT prio_array_t and move it to SHORT_OVERDUE
+	 	     and we change it's prio to 0 (all OVERDUE processes have same prio)
+
+	 	 3 - If it's still a SHORT process after the changes we dequeue and enqueue
+	 	     in the SHORT prio array, as in RR policy with it's new TimeSlice
+	 **************************************************************************/
 	if (IS_SHORT(p)){
-		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){
+		if ((!IS_OVERDUE(p)) && (--p->time_slice)){		//1
 			p->used_trials++;
-			p->time_slice = (p->requested_trials)/p->used_trials;
-			if (IS_OVERDUE(p)){
-				dequeue_task(p, rq->SHORT);
-				enqueue_task(p, rq->SHORT_OVERDUE);
-			}
+			p->time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
+			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
+			if (IS_OVERDUE(p)){							//2
+				p->prio = 0;
+				enqueue_task(p, rq->SHORT_OVERDUE);
+			}else {
+				enqueue_task(p, rq->SHORT);				//3
+			}
 		  // TODO hw2 monitoring
 		}
-	}
-	//End of HW2 -cz
-	else if (!--p->time_slice) {
+	/*************      End of HW2 Lotem  - 30.4.2015     	*******************/
+
+	} else if (!--p->time_slice) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
 		//TODO hw2 -  monitoring		//Std Linux Code of Std process
@@ -893,13 +909,8 @@ pick_next_task:
 		rq->expired_timestamp = 0;
 		goto switch_tasks;
 	}
-	//HW2 - Lotem 29.4.15
-	//TODO pay attention to short/overdue arrays and not only active.
-	//TODO check what happens if a SHORT process yields the CPU
-	//TODO CHeck with YOgEv if SHORT processes run in RR without using the Expired prio_array_t
-	//TODO when a SHORT process uses it's quantum we dequeue/enqueue it to the end of the queue of the processes with the same priority
-	if (!IS_OVERDUE(p)) {								//It should get into RR
-
+	//HW2 - Lotem 30.4.15
+	if (((rq->active)->nr_active || (rq->expired)->nr_active)) {		//There are SCHED_OTHER processes in the system
 		array = rq->active;
 		if (unlikely(!array->nr_active)) {
 			/*
@@ -911,10 +922,30 @@ pick_next_task:
 			rq->expired_timestamp = 0;
 		}
 	}
-	//End of HW2 additions - Lotem 29.4.15
 
+ 	/***************************************************************************
+ 	* HW2 - Lotem 30.4.15 - Priority Check according to the PDF
+ 	*
+	//1 - If the prio isn't Real-Time, search next SCHED_SHORT
+	//2 - If there are no SCHED_SHORT processes, search next SCHED_OTHER
+	//3 - If there are no SCHED_OTHER processes, search next SHORT_OVERDUE
+	//4 - Only if the array isn't rq->active we need a new idx calculation
+	*     from SHORT or SHORT_OVERDUE
+ 	***************************************************************************/
 	idx = sched_find_first_bit(array->bitmap);
-
+    if (idx > MAX_RT_PRIO) {                	//1
+        if (!(rq->SHORT)->nr_active) {			//2
+           if (unlikely(!array->nr_active)) {	//3
+        	   array = rq->SHORT_OVERDUE;
+           }
+        } else {
+        	array = rq->SHORT;
+        }
+        if (array != rq->active){				//4
+        	idx = sched_find_first_bit(array->bitmap);
+        }
+    }
+	/*************      End of HW2 Lotem  - 30.4.2015     	*******************/
 
 	queue = array->queue + idx;
 	next = list_entry(queue->next, task_t, run_list);
@@ -1117,9 +1148,9 @@ void set_user_nice(task_t *p, long nice)
 	p->prio = NICE_TO_PRIO(nice);
 
 	/*************			HW2 addition   -Lotem 28.4.15 23.00			******/
-	if (IS_SHORT(p)){
+	if (IS_OVERDUE(p)){
 		p->prio=0;								//According to the PDF we should set the priority
-	}											//of SHORT processes to be 0
+	}											//of SHORT_OVERDUE processes to be 0
 	/*************			End of HW2 addition   -Lotem 28.4.15 23.00			******/
 
 	if (array) {
@@ -1284,11 +1315,9 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
             	already_used_trials = 1;										//Making sure we are not dividing by zero
             }
             p->time_slice = ms_to_ticks(lp.requested_time)/already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
-            p->prio = 0;		/*According to the PDF...*/
+            p->prio = p->static_prio;		/*According to the PDF...*/
             p->policy = policy;
-            p->used_time = 0;
-            if (p->time_slice == 0) {							//Changing it to overdue...
-                    p->time_slice = 150 * HZ / 1000;
+            if (IS_OVERDUE(p)) {												//Changing it to overdue...
                     p->prio = 0;
             }
             if (array) {
@@ -1752,10 +1781,12 @@ void __init sched_init(void)
 		rq = cpu_rq(i);
 		rq->active = rq->arrays;
 		rq->expired = rq->arrays + 1;
+		rq->SHORT = rq-> arrays + 2;				//HW2 - Lotem - 30.4.15
+		rq->SHORT_OVERDUE = rq-> arrays +3;			//HW2 - Lotem - 30.4.15
 		spin_lock_init(&rq->lock);
 		INIT_LIST_HEAD(&rq->migration_queue);
 
-		for (j = 0; j < 2; j++) {
+		for (j = 0; j < 4; j++) {					//HW2 - Lotem - 30.4.15
 			array = rq->arrays + j;
 			for (k = 0; k < MAX_PRIO; k++) {
 				INIT_LIST_HEAD(array->queue + k);

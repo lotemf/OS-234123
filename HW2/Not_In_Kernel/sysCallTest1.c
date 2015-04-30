@@ -59,9 +59,9 @@ void testMakeShort()
         assert(param.trial_num == expected_trial_num);
         int i;
         doMediumTask();
-        assert(sched_getparam(thisId, &param) == 0);			//This means getparam worked...
-        int afterTime = remaining_time(thisId);
-        assert(afterTime > 0);
+//        assert(sched_getparam(thisId, &param) == 0);			//This means getparam worked...
+//        int afterTime = remaining_time(thisId);
+//        assert(afterTime > 0);
 //        printf("The amount of time remaining is %d \n",afterTime);
 //        assert(afterTime < expected_requested_time);						//Can't check this yet...
 //        int usedTrials = param.trial_num 																	//there is still all the work to be done in schedule() function
