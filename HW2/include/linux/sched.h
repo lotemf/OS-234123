@@ -135,8 +135,77 @@ struct sched_param {
 #define IS_RT(p) ((p->policy==(SCHED_FIFO)) || (p->policy==(SCHED_RR)))
 #define IS_SHORT(p) (p->policy == SCHED_SHORT)
 #define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
-			|| (p)->time_slice == 0) ) /* HW2 - Alon */
- /*HW2 - Lotem*/
+			|| (p)->time_slice == 0) ) /* HW2 - Alon */ /*HW2 - Lotem*/
+
+/* hw2 - cz - adding monitoring defines and macros*/
+
+#define TOTAL_MAX_TO_MONITOR 	150
+#define PROCESS_MAX_TO_MONITOR	30
+
+//macro to update switching info struct with some data
+#define UPDATE_SWITCH_INFO_STRUCT(info_struct,prevPid,nextPid,prevPolicy,nextPolicy,Time,Reason)\
+{\
+        info_struct->previous_pid = prevPid;\
+        info_struct->next_pid = nextPid;\
+        info_struct->previous_policy = prevPolicy;\
+        info_struct-> next_policy = nextPolicy;\
+        info_struct->  time = Time;\
+        info_struct-> reason = Reason;\
+}
+
+//macro to copy switch_info struct
+#define COPY_SWITCH_INFO_STRUCT(target, source) \
+        target.time = source.time;      \
+        target.previous_pid = source.previous_pid;      \
+        target.previous_policy = source.previous_policy;        \
+        target.next_pid = source.next_pid;      \
+        target.next_policy = source.next_policy;        \
+        target.reason = source.reason;
+
+//macro to increase index of recorded switching events,
+//	% is in order to provide o(1) solution for sys get stats
+#define INC_RECORD_IDX(rq)\
+		{\
+			if (rq->record_idx == TOTAL_MAX_TO_MONITOR-1){\
+				rq->is_round_completed_flag = 1;\
+			}\
+			rq->record_idx = (rq->record_idx + 1) % TOTAL_MAX_TO_MONITOR;\
+		}
+
+//no need for macro - will do this check in code
+//macro to increase switching events counter - for process
+//#define INC_EVENTS_COUNT(rq)\
+//		{\
+//			if (rq->p_events_counter < PROCESS_MAX_TO_MONITOR){\
+//				rq->p_events_counter++;\
+//			}\
+//		}
+
+/* hw2 - cz - end of monitoring defines and macros */
+
+/* hw2 - cz - adding monitoring structs */
+typdef enum{
+	//Default, - TODO cz not sure why yoav added default
+	A_task_was_created,
+	A_task_ended,
+	A_task_yields_the_CPU,
+	A_SHORT_process_became_overdue,
+	A_previous_task_goes_out_for_waiting,
+	A_task_with_higher_priority_returns_from_waiting,
+	The_time_slice_of_the_previous_task_has_ended
+} switching_reason;
+
+typedef struct switch_info {
+	int previous_pid;
+    int next_pid;
+    int previous_policy;
+    int next_policy;
+    unsigned long time;
+    int reason;
+} switch_info_t;
+/*hw2 - cz - end of monitoring structs*/
+
+
 
 
 struct completion;
@@ -472,6 +541,8 @@ struct task_struct {
 	int requested_trials;
 	int used_trials;
 			/*Maybe additional fields are required...*/
+//hw2 -cz - monitoring field - reason of event switching
+	switching_reason reason;
 };
 
 /*
@@ -577,11 +648,13 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
+
 	requested_time:		0,							\
 	requested_trials:	0,							\
 	used_trials:		0,							\
+	reason:				0,							\
 }
-
+//hw2 - cz - value 0 for reason is DEFAULT
 
 #ifndef INIT_TASK_SIZE
 # define INIT_TASK_SIZE	2048*sizeof(long)

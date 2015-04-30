@@ -140,11 +140,17 @@ struct runqueue {
 	task_t *curr, *idle;
 	//Hw2  - Lotem 29.4.15 	- Adding alternative arrays for the new schedueling policies
 	prio_array_t *active, *expired,*SHORT , *SHORT_OVERDUE, arrays[4];
-	//Hw2 addition - Lotem 29.4.15
 
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
 	list_t migration_queue;
+
+	//hw2 - cz - monitoring member fields
+	switch_info_t record_array[TOTAL_MAX_TO_MONITOR]; //recorded array
+	int record_idx;	//index for recording array, holds the next available idx in record arr to write- init to 0
+	int p_events_count; //counter of the process switching events - init to 0
+	int is_round_completed_flag;//flag for sys_get_stats -init to 0
+
 } ____cacheline_aligned;
 
 static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
@@ -153,7 +159,8 @@ static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
 #define this_rq()		cpu_rq(smp_processor_id())
 #define task_rq(p)		cpu_rq((p)->cpu)
 #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
-#define rt_task(p)		((p)->prio < MAX_RT_PRIO)
+//hw2 - cz - added policy check to the RT process macro
+#define rt_task(p)		(((p)->prio < MAX_RT_PRIO) && ((p)->policy != SCHED_SHORT))
 
 /*
  * Default context-switch locking:
@@ -1795,6 +1802,14 @@ void __init sched_init(void)
 			// delimiter for bitsearch
 			__set_bit(MAX_PRIO, array->bitmap);
 		}
+		//hw2 - cz - init monitoring fields
+		rq->record_idx = 0;
+		rq->p_events_count = 0;
+		rq->is_round_completed = 0;
+		for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
+			UPDATE_SWITCH_INFO_STRUCT(rq->record_array[idx],0,0,0,0,0,0);
+		}
+		//hw2 - cz - end of monitoring fields init
 	}
 	/*
 	 * We have to do a little magic to get the first
