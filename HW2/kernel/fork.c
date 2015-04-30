@@ -744,9 +744,17 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		if (!IS_OVERDUE(current)) {
 			int left_trials = current->requested_trials - current->used_trials;
 			p->static_prio = current->static_prio;
-			p->requested_trials = (left_trials + 1) >> 1;
-			current->used_trials += left_trials/2;
-			p->used_trials = 1;
+			if(left_trials > 1) {
+				p->requested_trials = (left_trials + 1) >> 1;
+				current->requested_trials -= (left_trials/2 + 1);
+			}//if it's the last trial of the father, than the father lose his trial and it becomes the son's
+			else {
+				p->requested_trials = 1;
+				--current->requested_trials; //now the father is overdue
+				dequeue_task(current, rq->SHORT);
+				enqueue_task(current, rq->SHORT_OVERDUE);
+			}
+			p->used_trials = 0;
 		}
 		else {
 			p->requested_trials = current->requested_trials;
