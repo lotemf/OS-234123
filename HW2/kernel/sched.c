@@ -828,7 +828,7 @@ void scheduler_tick(int user_tick, int system)
 	 	     in the SHORT prio array, as in RR policy with it's new TimeSlice
 	 **************************************************************************/
 	if (IS_SHORT(p)){
-		if ((!IS_OVERDUE(p)) && (--p->time_slice)){		//1
+		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
 			p->time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
 			dequeue_task(p, rq->SHORT);
