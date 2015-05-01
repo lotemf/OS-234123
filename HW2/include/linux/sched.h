@@ -132,7 +132,6 @@ struct sched_param {
  ------------------------------------------------------------------------------*/
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
 #define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
-#define IS_RT(p) ((p->policy==(SCHED_FIFO)) || (p->policy==(SCHED_RR)))
 #define IS_SHORT(p) (p->policy == SCHED_SHORT)
 #define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
 			|| (p)->time_slice == 0) ) /* HW2 - Alon */ /*HW2 - Lotem*/

@@ -138,8 +138,8 @@ struct runqueue {
 	unsigned long nr_running, nr_switches, expired_timestamp;
 	signed long nr_uninterruptible;
 	task_t *curr, *idle;
-	//Hw2  - Lotem 29.4.15 	- Adding alternative arrays for the new schedueling policies
-	prio_array_t *active, *expired,*SHORT , *SHORT_OVERDUE, arrays[4];
+
+	prio_array_t *active, *expired,*SHORT , *SHORT_OVERDUE, arrays[4]; 	//Hw2 addition - Lotem 29.4.15
 
 	int prev_nr_running[NR_CPUS];
 	task_t *migration_thread;
@@ -159,8 +159,10 @@ static struct runqueue runqueues[NR_CPUS] __cacheline_aligned;
 #define this_rq()		cpu_rq(smp_processor_id())
 #define task_rq(p)		cpu_rq((p)->cpu)
 #define cpu_curr(cpu)		(cpu_rq(cpu)->curr)
-//hw2 - cz - added policy check to the RT process macro
-#define rt_task(p)		(((p)->prio < MAX_RT_PRIO) && ((p)->policy != SCHED_SHORT))
+
+#define rt_task(p)		 (((p)->prio < MAX_RT_PRIO) && ((p)->policy != SCHED_SHORT))		//HW2 - Lotem - 30.4.15
+
+
 
 /*
  * Default context-switch locking:
@@ -310,19 +312,36 @@ static inline void activate_task(task_t *p, runqueue_t *rq)
 	unsigned long sleep_time = jiffies - p->sleep_timestamp;
 	prio_array_t *array = rq->active;
 
-	if (!rt_task(p) && sleep_time) {
-		/*
-		 * This code gives a bonus to interactive tasks. We update
-		 * an 'average sleep time' value here, based on
-		 * sleep_timestamp. The more time a task spends sleeping,
-		 * the higher the average gets - and the higher the priority
-		 * boost gets as well.
-		 */
-		p->sleep_avg += sleep_time;
-		if (p->sleep_avg > MAX_SLEEP_AVG)
-			p->sleep_avg = MAX_SLEEP_AVG;
-		p->prio = effective_prio(p);
-	}
+	//HW2 - Lotem 30.4.15
+	if (!IS_SHORT(p)) {
+		if (!rt_task(p) && sleep_time) {							//We don't have interactive SHORT processes, so we don't need to grant them a bonus
+			/*
+			 * This code gives a bonus to interactive tasks. We update
+			 * an 'average sleep time' value here, based on
+			 * sleep_timestamp. The more time a task spends sleeping,
+			 * the higher the average gets - and the higher the priority
+			 * boost gets as well.
+			 */
+			p->sleep_avg += sleep_time;
+			if (p->sleep_avg > MAX_SLEEP_AVG)
+				p->sleep_avg = MAX_SLEEP_AVG;
+			p->prio = effective_prio(p);
+		}
+		/***********************************************************************
+		 *  HW2  - Making sure no dynamic prio calculation is done for SHORT processes
+		 *  	   //1 - When a SHORT process is activated we only add it to the correct rq
+		 **********************************************************************/
+	} else {											//HW2 - Lotem 30.4.15
+             array = rq->SHORT;
+             if (IS_OVERDUE(p)) {
+                     array = rq->SHORT_OVERDUE;
+                     p->prio = MAX_PRIO;
+             } else {
+                     p->prio = p->static_prio;	//1
+             }
+    }
+	/***********				 End of HW2 additions					******/  //HW2 - Lotem 30.4.15
+
 	enqueue_task(p, array);
 	rq->nr_running++;
 }
@@ -429,9 +448,25 @@ repeat_lock_task:
 		/*
 		 * If sync is set, a resched_task() is a NOOP
 		 */
-		if (p->prio < rq->curr->prio)
-			resched_task(rq->curr);
-		success = 1;
+
+		/********************		HW2 - Lotem 30.4.15		*******************
+		* We need to check specifically for SHORT processes, because we don't want OTHER
+		* processes to call resched_task, because there is no need for a switch
+		*
+		* So when do we need to call resched_task ?
+		//1 - If it's a Real-Time process, or the current running process isn't SHORT (so it's SCHED_OTHER)
+		//2 - If both of the processes are SHORT
+		// *Notice: if it's a SHORT_OVERDUE process we don't care because they have same prio
+		***********************************************************************/
+			if (p->prio < rq->curr->prio){
+				if ((rt_task(p)) || (!IS_SHORT(rq->curr))){	//1
+					resched_task(rq->curr);
+				} else if (IS_SHORT(p)){					//2
+					resched_task(rq->curr);
+				}
+			}
+		/********		End of HW2 Additions - Lotem 30.4.15		********/
+			success = 1;
 	}
 	p->state = TASK_RUNNING;
 	task_rq_unlock(rq, &flags);
@@ -449,7 +484,13 @@ void wake_up_forked_process(task_t * p)
 	runqueue_t *rq = this_rq_lock();
 
 	p->state = TASK_RUNNING;
-	if (!rt_task(p)) {
+	/*HW2 - Lotem 30.4.15*/
+	if (IS_OVERDUE(p)){
+		p->prio = 0;
+	} else if (IS_SHORT(p)){
+		p->prio = p->static_prio;
+	/*End of HW2 Additions - Lotem 30.4.15*/
+	} else if (!rt_task(p)) {
 		/*
 		 * We decrease the sleep average of forking parents
 		 * and children as well, to keep max-interactive tasks
@@ -847,7 +888,7 @@ void scheduler_tick(int user_tick, int system)
 			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
 			if (IS_OVERDUE(p)){							//2
-				p->prio = 0;
+				p->prio = MAX_PRIO;
 				enqueue_task(p, rq->SHORT_OVERDUE);
 			}else {
 				enqueue_task(p, rq->SHORT);				//3
@@ -1221,8 +1262,8 @@ void set_user_nice(task_t *p, long nice)
 
 	/*************			HW2 addition   -Lotem 28.4.15 23.00			******/
 	if (IS_OVERDUE(p)){
-		p->prio=0;								//According to the PDF we should set the priority
-	}											//of SHORT_OVERDUE processes to be 0
+		p->prio=MAX_PRIO;						//According to the PDF we should set the priority
+	}											//of SHORT_OVERDUE processes to be the same
 	/*************			End of HW2 addition   -Lotem 28.4.15 23.00			******/
 
 	if (array) {
@@ -1370,11 +1411,15 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
                     retval = -EPERM;
                     goto out_unlock;
             }
-            if ((lp.trial_num < 1) || (lp.trial_num > 50))
-                    goto out_unlock;											//Checking input values
-            if ((lp.requested_time <= 0)
-                            || (lp.requested_time > (5000000)))
-                    goto out_unlock;
+         /*TEST*/printk("The Trial Number from input is: %d\n",lp.trial_num);	/*TEST*/
+            if ((lp.trial_num < 1) || (lp.trial_num > 50)){
+        /*TEST*/printk("BAD_INPUT - Trial Number\n");	/*TEST*/
+            	goto out_unlock;											//Checking input values
+            }
+            if ((lp.requested_time <= 0) || (lp.requested_time > (5000000))){
+        /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
+            	goto out_unlock;
+            }
             current->need_resched = 1;
 //            current->reason = A_change_in_the_scheduling_parameters_of_a_task;	//Haven't added the reason for monitoring yet
             array = p->array;
@@ -1390,7 +1435,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
             p->prio = p->static_prio;		/*According to the PDF...*/
             p->policy = policy;
             if (IS_OVERDUE(p)) {												//Changing it to overdue...
-                    p->prio = 0;
+                    p->prio = MAX_PRIO;
             }
             if (array) {
                     activate_task(p, task_rq(p));
@@ -1605,7 +1650,10 @@ asmlinkage long sys_sched_yield(void)
 	prio_array_t *array = current->array;
 	int i;
 
-	if (unlikely(rt_task(current))) {
+	/*HW2 - Lotem - SHORT (and SHORT_OVERDUE) processes use only one LList like
+	 RT processes so if they yield the CPU we just dequeue/enqueue them to the back of the list*/
+
+	if (unlikely(rt_task(current)) || IS_SHORT(current)) {				//HW2 - Lotem 1.5.15
 		list_del(&current->run_list);
 		list_add_tail(&current->run_list, array->queue + current->prio);
 		goto out_unlock;
@@ -1649,6 +1697,9 @@ asmlinkage long sys_sched_get_priority_max(int policy)
 	case SCHED_OTHER:
 		ret = 0;
 		break;
+    case SCHED_SHORT:                              //HW2 - Lotem 1.5.15
+        ret = 0;
+        break;
 	}
 	return ret;
 }
@@ -1664,6 +1715,9 @@ asmlinkage long sys_sched_get_priority_min(int policy)
 		break;
 	case SCHED_OTHER:
 		ret = 0;
+    case SCHED_SHORT:                              //HW2 - Lotem 1.5.15
+         ret = 0;
+         break;
 	}
 	return ret;
 }
