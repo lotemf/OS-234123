@@ -141,17 +141,6 @@ struct sched_param {
 #define TOTAL_MAX_TO_MONITOR 	150
 #define PROCESS_MAX_TO_MONITOR	30
 
-//macro to update switching info struct with some data
-#define UPDATE_SWITCH_INFO_STRUCT(info_struct,prevPid,nextPid,prevPolicy,nextPolicy,Time,Reason)\
-{\
-        info_struct->previous_pid = prevPid;\
-        info_struct->next_pid = nextPid;\
-        info_struct->previous_policy = prevPolicy;\
-        info_struct-> next_policy = nextPolicy;\
-        info_struct->  time = Time;\
-        info_struct-> reason = Reason;\
-}
-
 //macro to copy switch_info struct
 #define COPY_SWITCH_INFO_STRUCT(target, source) \
         target.time = source.time;      \
@@ -196,6 +185,10 @@ typedef struct switch_info {
 
 /*hw2 - cz - monitoring functions */
 void zero_switching_events_count();
+
+void update_switch_info_struct(switch_info_t* info,int pr_pid,
+				int nxt_pid, int pr_pol, int nxt_pol, int time, int reason);
+
 /*hw2 - cz - end of monitoring functions*/
 
 struct completion;
