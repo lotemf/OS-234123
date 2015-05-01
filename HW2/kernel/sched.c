@@ -198,6 +198,19 @@ int ms_to_ticks(int ms)
 	}
 	return ticks;
 }
+/**
+ * hw2 - cz -monitoring function
+ * zero_switching_events_count method provides interrupt safety operation of zeroing the events counter
+ * this must be added to prevent situation of not recording an event due to interrupt
+ */
+void zero_switching_events_count(){
+	unsigned long flags;
+	runqueue_t* rq = this_rq();
+	local_irq_save(flags); //lock
+	rq->p_events_count = 0;
+	local_irq_restore(flags); //unlock
+}
+
 /*------------------------------------------------------------------------------
   	  	  	  	  	  ***End of	HW2 Additions
 ------------------------------------------------------------------------------*/
