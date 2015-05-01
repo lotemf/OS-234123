@@ -1,22 +1,15 @@
 #include <asm/errno.h>
 extern int errno;
 
-/*------------------------------------------------------------------------------
- 	 --Notes:
-			1.There's a big part of the code that's still missing here
-				(The part that has to do with the monitoring...)
-			2.We need to write here all of the fields of "struct switch_inf"
- ------------------------------------------------------------------------------*/
-
-#include <asm/errno.h>
-extern int errno;
-
-/*------------------------------------------------------------------------------
- 	 --Notes:
-			1.There's a big part of the code that's still missing here
-				(The part that has to do with the monitoring...)
-			2.We need to write here all of the fields of "struct switch_inf"
- ------------------------------------------------------------------------------*/
+// switch info struct for monitoring
+typedef struct switch_info {
+	int previous_pid;
+    int next_pid;
+    int previous_policy;
+    int next_policy;
+    unsigned long time;
+    int reason;
+} switch_info_t;
 
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 * HW2	Macros	and param Struct*				HW2 - Lotem
@@ -112,24 +105,23 @@ int remaining_trials(int pid){
 }
 /*******************************************************************************
  * get_scheduling_statistics(struct switch_info * tasks_info) -
-					Will be used for the monitoring...
- * Complexity- ???
+ * Complexity- o(1)
  ******************************************************************************/
-//int get_scheduling_statistics(struct switch_info * info){
-//		long __res;
-//		__asm__ volatile (
-//		"movl $246, %%eax;"
-//		"movl %1, %%ebx;"
-//		"int $0x80;"
-//		"movl %%eax,%0"
-//		: "=m" (__res)
-//		: "m" (info)
-//		: "%eax","%ebx"
-//		);
-//		if ((unsigned long)(__res) >= (unsigned long)(-125)) {
-//		errno = -(__res); __res = -1;
-//		}
-//		return (int)(__res);
-//
-//	}
-//}
+int get_scheduling_statistics(struct switch_info * info){
+		long __res;
+		__asm__ volatile (
+		"movl $246, %%eax;"
+		"movl %1, %%ebx;"
+		"int $0x80;"
+		"movl %%eax,%0"
+		: "=m" (__res)
+		: "m" (info)
+		: "%eax","%ebx"
+		);
+		if ((unsigned long)(__res) >= (unsigned long)(-125)) {
+		errno = -(__res); __res = -1;
+		}
+		return (int)(__res);
+
+	}
+}
