@@ -171,21 +171,11 @@ struct sched_param {
 			}\
 			rq->record_idx = (rq->record_idx + 1) % TOTAL_MAX_TO_MONITOR;\
 		}
-
-//no need for macro - will do this check in code
-//macro to increase switching events counter - for process
-//#define INC_EVENTS_COUNT(rq)\
-//		{\
-//			if (rq->p_events_counter < PROCESS_MAX_TO_MONITOR){\
-//				rq->p_events_counter++;\
-//			}\
-//		}
-
 /* hw2 - cz - end of monitoring defines and macros */
 
 /* hw2 - cz - adding monitoring structs */
 typdef enum{
-	//Default, - TODO cz not sure why yoav added default
+	Default, //- TODO cz not sure why yoav added default
 	A_task_was_created,
 	A_task_ended,
 	A_task_yields_the_CPU,
