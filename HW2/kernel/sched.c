@@ -965,6 +965,22 @@ switch_tasks:
 		rq->nr_switches++;
 		rq->curr = next;
 	
+//hw2 - cz - context switch event happening, lets record!
+		if (rq->p_events_count < PROCESS_MAX_TO_MONITOR){
+			UPDATE_SWITCH_INFO_STRUCT(
+						rq->record_array[rq->record_idx],
+						prev->pid,
+						next->pid,
+						prev->policy,
+						next->policy,
+						jiffies,
+						prev->reason;)
+			rq->p_events_count--;
+			INC_RECORD_IDX(rq);
+		}
+
+
+//hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);
 		prev = context_switch(prev, next);
 		barrier();
@@ -1844,7 +1860,7 @@ void __init sched_init(void)
 		//hw2 - cz - init monitoring fields
 		rq->record_idx = 0;
 		rq->p_events_count = 0;
-		rq->is_round_completed = 0;
+		rq->is_round_completed_flag = 0;
 		for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
 			UPDATE_SWITCH_INFO_STRUCT(rq->record_array[idx],0,0,0,0,0,0);
 		}
