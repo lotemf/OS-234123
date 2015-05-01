@@ -1,7 +1,7 @@
 #include <asm/errno.h>
 extern int errno;
 
-// switch info struct for monitoring
+// hw2 - cz - switch info struct for monitoring
 typedef struct switch_info {
 	int previous_pid;
     int next_pid;
@@ -12,8 +12,8 @@ typedef struct switch_info {
 } switch_info_t;
 
 /*------------------------------------------------------------------------------
- 	 	 	 	 	 	 	 * HW2	Macros	and param Struct*				HW2 - Lotem
- -(For use in the Test Files...)
+* HW2	Macros	and param Struct
+* HW2 - Lotem
  ------------------------------------------------------------------------------*/
 #define SCHED_SHORT    4
 

@@ -979,6 +979,45 @@ switch_tasks:
 		goto need_resched;
 }
 
+//hw2 - cz - adding sys_get_scheduling_statistic sys call
+//this sys call returns an array of tasks info, sorted from the oldest to newest switch info events
+int sys_get_scheduling_statistic(switch_info_t* tasks_info){
+	unsigned long flags;
+	runqueue_t *rq;
+	int idx;
+	int actual_idx = rq->record_idx;
+	int result = 0;
+
+	if (!tasks_info) {
+		return -EINVAL;
+	}
+
+	local_irq_save(flags);
+    rq = this_rq();
+    switch_info_t returned_record[TOTAL_MAX_TO_MONITOR];
+
+    if (rq->is_round_completed_flag){
+    	for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
+    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], rq->record_array[actual_idx]);
+    		if (++actual_idx == TOTAL_MAX_TO_MONITOR){
+    			actual_idx = 0;
+    		}
+    		result++;
+    	}
+    } else{
+    	for (idx = actual_idx - 1; idx >= 0; idx--){
+    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], rq->record_array[actual_idx]);
+    		result++;
+    	}
+    }
+    if (copy_to_user(tasks_info, returned_record, sizeof(struct switch_info[TOTAL_MAX_TO_MONITOR]))) {
+             return -EFAULT;
+     }
+     return result;
+}
+
+
+
 /*
  * The core wakeup function.  Non-exclusive wakeups (nr_exclusive == 0) just
  * wake everything up.  If it's an exclusive wakeup (nr_exclusive == small +ve
