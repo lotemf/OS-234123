@@ -202,7 +202,7 @@ int ms_to_ticks(int ms)
 }
 /**
  * hw2 - cz -monitoring function
- * zero_switching_events_count method provides interrupt safety operation of zeroing the events counter
+ * ` method provides interrupt safety operation of zeroing the events counter
  * this must be added to prevent situation of not recording an event due to interrupt
  */
 void zero_switching_events_count(){
@@ -211,6 +211,15 @@ void zero_switching_events_count(){
 	local_irq_save(flags); //lock
 	rq->p_events_count = 0;
 	local_irq_restore(flags); //unlock
+}
+void update_switch_info_struct(switch_info_t* info,int pr_pid,
+				int nxt_pid, int pr_pol, int nxt_pol, int time, int reason){
+	info->previous_pid = pr_pid;
+    info->next_pid = nxt_pid;
+	info->previous_policy = pr_pol;
+	info->next_policy = nxt_pol;
+	info->time = time;
+	info->reason = reason;
 }
 
 /*------------------------------------------------------------------------------
@@ -1020,14 +1029,7 @@ switch_tasks:
 		rq->curr = next;
 //hw2 - cz - context switch event happening, lets record!
 		if (rq->p_events_count < PROCESS_MAX_TO_MONITOR){
-			UPDATE_SWITCH_INFO_STRUCT(
-						rq->record_array[rq->record_idx],
-						prev->pid,
-						next->pid,
-						prev->policy,
-						next->policy,
-						jiffies,
-						prev->reason;)
+			update_switch_info_struct(&(rq->record_array[rq->record_idx]),prev->pid,next->pid,prev->policy,next->policy,jiffies,prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
 		}
@@ -1899,7 +1901,7 @@ extern void immediate_bh(void);
 void __init sched_init(void)
 {
 	runqueue_t *rq;
-	int i, j, k;
+	int i, j, k, idx;
 
 	for (i = 0; i < NR_CPUS; i++) {
 		prio_array_t *array;
@@ -1926,7 +1928,7 @@ void __init sched_init(void)
 		rq->p_events_count = 0;
 		rq->is_round_completed_flag = 0;
 		for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
-			UPDATE_SWITCH_INFO_STRUCT(rq->record_array[idx],0,0,0,0,0,0);
+			update_switch_info_struct(&(rq->record_array[idx]),0,0,0,0,0,0);
 		}
 		//hw2 - cz - end of monitoring fields init
 	}
