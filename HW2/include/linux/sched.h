@@ -196,13 +196,7 @@ typedef struct switch_info {
 /*hw2 - cz - end of monitoring structs*/
 
 /*hw2 - cz - monitoring functions */
-void zero_switching_events_count(){
-	unsigned long flags;
-	runqueue_t* rq = this_rq();
-	local_irq_save(flags); //lock
-	rq->p_events_count = 0;                  //Hw2-yoav
-	local_irq_restore(flags); //unlock
-}
+void zero_switching_events_count();
 /*hw2 - cz - end of monitoring functions*/
 
 
