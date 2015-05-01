@@ -964,7 +964,6 @@ switch_tasks:
 	if (likely(prev != next)) {
 		rq->nr_switches++;
 		rq->curr = next;
-	
 //hw2 - cz - context switch event happening, lets record!
 		if (rq->p_events_count < PROCESS_MAX_TO_MONITOR){
 			UPDATE_SWITCH_INFO_STRUCT(
@@ -978,8 +977,6 @@ switch_tasks:
 			rq->p_events_count--;
 			INC_RECORD_IDX(rq);
 		}
-
-
 //hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);
 		prev = context_switch(prev, next);
