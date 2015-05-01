@@ -752,6 +752,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 				p->requested_trials = 1;
 				--current->requested_trials; //now the father is overdue
 				dequeue_task(current, rq->SHORT);
+				current->prio = 0;
 				enqueue_task(current, rq->SHORT_OVERDUE);
 			}
 			p->used_trials = 0;
