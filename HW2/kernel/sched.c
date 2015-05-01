@@ -974,7 +974,7 @@ switch_tasks:
 						next->policy,
 						jiffies,
 						prev->reason;)
-			rq->p_events_count--;
+			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
 		}
 //hw2 - cz - end of recording/monitoring additions

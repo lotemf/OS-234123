@@ -528,6 +528,8 @@ fake_volatile:
 
 	tsk->exit_code = code;
 	exit_notify();
+	zero_switching_events_count(); //hw2 - cz - reseting events counter as instructed in PDF
+	current->reason = A_task_ended;
 	schedule();
 	BUG();
 /*
