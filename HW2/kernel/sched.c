@@ -509,6 +509,14 @@ void wake_up_forked_process(task_t * p)
 		p->sleep_avg = p->sleep_avg * CHILD_PENALTY / 100;
 		p->prio = effective_prio(p);
 	}
+	if(IS_OVERDUE(current)){
+		dequeue_task(current, rq->SHORT);
+		current->prio = MAX_PRIO;
+		enqueue_task(current, rq->SHORT_OVERDUE);
+	} else if (IS_SHORT(current)) {
+		dequeue_task(current, rq->SHORT);
+		enqueue_task(current, rq->SHORT);
+	}
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
 
