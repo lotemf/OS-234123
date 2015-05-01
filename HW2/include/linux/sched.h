@@ -173,7 +173,7 @@ struct sched_param {
 /* hw2 - cz - end of monitoring defines and macros */
 
 /* hw2 - cz - adding monitoring structs */
-typdef enum{
+typedef enum{
 	Default, //- TODO cz not sure why yoav added default
 	A_task_was_created,
 	A_task_ended,
@@ -197,8 +197,6 @@ typedef struct switch_info {
 /*hw2 - cz - monitoring functions */
 void zero_switching_events_count();
 /*hw2 - cz - end of monitoring functions*/
-
-
 
 struct completion;
 
@@ -640,7 +638,6 @@ extern struct exec_domain	default_exec_domain;
     blocked:		{{0}},						\
     alloc_lock:		SPIN_LOCK_UNLOCKED,				\
     journal_info:	NULL,						\
-
 	requested_time:		0,							\
 	requested_trials:	0,							\
 	used_trials:		0,							\
