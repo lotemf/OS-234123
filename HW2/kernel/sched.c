@@ -1294,6 +1294,7 @@ void set_user_nice(task_t *p, long nice)
 		 * or increased its priority then reschedule its CPU:
 		 */
 		if ((NICE_TO_PRIO(nice) < p->static_prio) || (p == rq->curr))
+			p->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
 			resched_task(rq->curr);
 	}
 out_unlock:
@@ -1441,6 +1442,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
         /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
             	goto out_unlock;
             }
+            current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
             current->need_resched = 1;
             array = p->array;
             if (array)
