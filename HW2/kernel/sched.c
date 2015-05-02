@@ -496,7 +496,7 @@ void wake_up_forked_process(task_t * p)
 	p->state = TASK_RUNNING;
 	/*HW2 - Lotem 30.4.15*/
 	if (IS_OVERDUE(p)){
-		p->prio = 0;
+		p->prio = MAX_PRIO;						//HW2 - change lotem 2.5.15
 	} else if (IS_SHORT(p)){
 		p->prio = p->static_prio;
 	/*End of HW2 Additions - Lotem 30.4.15*/
@@ -1401,7 +1401,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	/***************************************************************************
          HW2 - Preventing SHORT process from changing it's priority
 	 **************************************************************************/
-    if (p->policy == SCHED_SHORT) {
+    if ((p->policy == SCHED_SHORT) && (policy!=SCHED_SHORT)) {
     	retval = -EPERM;							// HW2 - Lotem 28.4.15 21.00
     	goto out_unlock;
     }
