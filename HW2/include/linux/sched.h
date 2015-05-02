@@ -139,7 +139,7 @@ struct sched_param {
  /*HW2 - Lotem*/
 
 /* hw2 - cz - adding monitoring structs */
-typdef enum{
+typedef enum{
 	//Default, - cz not sure why yoav added default
 	A_task_was_created,
 	A_task_ended,
