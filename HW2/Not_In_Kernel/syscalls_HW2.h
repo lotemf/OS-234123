@@ -122,6 +122,5 @@ int get_scheduling_statistics(struct switch_info * info){
 		errno = -(__res); __res = -1;
 		}
 		return (int)(__res);
-
-	}
 }
+
