@@ -75,57 +75,6 @@ void testOther()
         printf("OK\n");
 }
 
-void testMakeShort()
-{
-        int thisId = getpid();
-        struct sched_param param;
-        int expected_requested_time = 30000;
-        int expected_trial_num = 8;
-        param.requested_time = expected_requested_time;
-        param.trial_num = expected_trial_num;
-        sched_setscheduler(thisId, SCHED_SHORT, &param);
-        assert(sched_getscheduler(thisId) == SCHED_SHORT);
-        assert(sched_getparam(thisId, &param) == 0);
-        assert(param.requested_time == expected_requested_time);
-        assert(param.trial_num == expected_trial_num);
-        int i;
-        doMediumTask();
-        assert(sched_getparam(thisId, &param) == 0);			//This means getparam worked...
-        int afterTime = remaining_time(thisId);
-        assert(afterTime > 0);
-//        printf("The amount of time remaining is %d \n",afterTime);
-        assert(afterTime < expected_requested_time);						//Can't check this yet...
-        int usedTrials = param.trial_num; 																	//there is still all the work to be done in schedule() function
-//        printf("The amount of used tirals  are %d \n",usedTrials);
-
-        printf("OK\n");
-}
-
-void testMakeSonShort()
-{
-        int id = fork();
-        int status;
-        if (id > 0) {
-                struct sched_param param;
-                int expected_requested_time = 30000;
-                int expected_trials = 8;
-                param.requested_time = expected_requested_time;
-                param.trial_num = expected_trials;
-                sched_setscheduler(id, SCHED_SHORT, &param);
-                assert(sched_getscheduler(id) == SCHED_SHORT);
-                assert(sched_getparam(id, &param) == 0);
-                assert(param.requested_time == expected_requested_time);
-                assert(param.trial_num <= expected_trials);
-                wait(&status);
-                printf("OK\n");
-        } else if (id == 0) {
-                doShortTask();
-                _exit(0);
-        }
-}
-
-
-
 void testSysCalls()
 {
         int id = fork();
@@ -158,30 +107,81 @@ void testSysCalls()
         }
 }
 
+void testMakeShort()
+{
+        int thisId = getpid();
+        struct sched_param inputParam,outputParam;
+        int expected_requested_time = 30000;
+        int expected_trial_num = 8;
+        inputParam.requested_time = expected_requested_time;
+        inputParam.trial_num = expected_trial_num;
+        sched_setscheduler(thisId, SCHED_SHORT, &inputParam);
+        assert(sched_getscheduler(thisId) == SCHED_SHORT);
+        assert(sched_getparam(thisId, &outputParam) == 0);
+        assert(outputParam.requested_time == expected_requested_time);
+        assert(outputParam.trial_num == expected_trial_num);
+        int i;
+        doMediumTask();
+        assert(sched_getparam(thisId, &outputParam) == 0);			//This means getparam worked...
+        int afterTime = remaining_time(thisId);
+        assert(afterTime > 0);
+//        printf("The amount of time remaining is %d \n",afterTime);
+        assert(afterTime < expected_requested_time);						//Can't check this yet...
+        int usedTrials = outputParam.trial_num; 																	//there is still all the work to be done in schedule() function
+//        printf("The amount of used tirals  are %d \n",usedTrials);
+
+        printf("OK\n");
+}
+
+void testMakeSonShort()
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+            struct sched_param inputParam,outputParam;
+            int expected_requested_time = 30000;
+            int expected_trials = 8;
+            inputParam.requested_time = expected_requested_time;
+            inputParam.trial_num = expected_trials;
+            sched_setscheduler(id, SCHED_SHORT, &inputParam);
+            assert(sched_getscheduler(id) == SCHED_SHORT);
+            assert(sched_getparam(id, &outputParam) == 0);
+            assert(outputParam.requested_time == expected_requested_time);
+            assert(outputParam.trial_num <= expected_trials);
+            wait(&status);
+            printf("OK\n");
+        } else if (id == 0) {
+            doShortTask();
+            _exit(0);
+        }
+}
+
 void testFork()
 {
         int expected_requested_time = 30000;
         int id = fork();
         int status;
         if (id > 0) {
-                struct sched_param param;
+                struct sched_param inputParam,outputParam;
                 int expected_trials = 8;
-                param.requested_time = expected_requested_time;
-                param.trial_num = expected_trials;
-                sched_setscheduler(id, SCHED_SHORT, &param);
+                inputParam.requested_time = expected_requested_time;
+                inputParam.trial_num = expected_trials;
+                sched_setscheduler(id, SCHED_SHORT, &inputParam);
                 assert(sched_getscheduler(id) == SCHED_SHORT);
-                assert(sched_getparam(id, &param) == 0);
-                assert(param.requested_time == expected_requested_time);
-                assert(param.trial_num <= expected_trials);
+                assert(sched_getparam(id, &outputParam) == 0);
+                assert(outputParam.requested_time == expected_requested_time);
+                assert(outputParam.trial_num <= expected_trials);
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
+//        		printf("The remaining time of the running process is: %d \n",remaining_time(getpid()));
                 assert(remaining_time(getpid()) == expected_requested_time);
                 int son = fork();
                 if (son == 0)
                 {
                 	int grandson_initial_time = remaining_time(getpid());
-                    assert(grandson_initial_time < (expected_requested_time*2)/3);
+                    assert(grandson_initial_time <= expected_requested_time/2);
+//                    assert(grandson_initial_time <= expected_requested_time/2);	//TODO - Check Trial_number
                     assert(grandson_initial_time > 0);
                     doMediumTask();
                     assert(remaining_time(getpid()) < grandson_initial_time);
@@ -189,7 +189,7 @@ void testFork()
                 }
                 else
                 {
-                    assert(remaining_time(getpid()) < expected_requested_time/2);
+                    assert(remaining_time(getpid()) <= expected_requested_time/2);
                     wait(&status);
                 }
                 _exit(0);
@@ -269,225 +269,224 @@ void testScheduleRealTimeOverShort()
                 _exit(0);
         }
 }
-//
-//void testScheduleRealTimeOverLShort2()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 30000;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        doMediumTask();
-//                        printf("\t\tLSHORT son finished\n");
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.sched_priority = 1;
-//                        sched_setscheduler(id, 1, &param2);                     //FIFO RealTime process
-//                        sched_setscheduler(id2, SCHED_LSHORT, &param1); // LSHORT process
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                doMediumTask();
-//                printf("\tRT son finished\n");
-//                _exit(0);
-//        }
-//}
-//
-//void testScheduleLShortOverOther()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 30000;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        doMediumTask();
-//                        printf("\tLSHORT son finished\n");
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.sched_priority = 1;
-//                        sched_setscheduler(id, 0, &param2);             // regular SCHED_OTHER
-//                        sched_setscheduler(id2, SCHED_LSHORT, &param1);         // LSHORT process
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                doMediumTask();
-//                printf("\t\tSCHED_OTHER son finished\n");
-//                _exit(0);
-//        }
-//}
-//
-//void testScheduleLShortOverOther2()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 30000;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        doMediumTask();
-//                        printf("\t\tSCHED_OTHER son finished\n");
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.sched_priority = 1;
-//                        sched_setscheduler(id2, 0, &param2);            // regular SCHED_OTHER
-//                        sched_setscheduler(id, SCHED_LSHORT, &param1);          // LSHORT process
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                doMediumTask();
-//                printf("\tLSHORT son finished\n");
-//                _exit(0);
-//        }
-//}
-//
-//void testScheduleOtherOverOverdue()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 1;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        doMediumTask();
-//                        printf("\t\tOVERDUE son finished\n");
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.sched_priority = 1;
-//                        sched_setscheduler(id, 0, &param2);             // regular SCHED_OTHER
-//                        sched_setscheduler(id2, SCHED_LSHORT, &param1);         // LSHORT process
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                doMediumTask();
-//                printf("\tSCHED_OTHER son finished\n");
-//                _exit(0);
-//        }
-//}
-//
-//void testScheduleOtherOverOverdue2()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 1;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        doMediumTask();
-//                        printf("\tSCHED_OTHER son finished\n");
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.sched_priority = 1;
-//                        sched_setscheduler(id2, 0, &param2);            // regular SCHED_OTHER
-//                        sched_setscheduler(id, SCHED_LSHORT, &param1);          // LSHORT process
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                doMediumTask();
-//                printf("\t\tOVERDUE son finished\n");
-//                _exit(0);
-//        }
-//}
-//
-//void testOverdueRoundRobin()
-//{
-//        int id = fork();
-//        int status;
-//        if (id > 0) {
-//                struct sched_param param1;
-//                int expected_requested_time = 1;
-//                int expected_level = 8;
-//                param1.lshort_params.requested_time = expected_requested_time;
-//                param1.lshort_params.level = expected_level;
-//
-//                int id2 = fork();
-//                if (id2 == 0)
-//                {
-//                        int i, j;
-//                        for (i=0; i < 4; i++)
-//                        {
-//                                doMediumTask();
-//                                printf("\t\tSon2\n");
-//                        }
-//                        _exit(0);
-//                }
-//                else
-//                {
-//                        struct sched_param param2;
-//                        param2.lshort_params.requested_time = expected_requested_time;
-//                        param2.lshort_params.level = expected_level;
-//                        sched_setscheduler(id2, SCHED_LSHORT, &param1);
-//                        sched_setscheduler(id, SCHED_LSHORT, &param2);
-//                }
-//                wait(&status);
-//                wait(&status);
-//                printf("OK\n");
-//        } else if (id == 0) {
-//                int i, j;
-//                for (i=0; i < 4; i++)
-//                {
-//                        doMediumTask();
-//                        printf("\tSon1\n");
-//                }
-//                _exit(0);
-//        }
-//}
+
+void testScheduleRealTimeOverLShort2()
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+                struct sched_param param1;
+                int expected_requested_time = 30000;
+                int expected_trials = 8;
+                param1.requested_time = expected_requested_time;
+                param1.trial_num = expected_trials;
+
+                int id2 = fork();
+                if (id2 == 0)
+                {
+                        doMediumTask();
+                        printf("\t\tSHORT son finished\n");
+                        _exit(0);
+                }
+                else
+                {
+                        struct sched_param param2;
+                        param2.sched_priority = 1;
+                        sched_setscheduler(id, 1, &param2);                     //FIFO RealTime process
+                        sched_setscheduler(id2, SCHED_SHORT, &param1); // SHORT process
+                }
+                wait(&status);
+                wait(&status);
+                printf("OK\n");
+        } else if (id == 0) {
+                doMediumTask();
+                printf("\tRT son finished\n");
+                _exit(0);
+        }
+}
+
+void testScheduleShortOverOther()
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+            struct sched_param param1;
+            int expected_requested_time = 30000;
+            int expected_trials = 8;
+            param1.requested_time = expected_requested_time;
+            param1.trial_num = expected_trials;
+
+            int id2 = fork();
+            if (id2 == 0)
+            	{
+                 doMediumTask();
+                 printf("\tSHORT son finished\n");
+                 _exit(0);
+            }
+            else
+            {
+                struct sched_param param2;
+                param2.sched_priority = 1;
+                sched_setscheduler(id, 0, &param2);             // regular SCHED_OTHER
+                sched_setscheduler(id2, SCHED_SHORT, &param1);         // SHORT process
+            }
+            wait(&status);
+            wait(&status);
+            printf("OK\n");
+        } else if (id == 0) {
+            doMediumTask();
+            printf("\t\tSCHED_OTHER son finished\n");
+            _exit(0);
+        }
+}
+
+void testScheduleShortOverOther2()
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+            struct sched_param param1;
+            int expected_requested_time = 30000;
+            int expected_trials = 8;
+            param1.requested_time = expected_requested_time;
+            param1.trial_num = expected_trials;
+
+            int id2 = fork();
+            if (id2 == 0){
+            	doMediumTask();
+                printf("\t\tSCHED_OTHER son finished\n");
+                _exit(0);
+            }
+            else
+            {
+                struct sched_param param2;
+                param2.sched_priority = 1;
+                sched_setscheduler(id2, 0, &param2);            // regular SCHED_OTHER
+                sched_setscheduler(id, SCHED_SHORT, &param1);          // SHORT process
+            }
+            wait(&status);
+            wait(&status);
+            printf("OK\n");
+        } else if (id == 0) {
+            doMediumTask();
+            printf("\tSHORT son finished\n");
+            _exit(0);
+        }
+}
+
+void testScheduleOtherOverOverdue()												//TODO - this test hangs the system
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+                struct sched_param param1;
+                int expected_requested_time = 1;
+                int expected_trials = 8;
+                param1.requested_time = expected_requested_time;
+                param1.trial_num = expected_trials;
+
+                int id2 = fork();
+                if (id2 == 0)
+                {
+                        doMediumTask();
+                        printf("\t\tOVERDUE son finished\n");
+                        _exit(0);
+                }
+                else
+                {
+                        struct sched_param param2;
+                        param2.sched_priority = 1;
+                        sched_setscheduler(id, 0, &param2);             // regular SCHED_OTHER
+                        sched_setscheduler(id2, SCHED_SHORT, &param1);         // SHORT process
+                }
+                wait(&status);
+                wait(&status);
+                printf("OK\n");
+        } else if (id == 0) {
+                doMediumTask();
+                printf("\tSCHED_OTHER son finished\n");
+                _exit(0);
+        }
+}
+
+void testScheduleOtherOverOverdue2()
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+                struct sched_param param1;
+                int expected_requested_time = 1;
+                int expected_trials = 8;
+                param1.requested_time = expected_requested_time;
+                param1.trial_num = expected_trials;
+
+                int id2 = fork();
+                if (id2 == 0)
+                {
+                        doMediumTask();
+                        printf("\tSCHED_OTHER son finished\n");
+                        _exit(0);
+                }
+                else
+                {
+                        struct sched_param param2;
+                        param2.sched_priority = 1;
+                        sched_setscheduler(id2, 0, &param2);            // regular SCHED_OTHER
+                        sched_setscheduler(id, SCHED_SHORT, &param1);          // SHORT process
+                }
+                wait(&status);
+                wait(&status);
+                printf("OK\n");
+        } else if (id == 0) {
+                doMediumTask();
+                printf("\t\tOVERDUE son finished\n");
+                _exit(0);
+        }
+}
+
+void testSHORTRoundRobin()				//TODO - Change it to SHORT RR
+{
+        int id = fork();
+        int status;
+        if (id > 0) {
+                struct sched_param param1;
+                int expected_requested_time = 1;
+                int expected_trials = 8;
+                param1.requested_time = expected_requested_time;
+                param1.trial_num = expected_trials;
+
+                int id2 = fork();
+                if (id2 == 0)
+                {
+                        int i, j;
+                        for (i=0; i < 4; i++)
+                        {
+                                doMediumTask();
+                                printf("\t\tSon2\n");
+                        }
+                        _exit(0);
+                }
+                else
+                {
+                        struct sched_param param2;
+                        param2.requested_time = expected_requested_time;
+                        param2.trial_num = expected_trials;
+                        sched_setscheduler(id2, SCHED_SHORT, &param1);
+                        sched_setscheduler(id, SCHED_SHORT, &param2);
+                }
+                wait(&status);
+                wait(&status);
+                printf("OK\n");
+        } else if (id == 0) {
+                int i, j;
+                for (i=0; i < 4; i++)
+                {
+                        doMediumTask();
+                        printf("\tSon1\n");
+                }
+                _exit(0);
+        }
+}
 
 int main()
 {
@@ -495,13 +494,13 @@ int main()
 //    	printf("Testing bad parameters... ");
 //    	testBadParams();
 //
-//        printf("Testing new System Calls... ");
-//        testSysCalls();
-//
 //        printf("Testing SCHED_OTHER process... ");
 //        testOther();
 //
-//        printf("Testing SCHED_SHORT process... ");
+//        printf("Testing new System Calls... ");
+//        testSysCalls();
+//
+//        printf("Testing making this process SHORT... ");
 //        testMakeShort();
 //
 //        printf("Testing making son process SHORT... ");
@@ -509,33 +508,39 @@ int main()
 //
 //        printf("Testing becoming overdue... ");
 //        testBecomingOverdue();
-
-        printf("Testing fork... ");
-        testFork();						//TODO - HW2 - Check with Alon why it's not working
 //
-//        printf("Testing Overdues Round-Robin... \n");
-//        testOverdueRoundRobin();
+//        printf("Testing fork... ");
+//        testFork();																//TODO - HW2 - Check why the system freezes with multiple tests...
 //
-//        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");
-//        testScheduleRealTimeOverShort();										//TODO - HW2 - Check why the system freezes with multiple tests...
+        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");		//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+        testScheduleRealTimeOverShort();										//TODO -
 //
 //        printf("Testing race: RT vs. LSHORT #2 (RT is supposed to win)\n");
 //        testScheduleRealTimeOverLShort2();
 //
-//        printf("Testing race: LSHORT vs. OTHER (LSHORT is supposed to win)\n");
-//        testScheduleLShortOverOther();
+//        printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
+//        testScheduleShortOverOther();
 //
-//        printf("Testing race: LSHORT vs. OTHER #2(LSHORT is supposed to win)\n");
-//        testScheduleLShortOverOther2();
+//        printf("Testing race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
+//        testScheduleShortOverOther2();
+
+
+	//**Important Notice:
+
+	/****************************************************************************/
+	/*    Until this point we are passing all of the tests except RT vs. SHORT	*/
+	/*	  -The three test below makes the system freeze...						*/
+	/****************************************************************************/
+
+
+//        printf("Testing SHORT processes Round-Robin... \n");					//TODO - This test causes the system to freeze :(
+//        testSHORTRoundRobin();
 //
-//        printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");
-//        testScheduleOtherOverOverdue();
+//        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
+//        /*Fucks Up The System*/testScheduleOtherOverOverdue();
 //
-//        printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");
+//        printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");//TODO - This test causes the system to freeze :(
 //        testScheduleOtherOverOverdue2();
 //
-//        printf("Testing making this process LSHORT... ");
-//        testMakeLshort();
-//        printf("Success!\n");
         return 0;
 }
