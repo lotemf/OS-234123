@@ -460,23 +460,44 @@ repeat_lock_task:
 
 		/********************		HW2 - Lotem 30.4.15		*******************
 		* We need to check specifically for SHORT processes, because we don't want OTHER
-		* processes to call resched_task, because there is no need for a switch
+		* processes with better prio to call resched_task.
+		*
 		*
 		* So when do we need to call resched_task ?
-		//1 - If it's a Real-Time process, or the current running process isn't SHORT (so it's SCHED_OTHER)
-		//2 - If both of the processes are SHORT
-		// *Notice: if it's a SHORT_OVERDUE process we don't care because they have same prio
+		//1 - The normal case (both processes aren't SHORT, so the one with the better prio wins)
+		//2 - If p is a Real-Time process, and current is SHORT it wins
+		//3 - If both of the processes are SHORT
+		      and If both are not OVERDUE, we calculate based on prio
+		//4 - If the current process is OVERDUE and the new one isn't
+		      we need to resched
+		//5 - If p isn't OVERDUE (because it isn't SHORT) and current is OVERDUE
+		 * 	  we need to resched
+		// *Notice: if both are SHORT_OVERDUE process we don't want to resched because it's FIFO
 		***********************************************************************/
-			if (p->prio < rq->curr->prio){
-				p->reason = A_task_with_higher_priority_returns_from_waiting; //hw2 - cz - monitoring
-				if ((rt_task(p)) || (!IS_SHORT(rq->curr))){	//1
-					resched_task(rq->curr);
-				} else if (IS_SHORT(p)){					//2
-					resched_task(rq->curr);
-				}
+		int reschedCheck=0;
+		if (!IS_SHORT(p) && !IS_SHORT(rq->curr) && (p->prio < rq->curr->prio)){	//1
+			reschedCheck=1;
+		}
+		if ((rt_task(p)) && IS_SHORT(p)){	//2
+			reschedCheck=1;
+		}
+		if (IS_SHORT(p) && IS_SHORT(p)){	//3
+			if (!IS_OVERDUE(p) && !IS_OVERDUE(rq->curr) && (p->prio < rq->curr->prio)){ //3
+				reschedCheck=1;
 			}
+		}
+		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){						//4
+			reschedCheck=1;
+		}
+		if (IS_SHORT(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//5
+			reschedCheck=1;
+		}
+		/* Making sure we are not switching the same process*/
+		if ((reschedCheck == 1) && ((rq->curr) != p) ){
+		resched_task(rq->curr);
+		}
 		/********		End of HW2 Additions - Lotem 30.4.15		********/
-			success = 1;
+		success = 1;
 	}
 	p->state = TASK_RUNNING;
 	task_rq_unlock(rq, &flags);
@@ -1401,7 +1422,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	/***************************************************************************
          HW2 - Preventing SHORT process from changing it's priority
 	 **************************************************************************/
-    if ((p->policy == SCHED_SHORT) && (policy!=SCHED_SHORT)) {
+    if ((p->policy == SCHED_SHORT) && (policy != SCHED_SHORT)) {
     	retval = -EPERM;							// HW2 - Lotem 28.4.15 21.00
     	goto out_unlock;
     }
