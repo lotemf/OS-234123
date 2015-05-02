@@ -740,6 +740,10 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	}
 
 	if (IS_SHORT(current)) {  // HW2 - Alon
+        //hw2 - cz - interrupts safety
+		unsigned long flags;
+        local_irq_save(flags);
+
 		p->policy = current->policy;
 		if (!IS_OVERDUE(current)) {
 			int left_trials = current->requested_trials - current->used_trials;
@@ -755,9 +759,14 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 			p->used_trials = 0;
 		}
 		else {
+			p->reason = Default; //hw2 - cz - monitoring
 			p->requested_trials = current->requested_trials;
 			p->used_trials = p->requested_trials;
 		}
+
+        local_irq_restore(flags);				//hw2 - cz - interrupts safety
+		current->reason = A_task_was_created;	//hw2 - cz monitoring
+		p->reason = A_task_was_created;			//hw2 - cz monitoring
 	}
 	__restore_flags(flags);
 
