@@ -509,7 +509,7 @@ void wake_up_forked_process(task_t * p)
 		p->sleep_avg = p->sleep_avg * CHILD_PENALTY / 100;
 		p->prio = effective_prio(p);
 	}
-	if(IS_OVERDUE(current)){
+	if(IS_OVERDUE(current)){ // hw2 - alon the father gives up the cpu
 		dequeue_task(current, rq->SHORT);
 		current->prio = MAX_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
@@ -517,6 +517,7 @@ void wake_up_forked_process(task_t * p)
 		dequeue_task(current, rq->SHORT);
 		enqueue_task(current, rq->SHORT);
 	}
+	//***
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
 
