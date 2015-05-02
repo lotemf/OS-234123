@@ -184,7 +184,7 @@ typedef struct switch_info {
 /*hw2 - cz - end of monitoring structs*/
 
 /*hw2 - cz - monitoring functions */
-void zero_switching_events_count();
+void zero_switching_events_count(void);
 
 void update_switch_info_struct(switch_info_t* info,int pr_pid,
 				int nxt_pid, int pr_pol, int nxt_pol, int time, int reason);

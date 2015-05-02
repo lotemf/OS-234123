@@ -468,6 +468,7 @@ repeat_lock_task:
 		// *Notice: if it's a SHORT_OVERDUE process we don't care because they have same prio
 		***********************************************************************/
 			if (p->prio < rq->curr->prio){
+				p->reason = A_task_with_higher_priority_returns_from_waiting; //hw2 - cz - monitoring
 				if ((rt_task(p)) || (!IS_SHORT(rq->curr))){	//1
 					resched_task(rq->curr);
 				} else if (IS_SHORT(p)){					//2
@@ -854,7 +855,7 @@ void scheduler_tick(int user_tick, int system)
 	//hw2 -cz
 	if ((p->array != rq->active) && (!IS_SHORT(p))) {				//That means it must be expired
 		set_tsk_need_resched(p);
-		//todo hw2 - monitoring
+		p->reason = The_time_slice_of_the_previous_task_has_ended;	//hw2 - cz - monitoring
 		return;
 	}
 	spin_lock(&rq->lock);
@@ -867,6 +868,7 @@ void scheduler_tick(int user_tick, int system)
 			p->time_slice = TASK_TIMESLICE(p);
 			p->first_time_slice = 0;
 			set_tsk_need_resched(p);
+			p->reason = The_time_slice_of_the_previous_task_has_ended;	//hw2 - cz - monitoring
 
 			/* put it at the end of the queue: */
 			dequeue_task(p, rq->active);
@@ -900,6 +902,7 @@ void scheduler_tick(int user_tick, int system)
 	 	     in the SHORT prio array, as in RR policy with it's new TimeSlice
 	 **************************************************************************/
 	if (IS_SHORT(p)){
+
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
 			p->time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
@@ -908,17 +911,19 @@ void scheduler_tick(int user_tick, int system)
 			if (IS_OVERDUE(p)){							//2
 				p->prio = MAX_PRIO;
 				enqueue_task(p, rq->SHORT_OVERDUE);
+				p->reason = A_SHORT_process_became_overdue;	//hw2 - cz - monitoring
 			}else {
 				enqueue_task(p, rq->SHORT);				//3
+				p->reason = The_time_slice_of_the_previous_task_has_ended; //hw2 - cz - monitoring
 			}
-		  // TODO hw2 monitoring
+
 		}
 	/*************      End of HW2 Lotem  - 30.4.2015     	*******************/
 
 	} else if (!--p->time_slice) {
 		dequeue_task(p, rq->active);
 		set_tsk_need_resched(p);
-		//TODO hw2 -  monitoring		//Std Linux Code of Std process
+		p->reason = The_time_slice_of_the_previous_task_has_ended; //hw2 - cz - monitoring
 		p->prio = effective_prio(p);
 		p->first_time_slice = 0;
 		p->time_slice = TASK_TIMESLICE(p);
@@ -984,7 +989,7 @@ pick_next_task:
 			goto pick_next_task;
 #endif
 		next = rq->idle;
-		//TODO hw2 - monitoring
+		current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 		rq->expired_timestamp = 0;
 		goto switch_tasks;
 	}
@@ -1174,6 +1179,7 @@ void wait_for_completion(struct completion *x)
 		do {
 			__set_current_state(TASK_UNINTERRUPTIBLE);
 			spin_unlock_irq(&x->wait.lock);
+			current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 			schedule();
 			spin_lock_irq(&x->wait.lock);
 		} while (!x->done);
@@ -1203,8 +1209,9 @@ void interruptible_sleep_on(wait_queue_head_t *q)
 	SLEEP_ON_VAR
 
 	current->state = TASK_INTERRUPTIBLE;
-
 	SLEEP_ON_HEAD
+
+    current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 	schedule();
 	SLEEP_ON_TAIL
 }
@@ -1214,6 +1221,7 @@ long interruptible_sleep_on_timeout(wait_queue_head_t *q, long timeout)
 	SLEEP_ON_VAR
 
 	current->state = TASK_INTERRUPTIBLE;
+    current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 
 	SLEEP_ON_HEAD
 	timeout = schedule_timeout(timeout);
@@ -1227,8 +1235,9 @@ void sleep_on(wait_queue_head_t *q)
 	SLEEP_ON_VAR
 	
 	current->state = TASK_UNINTERRUPTIBLE;
-
 	SLEEP_ON_HEAD
+
+    current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 	schedule();
 	SLEEP_ON_TAIL
 }
@@ -1238,6 +1247,7 @@ long sleep_on_timeout(wait_queue_head_t *q, long timeout)
 	SLEEP_ON_VAR
 	
 	current->state = TASK_UNINTERRUPTIBLE;
+    current->reason = A_previous_task_goes_out_for_waiting;	//hw2 - cz - monitoring
 
 	SLEEP_ON_HEAD
 	timeout = schedule_timeout(timeout);
@@ -1432,7 +1442,6 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
             	goto out_unlock;
             }
             current->need_resched = 1;
-//            current->reason = A_change_in_the_scheduling_parameters_of_a_task;	//Haven't added the reason for monitoring yet
             array = p->array;
             if (array)
                     deactivate_task(p, task_rq(p));
@@ -1688,6 +1697,7 @@ asmlinkage long sys_sched_yield(void)
 	__set_bit(i, array->bitmap);
 
 out_unlock:
+	current->reason = A_task_yields_the_CPU;//hw2 - cz - monitoring
 	spin_unlock(&rq->lock);
 
 	schedule();
