@@ -107,31 +107,6 @@ void testSysCalls()
         }
 }
 
-void testMakeShort()
-{
-        int thisId = getpid();
-        struct sched_param inputParam,outputParam;
-        int expected_requested_time = 30000;
-        int expected_trial_num = 8;
-        inputParam.requested_time = expected_requested_time;
-        inputParam.trial_num = expected_trial_num;
-        sched_setscheduler(thisId, SCHED_SHORT, &inputParam);
-        assert(sched_getscheduler(thisId) == SCHED_SHORT);
-        assert(sched_getparam(thisId, &outputParam) == 0);
-        assert(outputParam.requested_time == expected_requested_time);
-        assert(outputParam.trial_num == expected_trial_num);
-        int i;
-        doMediumTask();
-        assert(sched_getparam(thisId, &outputParam) == 0);			//This means getparam worked...
-        int afterTime = remaining_time(thisId);
-        assert(afterTime > 0);
-//        printf("The amount of time remaining is %d \n",afterTime);
-        assert(afterTime < expected_requested_time);						//Can't check this yet...
-        int usedTrials = outputParam.trial_num; 																	//there is still all the work to be done in schedule() function
-//        printf("The amount of used tirals  are %d \n",usedTrials);
-
-        printf("OK\n");
-}
 
 void testMakeSonShort()
 {
@@ -477,6 +452,31 @@ void testSHORTRoundRobin()				//TODO - Change it to SHORT RR
         }
 }
 
+void testMakeShort()
+{
+        int thisId = getpid();
+        struct sched_param inputParam,outputParam;
+        int expected_requested_time = 30000;
+        int expected_trial_num = 8;
+        inputParam.requested_time = expected_requested_time;
+        inputParam.trial_num = expected_trial_num;
+        sched_setscheduler(thisId, SCHED_SHORT, &inputParam);
+        assert(sched_getscheduler(thisId) == SCHED_SHORT);
+        assert(sched_getparam(thisId, &outputParam) == 0);
+        assert(outputParam.requested_time == expected_requested_time);
+        assert(outputParam.trial_num == expected_trial_num);
+        int i;
+        doMediumTask();
+        assert(sched_getparam(thisId, &outputParam) == 0);			//This means getparam worked...
+        int afterTime = remaining_time(thisId);
+        assert(afterTime > 0);
+//        printf("The amount of time remaining is %d \n",afterTime);
+        assert(afterTime < expected_requested_time);						//Can't check this yet...
+        int usedTrials = outputParam.trial_num; 																	//there is still all the work to be done in schedule() function
+//        printf("The amount of used tirals  are %d \n",usedTrials);
+
+        printf("OK\n");
+}
 int main()
 {
 
@@ -489,8 +489,7 @@ int main()
 //        printf("Testing new System Calls... ");
 //        testSysCalls();
 //
-//        printf("Testing making this process SHORT... ");
-//        testMakeShort();
+
 //
 //        printf("Testing making son process SHORT... ");
 //        testMakeSonShort();
@@ -500,10 +499,10 @@ int main()
 //
 //        printf("Testing becoming overdue... ");
 //        testBecomingOverdue();
-//
-//        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");		//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//        testScheduleRealTimeOverShort();										//TODO -
-//
+
+        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");		//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+        testScheduleRealTimeOverShort();										//TODO -
+
 //        printf("Testing race: RT vs. LSHORT #2 (RT is supposed to win)\n");
 //        testScheduleRealTimeOverShort2();
 //
@@ -528,11 +527,14 @@ int main()
 	//		  in FIFO....      -- Not sure yet ehat is the cause...
 
 ////
-        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
-        /*Fucks Up The System*/testScheduleOtherOverOverdue();
+//        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
+//        /*Fucks Up The System*/testScheduleOtherOverOverdue();
 //
 //        printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");//TODO - This test causes the system to freeze :(
 //        testScheduleOtherOverOverdue2();
 //
+//        printf("Testing making this process SHORT... ");
+//        testMakeShort();
+//          printf("Success!\n");
         return 0;
 }
