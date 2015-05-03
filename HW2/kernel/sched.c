@@ -472,7 +472,7 @@ repeat_lock_task:
 		//4 - If the current process is OVERDUE and the new one isn't
 		      we need to resched
 		//5 - If p isn't OVERDUE (because it isn't SHORT) and current is OVERDUE
-		 * 	  we need to resched
+		  	  we need to resched
 		// *Notice: if both are SHORT_OVERDUE process we don't want to resched because it's FIFO
 		***********************************************************************/
 		int reschedCheck=0;
@@ -487,7 +487,7 @@ repeat_lock_task:
 				reschedCheck=1;
 			}
 		}
-		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){						//4
+		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){				//4
 			reschedCheck=1;
 		}
 		if (IS_SHORT(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//5
@@ -519,9 +519,9 @@ void wake_up_forked_process(task_t * p)
 	/*HW2 - Lotem 30.4.15*/
 	if (IS_OVERDUE(p)){
 		p->prio = OVERDUE_PRIO;						//HW2 - change lotem 2.5.15
-//	} else if (IS_SHORT(p)){
-//		p->prio = p->static_prio;
-//	/*End of HW2 Additions - Lotem 30.4.15*/
+	} else if (IS_SHORT(p)){
+		p->prio = p->static_prio;
+	/*End of HW2 Additions - Lotem 30.4.15*/
 	} else if (!rt_task(p)) {
 		/*
 		 * We decrease the sleep average of forking parents
@@ -933,11 +933,13 @@ void scheduler_tick(int user_tick, int system)
 
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
-			p->time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
+			int next_time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
+			p->time_slice = next_time_slice;
 			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
-			if (IS_OVERDUE(p)){							//2
-				p->prio = OVERDUE_PRIO;
+			if (IS_OVERDUE(p) || !next_time_slice){							//2
+				p->prio = OVERDUE_PRIO;											//TODO - new code 3.5.15 21.30
+				p->used_trials = p->requested_trials + 1;				//THis ensures it will be checked as OVERDUE in the IS_OVERDUE macro
 				enqueue_task(p, rq->SHORT_OVERDUE);
 				p->reason = A_SHORT_process_became_overdue;	//hw2 - cz - monitoring
 			}else {
@@ -1479,7 +1481,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
         /*TEST*/printk("BAD_INPUT - Trial Number\n");	/*TEST*/
             	goto out_unlock;											//Checking input values
             }
-            if ((lp.requested_time <= 0) || (lp.requested_time > (5000000))){
+            if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){
         /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
             	goto out_unlock;
             }
