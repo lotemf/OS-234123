@@ -197,12 +197,12 @@ void testFork()
 }
 
 void testBecomingOverdue()					// HW2 - Lotem - NOT SURE HOW TO RUN THIS TEST HERE...
-{
+{											//because we need to check the trial num
         int id = fork();
         int status;
         if (id > 0) {
                 struct sched_param param;
-                int expected_requested_time = 2;
+                int expected_requested_time =5;
                 int expected_trials = 2;
                 param.requested_time = expected_requested_time;
                 param.trial_num = expected_trials;
@@ -213,15 +213,6 @@ void testBecomingOverdue()					// HW2 - Lotem - NOT SURE HOW TO RUN THIS TEST HE
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-//            	struct sched_param overDueparam;
-//                int expected_requested_time = 2;
-//                int expected_trials = 2;
-//                overDueparam.requested_time = expected_requested_time;
-//                overDueparam.trial_num = expected_trials;
-//                sched_setscheduler(id, SCHED_SHORT, &overDueparam);
-//                assert(sched_getscheduler(id) == SCHED_SHORT);
-//                assert(sched_getparam(id, &overDueparam) == 0);
-//                assert(overDueparam.trial_num == expected_trials);
                 int myId = getpid();
                 int i = remaining_time(myId);
                 for (i; i < 2; )
@@ -229,8 +220,6 @@ void testBecomingOverdue()					// HW2 - Lotem - NOT SURE HOW TO RUN THIS TEST HE
                         i = remaining_time(myId);
                         doShortTask();
                 }
-//                assert(sched_getparam(myId, &overDueparam) == 0);
-//                assert((!overDueparam.trial_num) || (!overDueparam.requested_time));			//Checking if it's Overdue
                 _exit(0);
         }
 }
@@ -241,7 +230,7 @@ void testScheduleRealTimeOverShort()
         int status;
         if (id > 0) {
                 struct sched_param param1;
-                int expected_requested_time = 100000;
+                int expected_requested_time = 300000;
                 int expected_trials = 8;
                 param1.requested_time = expected_requested_time;
                 param1.trial_num = expected_trials;
@@ -270,7 +259,7 @@ void testScheduleRealTimeOverShort()
         }
 }
 
-void testScheduleRealTimeOverLShort2()
+void testScheduleRealTimeOverShort2()
 {
         int id = fork();
         int status;
@@ -491,32 +480,32 @@ void testSHORTRoundRobin()				//TODO - Change it to SHORT RR
 int main()
 {
 
-//    	printf("Testing bad parameters... ");
-//    	testBadParams();
-//
-//        printf("Testing SCHED_OTHER process... ");
-//        testOther();
-//
-//        printf("Testing new System Calls... ");
-//        testSysCalls();
-//
-//        printf("Testing making this process SHORT... ");
-//        testMakeShort();
-//
-//        printf("Testing making son process SHORT... ");
-//        testMakeSonShort();
+    	printf("Testing bad parameters... ");
+    	testBadParams();
+
+        printf("Testing SCHED_OTHER process... ");
+        testOther();
+
+        printf("Testing new System Calls... ");
+        testSysCalls();
+
+        printf("Testing making this process SHORT... ");
+        testMakeShort();
+
+        printf("Testing making son process SHORT... ");
+        testMakeSonShort();
+
+        printf("Testing fork... ");
+        testFork();																//TODO - HW2 - Check why the system freezes with multiple tests...
 //
 //        printf("Testing becoming overdue... ");
 //        testBecomingOverdue();
-//
-//        printf("Testing fork... ");
-//        testFork();																//TODO - HW2 - Check why the system freezes with multiple tests...
 //
 //        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");		//TODO - !!! ERROR !!! -  Here we get an opposite outcome
 //        testScheduleRealTimeOverShort();										//TODO -
 //
 //        printf("Testing race: RT vs. LSHORT #2 (RT is supposed to win)\n");
-//        testScheduleRealTimeOverLShort2();
+//        testScheduleRealTimeOverShort2();
 //
 //        printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
 //        testScheduleShortOverOther();
@@ -524,8 +513,8 @@ int main()
 //        printf("Testing race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
 //        testScheduleShortOverOther2();
 //
-//    printf("Testing SHORT processes Round-Robin... \n");
-//    testSHORTRoundRobin();
+//        printf("Testing SHORT processes Round-Robin... \n");
+//        testSHORTRoundRobin();
 
 	//**Important Notice:
 

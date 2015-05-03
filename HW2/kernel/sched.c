@@ -1029,27 +1029,40 @@ pick_next_task:
 	}
 
  	/***************************************************************************
- 	* HW2 - Lotem 30.4.15 - Priority Check according to the PDF
+ 	* HW2 - Lotem 30.4.15 - Searching the next process to run based
+ 	* 					    on the priority, according to the PDF
  	*
-	//1 - If the prio isn't Real-Time, search next SCHED_SHORT
-	//2 - If there are no SCHED_SHORT processes, search next SCHED_OTHER
-	//3 - If there are no SCHED_OTHER processes, search next SHORT_OVERDUE
-	//4 - Only if the array isn't rq->active we need a new idx calculation
-	*     from SHORT or SHORT_OVERDUE
+	//1 - If the prio isn't Real-Time, search next SCHED_SHORT to run
+	//2 - Only if all of the other processes array are empty, we check in
+	*     the SHORT_OVERDUE array
  	***************************************************************************/
 	idx = sched_find_first_bit(array->bitmap);
-    if (idx > MAX_RT_PRIO) {                	//1
-        if (!(rq->SHORT)->nr_active) {			//2
-           if (unlikely(!array->nr_active)) {	//3
-        	   array = rq->SHORT_OVERDUE;
-           }
-        } else {
-        	array = rq->SHORT;
-        }
-        if (array != rq->active){				//4
-        	idx = sched_find_first_bit(array->bitmap);
-        }
-    }
+
+	/*TEST - NEW CODE 3.5.15 - LOTEM*/
+	if ((rq->SHORT->nr_active) && !(idx<MAX_RT_PRIO))	//1
+	{
+		array = rq->SHORT;
+		idx = sched_find_first_bit(array->bitmap);
+	}
+	if ((rq->SHORT_OVERDUE->nr_active)&&(!rq->SHORT->nr_active)&&(!rq->active->nr_active)&&(!rq->expired->nr_active))
+	{
+		array = rq->SHORT_OVERDUE;							//2
+		idx = sched_find_first_bit(array->bitmap);
+	}
+	/*TEST - NEW CODE 3.5.15 - LOTEM*/
+//
+//    if (idx > MAX_RT_PRIO) {                	//1
+//        if (!(rq->SHORT)->nr_active) {			//2
+//           if (unlikely(!array->nr_active)) {	//3
+//        	   array = rq->SHORT_OVERDUE;
+//           }
+//        } else {
+//        	array = rq->SHORT;
+//        }
+//        if (array != rq->active){				//4
+//        	idx = sched_find_first_bit(array->bitmap);
+//        }
+//    }
 	/*************      End of HW2 Lotem  - 30.4.2015     	*******************/
 
 	queue = array->queue + idx;
