@@ -647,6 +647,14 @@ int main()
         printf("Testing race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
         testScheduleShortOverOther2();
 
+        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
+        testScheduleOtherOverOVERDUEBecauseOfTrials();
+
+        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
+        testScheduleOtherOverOVERDUEBecauseOfTrials2();
+
 //		printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
 //		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
 //		testScheduleOtherOverOVERDUEBecauseOfTime();
@@ -655,16 +663,8 @@ int main()
 //		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
 //		testScheduleOtherOverOVERDUEBecauseOfTime2();
 //
-//		printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//        testScheduleOtherOverOVERDUEBecauseOfTrials();
-//
-//		printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//        testScheduleOtherOverOVERDUEBecauseOfTrials2();
-
         printf("Testing making this process SHORT... ");
         testMakeShort();
-          printf("Success!\n");
+        printf("Success!\n");
         return 0;
 }
