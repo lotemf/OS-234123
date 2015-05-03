@@ -518,9 +518,9 @@ void wake_up_forked_process(task_t * p)
 	/*HW2 - Lotem 30.4.15*/
 	if (IS_OVERDUE(p)){
 		p->prio = OVERDUE_PRIO;						//HW2 - change lotem 2.5.15
-	} else if (IS_SHORT(p)){
-		p->prio = p->static_prio;
-	/*End of HW2 Additions - Lotem 30.4.15*/
+//	} else if (IS_SHORT(p)){
+//		p->prio = p->static_prio;
+//	/*End of HW2 Additions - Lotem 30.4.15*/
 	} else if (!rt_task(p)) {
 		/*
 		 * We decrease the sleep average of forking parents
@@ -531,14 +531,14 @@ void wake_up_forked_process(task_t * p)
 		p->sleep_avg = p->sleep_avg * CHILD_PENALTY / 100;
 		p->prio = effective_prio(p);
 	}
-	/*if(IS_OVERDUE(current)){ // hw2 - alon the father gives up the cpu
-		dequeue_task(current, current->array);
+	if(IS_OVERDUE(current) && (current->array == rq->SHORT)){ // hw2 - alon the father gives up the cpu
+		dequeue_task(current, rq->SHORT);
 		current->prio = OVERDUE_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
-	}else*/ if (IS_SHORT(current)) {
-		dequeue_task(current, current->array);
-		activate_task(current, rq);
-		//enqueue_task(current, rq->SHORT);
+	}else if (IS_SHORT(current)) {
+		dequeue_task(current, rq->SHORT);
+//		activate_task(current, rq);
+		enqueue_task(current, rq->SHORT);
 	}
 	//***
 	p->cpu = smp_processor_id();
