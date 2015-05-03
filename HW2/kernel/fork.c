@@ -750,11 +750,13 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 			p->static_prio = current->static_prio;
 			if(left_trials > 1) {
 				p->requested_trials = (left_trials + 1) >> 1;
-				current->requested_trials -= (left_trials/2 + 1);
+				current->requested_trials = (left_trials)%2 == 0 ?
+					(current->requested_trials - left_trials/2) :
+						(current->requested_trials - (left_trials/2 + 1));
 			}//if it's the last trial of the father, than the father lose his trial and it becomes the son's
-			else {
+			else if(left_trials == 1){
 				p->requested_trials = 1;
-				--current->requested_trials; //now the father is overdue
+				++current->used_trials; //now the father is overdue
 			}
 			p->used_trials = 0;
 		}
