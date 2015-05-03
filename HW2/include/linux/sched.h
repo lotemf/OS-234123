@@ -133,9 +133,8 @@ struct sched_param {
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
 #define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
 #define IS_SHORT(p) (p->policy == SCHED_SHORT)
-#define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
-			|| (p)->time_slice == 0) ) /* HW2 - Alon */ /*HW2 - Lotem*/
-
+#define IS_OVERDUE(p) (IS_SHORT(p) && ( ( (p)->used_trials >= ( (p)->requested_trials) ) ))/* HW2 - Alon */ /*HW2 - Lotem*/
+				//Change - Lotem 2.5.15 - Removed Error in the code upstairs (no need for timeslice check)...
 /* hw2 - cz - adding monitoring defines and macros*/
 
 #define TOTAL_MAX_TO_MONITOR 	150

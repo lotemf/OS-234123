@@ -480,23 +480,23 @@ void testSHORTRoundRobin()				//TODO - Change it to SHORT RR
 int main()
 {
 
-    	printf("Testing bad parameters... ");
-    	testBadParams();
-
-        printf("Testing SCHED_OTHER process... ");
-        testOther();
-
-        printf("Testing new System Calls... ");
-        testSysCalls();
-
-        printf("Testing making this process SHORT... ");
-        testMakeShort();
-
-        printf("Testing making son process SHORT... ");
-        testMakeSonShort();
-
-        printf("Testing fork... ");
-        testFork();																//TODO - HW2 - Check why the system freezes with multiple tests...
+//    	printf("Testing bad parameters... ");
+//    	testBadParams();
+//
+//        printf("Testing SCHED_OTHER process... ");
+//        testOther();
+//
+//        printf("Testing new System Calls... ");
+//        testSysCalls();
+//
+//        printf("Testing making this process SHORT... ");
+//        testMakeShort();
+//
+//        printf("Testing making son process SHORT... ");
+//        testMakeSonShort();
+//
+//        printf("Testing fork... ");
+//        testFork();																//TODO - HW2 - Check why the system freezes with multiple tests...
 //
 //        printf("Testing becoming overdue... ");
 //        testBecomingOverdue();
@@ -527,9 +527,9 @@ int main()
 	//		  It seems that something is wrong with the way these processes run
 	//		  in FIFO....      -- Not sure yet ehat is the cause...
 
-//
-//        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
-//        /*Fucks Up The System*/testScheduleOtherOverOverdue();
+////
+        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
+        /*Fucks Up The System*/testScheduleOtherOverOverdue();
 //
 //        printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");//TODO - This test causes the system to freeze :(
 //        testScheduleOtherOverOverdue2();

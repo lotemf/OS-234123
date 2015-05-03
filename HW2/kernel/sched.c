@@ -319,10 +319,11 @@ static inline int effective_prio(task_t *p)
 static inline void activate_task(task_t *p, runqueue_t *rq)
 {
 	unsigned long sleep_time = jiffies - p->sleep_timestamp;
-	prio_array_t *array = rq->active;
+	prio_array_t *array = NULL;							//HW2 - Lotem 3.5.15
 
 	//HW2 - Lotem 30.4.15
 	if (!IS_SHORT(p)) {
+		array = rq->active;
 		if (!rt_task(p) && sleep_time) {							//We don't have interactive SHORT processes, so we don't need to grant them a bonus
 			/*
 			 * This code gives a bonus to interactive tasks. We update
@@ -532,10 +533,15 @@ void wake_up_forked_process(task_t * p)
 		p->prio = effective_prio(p);
 	}
 	if(IS_OVERDUE(current) && (current->array == rq->SHORT)){ // hw2 - alon the father gives up the cpu
+		/*TEST*/ printk("**Notice: \n");
+		/*TEST*/ printk("The father process became SHORT_OVERDUE and the son is SHORT \n");
+
 		dequeue_task(current, rq->SHORT);
 		current->prio = OVERDUE_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
 	}else if (IS_SHORT(current)) {
+		/*TEST*/ printk("**Notice: \n");
+		/*TEST*/ printk("Both father and son processes are SHORT \n");
 		dequeue_task(current, rq->SHORT);
 //		activate_task(current, rq);
 		enqueue_task(current, rq->SHORT);
