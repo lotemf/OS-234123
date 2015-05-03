@@ -536,8 +536,8 @@ int main()
 //        printf("Testing SHORT processes Round-Robin... \n");					//TODO - This test causes the system to freeze :(
 //        testSHORTRoundRobin();
 //
-//        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
-//        /*Fucks Up The System*/testScheduleOtherOverOverdue();
+        /*NOTICE*/printf("Testing race: OTHER vs. OVERDUE (OTHER is supposed to win)\n");	//TODO - This test causes the system to freeze :(
+        /*Fucks Up The System*/testScheduleOtherOverOverdue();
 //
 //        printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");//TODO - This test causes the system to freeze :(
 //        testScheduleOtherOverOverdue2();

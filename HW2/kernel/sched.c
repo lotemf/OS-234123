@@ -344,7 +344,7 @@ static inline void activate_task(task_t *p, runqueue_t *rq)
              array = rq->SHORT;
              if (IS_OVERDUE(p)) {
                      array = rq->SHORT_OVERDUE;
-                     p->prio = MAX_PRIO;
+                     p->prio = OVERDUE_PRIO;
              } else {
                      p->prio = p->static_prio;	//1
              }
@@ -517,7 +517,7 @@ void wake_up_forked_process(task_t * p)
 	p->state = TASK_RUNNING;
 	/*HW2 - Lotem 30.4.15*/
 	if (IS_OVERDUE(p)){
-		p->prio = MAX_PRIO;						//HW2 - change lotem 2.5.15
+		p->prio = OVERDUE_PRIO;						//HW2 - change lotem 2.5.15
 	} else if (IS_SHORT(p)){
 		p->prio = p->static_prio;
 	/*End of HW2 Additions - Lotem 30.4.15*/
@@ -930,7 +930,7 @@ void scheduler_tick(int user_tick, int system)
 			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
 			if (IS_OVERDUE(p)){							//2
-				p->prio = MAX_PRIO;
+				p->prio = OVERDUE_PRIO;
 				enqueue_task(p, rq->SHORT_OVERDUE);
 				p->reason = A_SHORT_process_became_overdue;	//hw2 - cz - monitoring
 			}else {
@@ -1304,7 +1304,7 @@ void set_user_nice(task_t *p, long nice)
 
 	/*************			HW2 addition   -Lotem 28.4.15 23.00			******/
 	if (IS_OVERDUE(p)){
-		p->prio=MAX_PRIO;						//According to the PDF we should set the priority
+		p->prio=OVERDUE_PRIO;						//According to the PDF we should set the priority
 	}											//of SHORT_OVERDUE processes to be the same
 	/*************			End of HW2 addition   -Lotem 28.4.15 23.00			******/
 
@@ -1478,7 +1478,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
             p->prio = p->static_prio;		/*According to the PDF...*/
             p->policy = policy;
             if (IS_OVERDUE(p)) {												//Changing it to overdue...
-                    p->prio = MAX_PRIO;
+                    p->prio = OVERDUE_PRIO;
             }
             if (array) {
                     activate_task(p, task_rq(p));
