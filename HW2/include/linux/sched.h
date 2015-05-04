@@ -162,7 +162,7 @@ struct sched_param {
 
 /* hw2 - cz - adding monitoring structs */
 typedef enum{
-	Default, //- TODO cz not sure why yoav added default
+	Default, //- for debugging
 	A_task_was_created,
 	A_task_ended,
 	A_task_yields_the_CPU,
@@ -638,7 +638,7 @@ extern struct exec_domain	default_exec_domain;
 	used_trials:		0,							\
 	reason:				0,							\
 }
-//hw2 - cz - value 0 for reason is DEFAULT
+//hw2 - cz - value 0 for reason is DEFAULT for debugging
 
 #ifndef INIT_TASK_SIZE
 # define INIT_TASK_SIZE	2048*sizeof(long)
