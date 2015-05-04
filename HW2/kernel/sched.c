@@ -495,7 +495,7 @@ repeat_lock_task:
 		}
 		/* Making sure we are not switching the same process*/
 		if ((reschedCheck == 1) && ((rq->curr) != p) ){
-		resched_task(rq->curr);
+			resched_task(rq->curr);
 		}
 		/********		End of HW2 Additions - Lotem 30.4.15		********/
 		success = 1;
@@ -935,7 +935,7 @@ void scheduler_tick(int user_tick, int system)
 			p->used_trials++;
 			int next_time_slice = ((p->requested_time)/(p->used_trials));		//TODO - HW2 - 4.5.15
 			p->time_slice = next_time_slice;
-			dequeue_task(p, rq->SHORT);
+			dequeue_task(p, rq->SHORT);											//TODO - HW2 change 4.5.15
 			set_tsk_need_resched(p);
 			if (IS_OVERDUE(p) || !next_time_slice){							//2
 				p->prio = OVERDUE_PRIO;											//TODO - new code 3.5.15 21.30
@@ -1024,6 +1024,8 @@ pick_next_task:
 		goto switch_tasks;
 	}
 	//HW2 - Lotem 30.4.15
+	array = rq->active;							//TODO 4.5.15 - Runqueue Problem - was NULL before...
+
 	if (((rq->active)->nr_active || (rq->expired)->nr_active)) {		//There are SCHED_OTHER processes in the system
 		array = rq->active;
 		if (unlikely(!array->nr_active)) {
