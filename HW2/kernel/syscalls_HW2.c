@@ -17,7 +17,6 @@ int sys_is_SHORT(int pid){
 	if (!(IS_SHORT(p))){
 			return -EINVAL;
 	}
-
 	if (IS_OVERDUE(p)){
 		return 0;
 	}
@@ -31,10 +30,10 @@ int sys_remaining_time(int pid){
 	unsigned time = 0;
 	int check = sys_is_SHORT(pid);
 
-	if (!check){
-		return 0;
-	}																			//TODO - fixed return values 5.5.15 1.30
-	if (check == -1){
+	if (check != 1){
+		if (!check){
+			return 0;
+		}
 		return -EINVAL;
 	}
 	task_t *p = NULL;
