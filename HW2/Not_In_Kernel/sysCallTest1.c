@@ -542,6 +542,43 @@ void testScheduleOtherOverOVERDUEBecauseOfTime2()
         }
 }
 
+
+
+//void testScheduleOtherOverOverdue2()
+//{
+//        int id = fork();
+//        int status;
+//        if (id > 0) {
+//                struct sched_param param1;
+//                int expected_requested_time = 5;
+//                int expected_trials = 2;
+//                param1.requested_time = expected_requested_time;
+//                param1.trial_num = expected_trials;
+//
+//                int id2 = fork();
+//                if (id2 == 0)
+//                {
+//                        doMediumTask();
+//                        printf("\tSCHED_OTHER son finished\n");
+//                        _exit(0);
+//                }
+//                else
+//                {
+//                        struct sched_param param2;
+//                        param2.sched_priority = 1;
+//                        sched_setscheduler(id2, 0, &param2);            // regular SCHED_OTHER
+//                        sched_setscheduler(id, SCHED_SHORT, &param1);          // SHORT_OVERDUE process
+//                }
+//                wait(&status);
+//                wait(&status);
+//                printf("OK\n");
+//        } else if (id == 0) {
+//                doMediumTask();
+//                printf("\t\tOVERDUE son finished\n");
+//                _exit(0);
+//        }
+//}
+
 void testSHORTRoundRobin()
 {
         int id = fork();
@@ -557,12 +594,15 @@ void testSHORTRoundRobin()
                 if (id2 == 0)
                 {
                  int i, j;
-                 for (i=0; i < 3; i++){
-                	 for (j=0; j < 6; j++){
-                		 doLongTask();
-                         }
-                         printf("\tSon1\n");
-                 }
+                 for (i=0; i < 3; i++)
+                    {
+                    doLongTask();
+                    doLongTask();
+                    doLongTask();
+                    doLongTask();
+
+                    printf("\t\tSon2\n");
+                    }
                         _exit(0);
                 }
                 else
@@ -580,10 +620,12 @@ void testSHORTRoundRobin()
                 int i, j;
                 for (i=0; i < 3; i++)
                 {
-                	for (j=0; j < 6; j++){
-                    	doLongTask();
-                	}
-                	printf("\t\tSon2\n");
+                    doLongTask();
+                    doLongTask();
+                    doLongTask();
+                    doLongTask();
+
+                  printf("\tSon1\n");
                 }
                 _exit(0);
         }
