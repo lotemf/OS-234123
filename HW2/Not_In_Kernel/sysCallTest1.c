@@ -124,7 +124,7 @@ void testSysCalls()
             assert(errno == 22);
 
             struct sched_param param;
-            int expected_requested_time = 5000;
+            int expected_requested_time = 50000;
             int expected_trials = 8;
             param.requested_time = expected_requested_time;
             param.trial_num = expected_trials;
@@ -223,13 +223,6 @@ void testBecomingOverdueBecauseOfTrials()					// HW2 - Lotem - NOT SURE HOW TO R
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-//                int myId = getpid();
-//                int i = remaining_time(myId);
-//                for (i; i < 2; )
-//                {
-//                        i = remaining_time(myId);
-//                        doShortTask();
-//                }
         		doLongTask();
         		printf("The remaining time is: %d\n", remaining_time(getpid()));
                 _exit(0);
@@ -658,8 +651,8 @@ int main()
 	printf("Testing RealTimeOverShortYOGEV... ");
 	testScheduleRealTimeOverShortYOGEV();
 
-    	printf("Testing bad parameters... ");
-    	testBadParams();
+//    	printf("Testing bad parameters... ");
+//    	testBadParams();
 
         printf("Testing SCHED_OTHER process... ");
         testOther();
