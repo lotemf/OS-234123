@@ -933,7 +933,7 @@ void scheduler_tick(int user_tick, int system)
 
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
-			int next_time_slice = (ms_to_ticks((p->requested_time)))/p->used_trials;
+			int next_time_slice = ((p->requested_time)/(p->used_trials));		//TODO - HW2 - 4.5.15
 			p->time_slice = next_time_slice;
 			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
