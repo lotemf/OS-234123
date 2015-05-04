@@ -1469,7 +1469,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
         /*TEST*/printk("BAD_INPUT - Trial Number\n");	/*TEST*/
             	goto out_unlock;											//Checking input values
             }
-            if ((lp.requested_time <= 0) || (lp.requested_time > (50000))){		//TODO - Change it back to 5000 after the tests
+            if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
         /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
             	goto out_unlock;
             }
