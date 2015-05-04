@@ -278,7 +278,7 @@ void testScheduleRealTimeOverShort()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                        doLongTask();
                         printf("\tRT son finished\n");
                         _exit(0);
                 }
@@ -293,7 +293,7 @@ void testScheduleRealTimeOverShort()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+                doLongTask();
                 printf("\t\tSHORT son finished\n");
                 _exit(0);
         }
@@ -313,7 +313,7 @@ void testScheduleRealTimeOverShort2()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                		doLongTask();
                         printf("\t\tSHORT son finished\n");
                         _exit(0);
                 }
@@ -328,7 +328,7 @@ void testScheduleRealTimeOverShort2()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+    			doLongTask();
                 printf("\tRT son finished\n");
                 _exit(0);
         }
@@ -348,9 +348,9 @@ void testScheduleShortOverOther()
             int id2 = fork();
             if (id2 == 0)
             	{
-                 doMediumTask();
-                 printf("\tSHORT son finished\n");
-                 _exit(0);
+        		doLongTask();
+                printf("\tSHORT son finished\n");
+                _exit(0);
             }
             else
             {
@@ -363,7 +363,7 @@ void testScheduleShortOverOther()
             wait(&status);
             printf("OK\n");
         } else if (id == 0) {
-            doMediumTask();
+    		doLongTask();
             printf("\t\tSCHED_OTHER son finished\n");
             _exit(0);
         }
@@ -382,7 +382,7 @@ void testScheduleShortOverOther2()
 
             int id2 = fork();
             if (id2 == 0){
-            	doMediumTask();
+        		doLongTask();
                 printf("\t\tSCHED_OTHER son finished\n");
                 _exit(0);
             }
@@ -397,7 +397,7 @@ void testScheduleShortOverOther2()
             wait(&status);
             printf("OK\n");
         } else if (id == 0) {
-            doMediumTask();
+    		doLongTask();
             printf("\tSHORT son finished\n");
             _exit(0);
         }
@@ -417,7 +417,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTrials()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                                   		doLongTask();
                         printf("\t\tOVERDUE son finished\n");
                         _exit(0);
                 }
@@ -432,7 +432,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTrials()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+                           		doLongTask();
                 printf("\tSCHED_OTHER son finished\n");
                 _exit(0);
         }
@@ -452,7 +452,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTrials2()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                                   		doLongTask();
                         printf("\t\tOVERDUE son finished\n");
                         _exit(0);
                 }
@@ -467,7 +467,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTrials2()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+                           		doLongTask();
                 printf("\tSCHED_OTHER son finished\n");
                 _exit(0);
         }
@@ -486,7 +486,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTime()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                                   		doLongTask();
                         printf("\t\tOVERDUE son finished\n");
                         _exit(0);
                 }
@@ -501,7 +501,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTime()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+                           		doLongTask();
                 printf("\tSCHED_OTHER son finished\n");
                 _exit(0);
         }
@@ -521,7 +521,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTime2()
                 int id2 = fork();
                 if (id2 == 0)
                 {
-                        doMediumTask();
+                                   		doLongTask();
                         printf("\t\tOVERDUE son finished\n");
                         _exit(0);
                 }
@@ -536,7 +536,7 @@ void testScheduleOtherOverOVERDUEBecauseOfTime2()
                 wait(&status);
                 printf("OK\n");
         } else if (id == 0) {
-                doMediumTask();
+                           		doLongTask();
                 printf("\tSCHED_OTHER son finished\n");
                 _exit(0);
         }
@@ -596,7 +596,7 @@ void testSHORTRoundRobin()
                         int i, j;
                         for (i=0; i < 4; i++)
                         {
-                                doMediumTask();
+                                           		doLongTask();
                                 printf("\t\tSon2\n");
                         }
                         _exit(0);
@@ -616,7 +616,7 @@ void testSHORTRoundRobin()
                 int i, j;
                 for (i=0; i < 4; i++)
                 {
-                        doMediumTask();
+                                   		doLongTask();
                         printf("\tSon1\n");
                 }
                 _exit(0);
@@ -662,46 +662,46 @@ int main()
 //
 //        printf("Testing fork... ");
 //        testFork();
-//
+
         printf("Testing becoming overdue because of Trials... ");
         testBecomingOverdueBecauseOfTrials();
-//
-//        printf("Testing becoming overdue because of Time... ");
-//        testBecomingOverdueBecauseOfTime();
-//
-//        printf("Testing SHORT processes Round-Robin... \n");
-//        testSHORTRoundRobin();
-//
-//        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");			//TODO - we get an opposite outcome - maybe because
-//        testScheduleRealTimeOverShort();										//       the course demands the father of fork() to release CPU
-//
-//        printf("Testing race: RT vs. LSHORT #2 (RT is supposed to win)\n");
-//        testScheduleRealTimeOverShort2();
-//
-//        printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
-//        testScheduleShortOverOther();
-//
-//        printf("Testing race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
-//        testScheduleShortOverOther2();
-//
-//        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
-//        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
-//        testScheduleOtherOverOVERDUEBecauseOfTrials();
-//
-//        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
-//        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
-//        testScheduleOtherOverOVERDUEBecauseOfTrials2();
-//
-//		printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//		testScheduleOtherOverOVERDUEBecauseOfTime();
-//
-//		printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
-//		testScheduleOtherOverOVERDUEBecauseOfTime2();
-//
-//        printf("Testing making this process SHORT... ");
-//        testMakeShort();
-//        printf("Success!\n");
+
+        printf("Testing becoming overdue because of Time... ");
+        testBecomingOverdueBecauseOfTime();
+
+        printf("Testing SHORT processes Round-Robin... \n");
+        testSHORTRoundRobin();
+
+        printf("Testing race: RT vs. SHORT (RT is supposed to win)\n");			//TODO - we get an opposite outcome - maybe because
+        testScheduleRealTimeOverShort();										//       the course demands the father of fork() to release CPU
+
+        printf("Testing race: RT vs. LSHORT #2 (RT is supposed to win)\n");
+        testScheduleRealTimeOverShort2();
+
+        printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
+        testScheduleShortOverOther();
+
+        printf("Testing race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
+        testScheduleShortOverOther2();
+
+        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
+        testScheduleOtherOverOVERDUEBecauseOfTrials();
+
+        printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+        printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
+        testScheduleOtherOverOVERDUEBecauseOfTrials2();
+
+		printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+		testScheduleOtherOverOVERDUEBecauseOfTime();
+
+		printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+		printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");	//TODO - !!! ERROR !!! -  Here we get an opposite outcome
+		testScheduleOtherOverOVERDUEBecauseOfTime2();
+
+        printf("Testing making this process SHORT... ");
+        testMakeShort();
+        printf("Success!\n");
         return 0;
 }
