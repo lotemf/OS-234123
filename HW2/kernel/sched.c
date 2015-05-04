@@ -1089,6 +1089,7 @@ switch_tasks:
 			update_switch_info_struct(&(rq->record_array[rq->record_idx]),prev->pid,next->pid,prev->policy,next->policy,jiffies,prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
+			prev->reason = Default; //this resets the reason after a context switch for debugging
 		}
 //hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);

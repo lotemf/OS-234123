@@ -4,6 +4,41 @@
 
 #define HZ 512
 
+
+void printMonitoringUsage(int reason){
+	printf("\n the integer value of reason should be between 0 to 7\n, reason value is:\t %d". reason);
+	switch (reason) {
+		case 0:
+			printf("\n reason is Default, means reason of context switch wasn't monitored\n\n");
+			break;
+		case 1:
+			printf("\n reason for context switch is:\t a task was created\n\n");
+			break;
+		case 2:
+			printf("\n reason for context switch is:\t a task was ended\n\n");
+			break;
+		case 3:
+			printf("\n reason for context switch is:\t a task yields the CPU\n\n");
+			break;
+		case 4:
+			printf("\n reason for context switch is:\t a SHORT process became overdue\n\n");
+			break;
+		case 5:
+			printf("\n reason for context switch is:\t a previous task goes out for waiting\n\n");
+			break;
+		case 6:
+			printf("\n reason for context switch is:\t a task with higher priority returns from waiting\n\n");
+			break;
+		case 7:
+			printf("\n reason for context switch is:\t the time slice of previous task has ended\n\n");
+			break;
+		default:
+			printf("\n value of reason is %d, this is not legal value for reason\n\n", reason);
+			break;
+	}
+
+}
+
 void doLongTask()
 {
         long i;
