@@ -6,7 +6,7 @@
 
 
 void printMonitoringUsage(int reason){
-	printf("\n the integer value of reason should be between 0 to 7\n, reason value is:\t %d". reason);
+	printf("\n the integer value of reason should be between 0 to 7\n, reason value is:\t %d", reason);
 	switch (reason) {
 		case 0:
 			printf("\n reason is Default, means reason of context switch wasn't monitored\n\n");
