@@ -14,13 +14,10 @@ int sys_is_SHORT(int pid){
 		return -EINVAL;
 	}
 
-	/*HW2 - TEST*/
-	printk("The policy of this process is %d \n\r",p->policy);
-	/*HW2 - TEST*/
-
 	if (!(IS_SHORT(p))){
 			return -EINVAL;
 	}
+
 	if (IS_OVERDUE(p)){
 		return 0;
 	}
@@ -33,13 +30,17 @@ int sys_is_SHORT(int pid){
 int sys_remaining_time(int pid){
 	unsigned time = 0;
 	int check = sys_is_SHORT(pid);
-	if (check != 1){
+
+	if (!check){
+		return 0;
+	}																			//TODO - fixed return values 5.5.15 1.30
+	if (check == -1){
 		return -EINVAL;
 	}
 	task_t *p = NULL;
 	p = find_task_by_pid(pid);
 
-	time = ticks_to_ms(REMAINING_TIME(p));		//Still not sure about this MACRO...
+	time = ticks_to_ms(REMAINING_TIME(p));
 	return (int)time;
 
 }

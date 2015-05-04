@@ -539,13 +539,14 @@ void wake_up_forked_process(task_t * p)
 		dequeue_task(current, rq->SHORT);
 		current->prio = OVERDUE_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
-	}else if (IS_SHORT(current)) {
-		/*TEST*/ printk("**Notice: \n");
-		/*TEST*/ printk("Both father and son processes are SHORT \n");
-		dequeue_task(current, rq->SHORT);
-//		activate_task(current, rq);
-		enqueue_task(current, rq->SHORT);
 	}
+//	else if (IS_SHORT(current)) {
+//		/*TEST*/ printk("**Notice: \n");
+//		/*TEST*/ printk("Both father and son processes are SHORT \n");
+//		dequeue_task(current, rq->SHORT);
+////		activate_task(current, rq);
+//		enqueue_task(current, rq->SHORT);
+//	}
 	//***
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
@@ -1025,9 +1026,8 @@ pick_next_task:
 	}
 	//HW2 - Lotem 30.4.15
 	array = rq->active;							//TODO 4.5.15 - Runqueue Problem - was NULL before...
-
 	if (((rq->active)->nr_active || (rq->expired)->nr_active)) {		//There are SCHED_OTHER processes in the system
-		array = rq->active;
+//		array = rq->active;
 		if (unlikely(!array->nr_active)) {
 			/*
 			 * Switch the active and expired arrays.
@@ -1049,7 +1049,6 @@ pick_next_task:
  	***************************************************************************/
 	idx = sched_find_first_bit(array->bitmap);
 
-	/*TEST - NEW CODE 3.5.15 - LOTEM*/
 	if ((rq->SHORT->nr_active) && !(idx<MAX_RT_PRIO))	//1
 	{
 		array = rq->SHORT;
@@ -1060,20 +1059,6 @@ pick_next_task:
 		array = rq->SHORT_OVERDUE;							//2
 		idx = sched_find_first_bit(array->bitmap);
 	}
-	/*TEST - NEW CODE 3.5.15 - LOTEM*/
-//
-//    if (idx > MAX_RT_PRIO) {                	//1
-//        if (!(rq->SHORT)->nr_active) {			//2
-//           if (unlikely(!array->nr_active)) {	//3
-//        	   array = rq->SHORT_OVERDUE;
-//           }
-//        } else {
-//        	array = rq->SHORT;
-//        }
-//        if (array != rq->active){				//4
-//        	idx = sched_find_first_bit(array->bitmap);
-//        }
-//    }
 	/*************      End of HW2 Lotem  - 30.4.2015     	*******************/
 
 	queue = array->queue + idx;
@@ -1484,7 +1469,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
         /*TEST*/printk("BAD_INPUT - Trial Number\n");	/*TEST*/
             	goto out_unlock;											//Checking input values
             }
-            if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){
+            if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
         /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
             	goto out_unlock;
             }
