@@ -104,10 +104,10 @@ int remaining_trials(int pid){
 
 }
 /*******************************************************************************
- * get_scheduling_statistics(struct switch_info * tasks_info) -
+ * get_scheduling_statistic(struct switch_info * tasks_info) -
  * Complexity- o(1)
  ******************************************************************************/
-int get_scheduling_statistics(struct switch_info * info){
+int get_scheduling_statistic(struct switch_info * info){
 		long __res;
 		__asm__ volatile (
 		"movl $246, %%eax;"
