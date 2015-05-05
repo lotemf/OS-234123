@@ -1073,7 +1073,13 @@ switch_tasks:
 		rq->curr = next;
 //hw2 - cz - context switch event happening, lets record!
 		if (rq->p_events_count < PROCESS_MAX_TO_MONITOR){
-			update_switch_info_struct(&(rq->record_array[rq->record_idx]),prev->pid,next->pid,prev->policy,next->policy,jiffies,prev->reason);
+			update_switch_info_struct(&((rq->record_array)[rq->record_idx]),
+										prev->pid,
+										next->pid,
+										prev->policy,
+										next->policy,
+										jiffies,
+										prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
 			prev->reason = Default; //this resets the reason after a context switch for debugging
@@ -1096,11 +1102,13 @@ switch_tasks:
 //hw2 - cz - adding sys_get_scheduling_statistic sys call
 //this sys call returns an array of tasks info, sorted from the oldest to newest switch info events
 int sys_get_scheduling_statistic(switch_info_t* tasks_info){
+
 	unsigned long flags;
 	runqueue_t *rq;
 	int idx;
-	int actual_idx = rq->record_idx;
+	int actual_idx;
 	int result = 0;
+
 
 	if (!tasks_info) {
 		return -EINVAL;
@@ -1108,26 +1116,48 @@ int sys_get_scheduling_statistic(switch_info_t* tasks_info){
 
 	local_irq_save(flags);
     rq = this_rq();
+    actual_idx = rq->record_idx;
     switch_info_t returned_record[TOTAL_MAX_TO_MONITOR];
 
     if (rq->is_round_completed_flag){
+    	printk("\n\tHW2 DEBUG, round is completed flag is on\n");
+
     	for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
-    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], rq->record_array[actual_idx]);
+
+    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], (rq->record_array)[actual_idx]);
+//    		returned_record[idx].time = (rq->record_array)[actual_idx].time;
+//    		returned_record[idx].previous_pid = (rq->record_array)[actual_idx].previous_pid;
+//    		returned_record[idx].previous_policy = (rq->record_array)[actual_idx].previous_policy;
+//    		returned_record[idx].next_pid = (rq->record_array)[actual_idx].next_pid;
+//    		returned_record[idx].next_policy = (rq->record_array)[actual_idx].next_policy;
+//    		returned_record[idx].reason = (rq->record_array)[actual_idx].reason;
     		if (++actual_idx == TOTAL_MAX_TO_MONITOR){
     			actual_idx = 0;
     		}
     		result++;
     	}
     } else{
+
     	for (idx = actual_idx - 1; idx >= 0; idx--){
-    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], rq->record_array[actual_idx]);
+    		COPY_SWITCH_INFO_STRUCT(returned_record[idx], (rq->record_array)[idx]);
+//    		returned_record[idx].time = (rq->record_array)[idx].time;
+//    		returned_record[idx].previous_pid = (rq->record_array)[idx].previous_pid;
+//    		returned_record[idx].previous_policy = (rq->record_array)[idx].previous_policy;
+//    		returned_record[idx].next_pid = (rq->record_array)[idx].next_pid;
+//    		returned_record[idx].next_policy = (rq->record_array)[idx].next_policy;
+//    		returned_record[idx].reason = (rq->record_array)[idx].reason;
+
     		result++;
     	}
     }
+    local_irq_restore(flags);
+
     if (copy_to_user(tasks_info, returned_record, sizeof(struct switch_info[TOTAL_MAX_TO_MONITOR]))) {
-             return -EFAULT;
-     }
-     return result;
+
+    		return -EFAULT;
+    }
+
+    return result;
 }
 
 
