@@ -128,7 +128,7 @@ struct sched_param {
 };
 
 /*------------------------------------------------------------------------------
- 	 	 	 	 	 	 	 * HW2	Macros	*					HW2 - Lotem
+ 	 	 	 	 	 	 	 * HW2	Macros	*
  ------------------------------------------------------------------------------*/
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
 #define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
