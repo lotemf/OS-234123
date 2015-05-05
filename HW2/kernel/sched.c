@@ -1125,12 +1125,6 @@ int sys_get_scheduling_statistic(switch_info_t* tasks_info){
     	for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
 
     		COPY_SWITCH_INFO_STRUCT(returned_record[idx], (rq->record_array)[actual_idx]);
-//    		returned_record[idx].time = (rq->record_array)[actual_idx].time;
-//    		returned_record[idx].previous_pid = (rq->record_array)[actual_idx].previous_pid;
-//    		returned_record[idx].previous_policy = (rq->record_array)[actual_idx].previous_policy;
-//    		returned_record[idx].next_pid = (rq->record_array)[actual_idx].next_pid;
-//    		returned_record[idx].next_policy = (rq->record_array)[actual_idx].next_policy;
-//    		returned_record[idx].reason = (rq->record_array)[actual_idx].reason;
     		if (++actual_idx == TOTAL_MAX_TO_MONITOR){
     			actual_idx = 0;
     		}
@@ -1140,13 +1134,6 @@ int sys_get_scheduling_statistic(switch_info_t* tasks_info){
 
     	for (idx = actual_idx - 1; idx >= 0; idx--){
     		COPY_SWITCH_INFO_STRUCT(returned_record[idx], (rq->record_array)[idx]);
-//    		returned_record[idx].time = (rq->record_array)[idx].time;
-//    		returned_record[idx].previous_pid = (rq->record_array)[idx].previous_pid;
-//    		returned_record[idx].previous_policy = (rq->record_array)[idx].previous_policy;
-//    		returned_record[idx].next_pid = (rq->record_array)[idx].next_pid;
-//    		returned_record[idx].next_policy = (rq->record_array)[idx].next_policy;
-//    		returned_record[idx].reason = (rq->record_array)[idx].reason;
-
     		result++;
     	}
     }
