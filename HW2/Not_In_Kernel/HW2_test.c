@@ -691,32 +691,32 @@ int main()
 //
 //    printf("Testing making son process SHORT... ");
 //    testMakeSonShort();
-
+//
 //    printf("Testing fork... ");
 //    testFork();
 //
-//    printf("Testing becoming overdue because of Trials... ");
-//    testBecomingOverdueBecauseOfTrials();
-
-    printf("Testing becoming overdue because of Time... ");
-    testBecomingOverdueBecauseOfTime();
+    printf("Testing becoming overdue because of Trials... ");
+    testBecomingOverdueBecauseOfTrials();
+//
+//    printf("Testing becoming overdue because of Time... ");
+//    testBecomingOverdueBecauseOfTime();
 //
 //    printf("Testing SHORT processes Round-Robin... \n");
 //    testSHORTRoundRobin();
 //
 //    printf("testChangeRequestedTimeForShort... ");							//TODO - This test's results are depended on you implementation
-//    testChangeRequestedTimeForShort();												 (there wasn't a specific demand...)
+//    testChangeRequestedTimeForShort();										//		 (there wasn't a specific demand...)
 //
 //    printf("Testing race: RT vs. SHORT (RT is supposed to win)...\n");
 //    testScheduleRealTimeOverShort();
 //
 //    printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
 //    testScheduleShortOverOther();
-//
+
 //    printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
 //    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
 //    testScheduleOtherOverOVERDUEBecauseOfTrials();
-//
+
 //
 //    printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");
 //    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n");
@@ -729,8 +729,8 @@ int main()
 //
 //    printf("Testing making this process SHORT... ");
 //    testMakeShort();
-
-    printf("Success!\n");
+//
+//    printf("Success!\n");
 
     return 0;
 }
