@@ -466,7 +466,7 @@ repeat_lock_task:
 		*
 		* So when do we need to call resched_task ?
 		//1 - The normal case (both processes aren't SHORT, so the one with the better prio wins)
-		//2 - If p is a Real-Time process, and current is SHORT it wins
+		//2 - If p is a Real-Time process, and current is SHORT , RT needs to run
 		//3 - If both of the processes are SHORT
 		      and If both are not OVERDUE, we calculate based on prio
 		//4 - If the current process is OVERDUE and the new one isn't
@@ -490,7 +490,7 @@ repeat_lock_task:
 		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){				//4
 			reschedCheck=1;
 		}
-		if (IS_SHORT(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//5
+		if (!IS_OVERDUE(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//5			//HW2 Update - Lotem 5.5.15 16.15
 			reschedCheck=1;
 		}
 		/* Making sure we are not switching the same process*/
@@ -540,13 +540,12 @@ void wake_up_forked_process(task_t * p)
 		current->prio = OVERDUE_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
 	}
-//	else if (IS_SHORT(current)) {
-//		/*TEST*/ printk("**Notice: \n");
-//		/*TEST*/ printk("Both father and son processes are SHORT \n");
-//		dequeue_task(current, rq->SHORT);
-////		activate_task(current, rq);
-//		enqueue_task(current, rq->SHORT);
-//	}
+	else if (IS_SHORT(current)) {
+		/*TEST*/ printk("**Notice: \n");
+		/*TEST*/ printk("Both father and son processes are SHORT \n");
+		dequeue_task(current, rq->SHORT);										//TODO - Changed back from comment - HW2 - Lotem 5.5.15 15.30
+		enqueue_task(current, rq->SHORT);
+	}
 	//***
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
@@ -930,15 +929,22 @@ void scheduler_tick(int user_tick, int system)
 	 	 3 - If it's still a SHORT process after the changes we dequeue and enqueue
 	 	     in the SHORT prio array, as in RR policy with it's new TimeSlice
 	 **************************************************************************/
+//	/*TEST*/printk("HW2 - 5.5.15:Before the IS_SHORT check scheduler_tick\n");
 	if (IS_SHORT(p)){
+	/*TEST*/printk("HW2 - 5.5.15:After IS_SHORT Before the !OVERDUE Check of scheduler_tick\n");
 
+//		/*TEST*/if ((p->used_trials < p->requested_trials) && (!--p->time_slice)){
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
 			int next_time_slice = ((p->requested_time)/(p->used_trials));		//TODO - HW2 - 4.5.15
 			p->time_slice = next_time_slice;
 			dequeue_task(p, rq->SHORT);											//TODO - HW2 change 4.5.15
 			set_tsk_need_resched(p);
+			/*TEST*/printk("HW2 - 5.5.15:Before the OVERDUE Check of scheduler_tick\n");
 			if (IS_OVERDUE(p) || !next_time_slice){							//2
+				/*TEST*/printk("HW2 - 5.5.15: Inside IS_OVERDUE of scheduler_tick\n");
+				/*TEST*/printk("HW2 - 5.5.15:Used Trials of p: %d\n",p->used_trials);
+				/*TEST*/printk("HW2 - 5.5.15:Requested Trials of p: %d\n",p->requested_trials);
 				p->prio = OVERDUE_PRIO;											//TODO - new code 3.5.15 21.30
 				p->used_trials = p->requested_trials + 1;				//THis ensures it will be checked as OVERDUE in the IS_OVERDUE macro
 				enqueue_task(p, rq->SHORT_OVERDUE);
@@ -1447,11 +1453,25 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 
 
 	/***************************************************************************
-         HW2 - Preventing SHORT process from changing it's priority
+         HW2 - Preventing SHORT process from changing it's policy
+         	   and enforcing the trial_num, and requested_time fields:
+         	   The Course Demands are:
+         	   1.(New trial_num == Current trial_num)
+         	   2.(New requsetd_time < Current requested_time)
 	 **************************************************************************/
-    if ((p->policy == SCHED_SHORT) && (policy != SCHED_SHORT)) {
-    	retval = -EPERM;							// HW2 - Lotem 28.4.15 21.00
-    	goto out_unlock;
+	/*TEST*/printk("HW2 - 5.5.15:Before the IS_SHORT check in setscheduler function\n");
+	if (p->policy == SCHED_SHORT) {
+    	if (policy == -1){			//That means set_param called setscheduler
+    		if ((p->requested_trials != lp.trial_num) || (p->requested_time < lp.requested_time)){
+    			retval = -EPERM;												// HW2 - Lotem 5.5.15 16.00
+    			goto out_unlock;
+    		}
+    	}
+    	else if  ((policy != SCHED_SHORT)){
+    		retval = -EPERM;													// HW2 - Lotem 5.5.15 16.00
+    		goto out_unlock;
+    	}
+
     }
     /***		End of HW2 Additions by Lotem			***/
 
