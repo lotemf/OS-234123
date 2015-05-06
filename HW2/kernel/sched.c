@@ -537,21 +537,17 @@ void wake_up_forked_process(task_t * p)
 		p->sleep_avg = p->sleep_avg * CHILD_PENALTY / 100;
 		p->prio = effective_prio(p);
 	}
-	if(IS_OVERDUE(current) && (current->array == rq->SHORT)){ // hw2 - alon the father gives up the cpu
-		/*TEST*/ printk("**Notice: \n");
-		/*TEST*/ printk("The father process became SHORT_OVERDUE and the son is SHORT \n");
-
+	/* HW2 - alon the father gives up the cpu */
+	if(IS_OVERDUE(current) && (current->array == rq->SHORT)){
 		dequeue_task(current, rq->SHORT);
 		current->prio = OVERDUE_PRIO;
 		enqueue_task(current, rq->SHORT_OVERDUE);
 	}
 	else if (IS_SHORT(current)) {
-		/*TEST*/ printk("**Notice: \n");
-		/*TEST*/ printk("Both father and son processes are SHORT \n");
-		dequeue_task(current, rq->SHORT);										//TODO - Changed back from comment - HW2 - Lotem 5.5.15 15.30
+		dequeue_task(current, rq->SHORT);
 		enqueue_task(current, rq->SHORT);
 	}
-	//***
+	/* HW2 - alon end of additions */
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
 
@@ -937,13 +933,13 @@ void scheduler_tick(int user_tick, int system)
 	if (IS_SHORT(p)){
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
-			int next_time_slice = ((p->requested_time)/(p->used_trials));		//TODO - HW2 - 4.5.15
+			int next_time_slice = ((p->requested_time)/(p->used_trials));
 			p->time_slice = next_time_slice;
-			dequeue_task(p, rq->SHORT);											//TODO - HW2 change 4.5.15
+			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
 			if (IS_OVERDUE(p) || !next_time_slice){							//2
-				p->prio = OVERDUE_PRIO;											//TODO - new code 3.5.15 21.30
-				p->used_trials = p->requested_trials + 1;				//THis ensures it will be checked as OVERDUE in the IS_OVERDUE macro
+				p->prio = OVERDUE_PRIO;
+				p->used_trials = p->requested_trials + 1;
 				enqueue_task(p, rq->SHORT_OVERDUE);
 				p->reason = A_SHORT_process_became_overdue;	//hw2 - cz - monitoring
 			}else {
@@ -1028,7 +1024,7 @@ pick_next_task:
 		goto switch_tasks;
 	}
 	//HW2 - Lotem 30.4.15
-	array = rq->active;							//TODO 4.5.15 - Runqueue Problem - was NULL before...
+	array = rq->active;
 	if (((rq->active)->nr_active || (rq->expired)->nr_active)) {		//There are SCHED_OTHER processes in the system
 		if (unlikely(!array->nr_active)) {
 			/*
@@ -1334,7 +1330,7 @@ void set_user_nice(task_t *p, long nice)
 	/*************			HW2 addition   -Lotem 28.4.15 23.00			******/
 	if (IS_OVERDUE(p)){
 		p->prio=OVERDUE_PRIO;						//According to the PDF we should set the priority
-	}											//of SHORT_OVERDUE processes to be the same
+	}												//of SHORT_OVERDUE processes to be the same
 	/*************			End of HW2 addition   -Lotem 28.4.15 23.00			******/
 
 	if (array) {
@@ -1456,7 +1452,6 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
          	   1.(New trial_num == Current trial_num)
          	   2.(New requsetd_time < Current requested_time)
 	 **************************************************************************/
-	/*TEST*/printk("HW2 - 5.5.15:Before the IS_SHORT check in setscheduler function\n");
 	if (p->policy == SCHED_SHORT) {
     	if (policy == -1){			//That means set_param called setscheduler
     		if ((p->requested_trials != lp.trial_num) || (p->requested_time < lp.requested_time)){
@@ -1498,13 +1493,10 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
                     retval = -EPERM;
                     goto out_unlock;
             }
-         /*TEST*/printk("The Trial Number from input is: %d\n",lp.trial_num);	/*TEST*/
             if ((lp.trial_num < 1) || (lp.trial_num > 50)){
-        /*TEST*/printk("BAD_INPUT - Trial Number\n");	/*TEST*/
-            	goto out_unlock;											//Checking input values
+            	goto out_unlock;												//Checking input values
             }
             if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
-        /*TEST*/printk("BAD_INPUT - Requested Time\n");	/*TEST*/
             	goto out_unlock;
             }
             current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
