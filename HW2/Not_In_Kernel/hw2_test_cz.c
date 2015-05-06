@@ -23,9 +23,8 @@ const char* context_switching_reason[] =
                         "A task was created",
                         "A task ended",
                         "A task yields the CPU",
-                        "An LSHORT process became overdue",
+                        "An SHORT-process became overdue",
                         "A previous task goes out for waiting",
-                        "A change in the scheduling params",
                         "A task with higher priority returns from waiting",
                         "The time slice of the previous task has ended"
 };
