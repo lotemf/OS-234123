@@ -1089,7 +1089,7 @@ switch_tasks:
 										prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
-			prev->reason = Default; //this resets the reason after a context switch for debugging
+//			prev->reason = Default; //this resets the reason after a context switch for debugging
 		}
 //hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);
