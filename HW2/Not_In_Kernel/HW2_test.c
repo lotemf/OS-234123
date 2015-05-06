@@ -413,6 +413,8 @@ void testScheduleOtherOverOVERDUEBecauseOfTrials()
         {
             doLongTask();
             doLongTask();
+            doLongTask();
+
             assert(is_SHORT(getpid())==0);
             printf("\t\tOVERDUE son finished\n"); //make sure it became overdue
             _exit(0);
@@ -638,6 +640,7 @@ void testShortOverdueFIFO()
         param.requested_time = 5;
         param.trial_num = 15;
         sched_setscheduler(Manager, SCHED_SHORT, &param); //make the son (SHORT1) a short
+        /*TEST*/printf("Manager contains: %d \n",Manager);
         wait(&status);
     }
     else if (Manager == 0)
@@ -646,6 +649,7 @@ void testShortOverdueFIFO()
         doLongTask();
         assert(is_SHORT(getpid())==0); //make sure its overdue
         int SHORT2 = fork(); //Create SHORT2
+        /*TEST*/printf("SHORT2 contains: %d \n",SHORT2);
         if(SHORT2 > 0)
         {
             //this is the SHORT1 (son of manager)
@@ -654,6 +658,7 @@ void testShortOverdueFIFO()
             param.trial_num = 15;
             sched_setscheduler(SHORT2, SCHED_SHORT, &param); //make the son (SHORT2) a short
 
+            /*TEST*/printf("is_SHORT for SHORT1 returns : %d\n",is_SHORT(getpid()));
             int i;
             for (i=0; i<5; i++)
             {
@@ -675,6 +680,7 @@ void testShortOverdueFIFO()
             doLongTask();
             assert(is_SHORT(getpid())==0); //make sure its overdue
             //this is the SHORT2 (son of SHORT1)
+            /*TEST*/printf("is_SHORT for SHORT2 returns : %d\n",is_SHORT(getpid()));
 
             int i;
             for (i=0; i<5; i++)
@@ -723,57 +729,57 @@ void testMakeShort()
 
 int main()
 {
-    printf("Testing bad parameters... ");
-    testBadParams();
+//    printf("Testing bad parameters... ");
+//    testBadParams();
+//
+//    printf("Testing SCHED_OTHER process... ");
+//    testOther();
+//
+//    printf("Testing new System Calls... ");										//TODO - This test might be incoherent eith the PDF
+//    testSysCalls();
+//
+//    printf("Testing making son process SHORT... ");
+//    testMakeSonShort();
+//
+//    printf("Testing fork... ");
+//    testFork();
+//
+//    printf("Testing becoming overdue because of Trials... ");
+//    testBecomingOverdueBecauseOfTrials();
+//
+//    printf("Testing becoming overdue because of Time... ");
+//    testBecomingOverdueBecauseOfTime();
+//
+//    printf("testChangeRequestedTimeForShort... ");
+//    testChangeRequestedTimeForShort();
 
-    printf("Testing SCHED_OTHER process... ");
-    testOther();
-
-    printf("Testing new System Calls... ");
-    testSysCalls();
-
-    printf("Testing making son process SHORT... ");
-    testMakeSonShort();
-
-    printf("Testing fork... ");
-    testFork();
-
-    printf("Testing becoming overdue because of Trials... ");
-    testBecomingOverdueBecauseOfTrials();
-
-    printf("Testing becoming overdue because of Time... ");
-    testBecomingOverdueBecauseOfTime();
-
-    printf("testChangeRequestedTimeForShort... ");
-    testChangeRequestedTimeForShort();
-
-    printf("Testing race: RT vs. SHORT (RT is supposed to win)...\n");
-    testScheduleRealTimeOverShort();
-
-    printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
-    testScheduleShortOverOther();
-
-    printf("Testing race: OTHER vs. OVERDUE #1(OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTrials();
-
-    printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTrials2();
-
-    printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTime();
-
-    printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTime2();
-
+//    printf("Testing race: RT vs. SHORT (RT is supposed to win)...\n");
+//    testScheduleRealTimeOverShort();
+//
+//    printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
+//    testScheduleShortOverOther();
+//
+//    printf("Testing race: OTHER vs. OVERDUE #1(OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTrials();
+//
+//    printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTrials2();
+//
+//    printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTime();
+//
+//    printf("Testing race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTime2();
+//
     printf("Testing SHORT - OVERDUE processes FIFO... \n");
     testShortOverdueFIFO();
-
-    printf("Testing SHORT processes Round-Robin... \n");
-    testSHORTRoundRobin();
+//
+//    printf("Testing SHORT processes Round-Robin... \n");
+//    testSHORTRoundRobin();
 
     printf("Testing making this process SHORT... ");
     testMakeShort();
