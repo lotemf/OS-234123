@@ -225,7 +225,7 @@ void testBecomingOverdueBecauseOfTrials()
         		int i = remaining_trials(myId);
         		/*TEST*/assert(i >= 0);
         		/*TEST*/printf("\t\tThe amount of remaining trials for the Son are: %d\n",i);
-                  for (i; i < 2; )
+                  for (i; i < 1; )
                   {
                 	  i = remaining_trials(myId);
                       doShortTask();
@@ -713,9 +713,9 @@ int main()
 //    printf("Testing race: SHORT vs. OTHER (SHORT is supposed to win)\n");
 //    testScheduleShortOverOther();
 
-//    printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
-//    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
-//    testScheduleOtherOverOVERDUEBecauseOfTrials();
+    printf("Testing race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n");
+    testScheduleOtherOverOVERDUEBecauseOfTrials();
 
 //
 //    printf("Testing race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");

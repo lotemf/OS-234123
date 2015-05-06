@@ -35,6 +35,7 @@ void printMonitoringUsage(switch_info_t switch_info){
 	printf("\tnext pid: %20d, \n", switch_info.next_pid);
 	printf("\tpolicy: %20s\n", policy[switch_info.previous_policy]);
 	printf("\tnext policy is: %s, \n", policy[switch_info.next_policy]);
+	printf("\ttime in ticks is: %s, \n", switch_info.time);
 	switch (switch_info.reason) {
 		case 0:
 			printf("\treason is Default, means reason of context switch wasn't monitoreds\n\n");
