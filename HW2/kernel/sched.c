@@ -495,6 +495,7 @@ repeat_lock_task:
 		}
 		/* Making sure we are not switching the same process*/
 		if ((reschedCheck == 1) && ((rq->curr) != p) ){
+			(rq->curr)->reason = A_task_with_higher_priority_returns_from_waiting; //hw2 - cz - monitoring
 			resched_task(rq->curr);
 		}
 		/********		End of HW2 Additions - Lotem 30.4.15		********/

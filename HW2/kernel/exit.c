@@ -649,7 +649,7 @@ repeat:
 		retval = -ERESTARTSYS;
 		if (signal_pending(current))
 			goto end_wait4;
-		current->reason = A_task_ended;
+		current->reason = A_previous_task_goes_out_for_waiting;
 		schedule();
 		goto repeat;
 	}

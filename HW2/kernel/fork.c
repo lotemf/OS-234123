@@ -815,8 +815,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		 * Let the child process run first, to avoid most of the
 		 * COW overhead when the child exec()s afterwards.
 		 */
-		zero_switching_events_count(); //hw2 - cz - reseting events counter as instructed in PDF
 		current->reason = A_task_was_created; // hw2 - cz - updating reason
+		zero_switching_events_count(); //hw2 - cz - reseting events counter as instructed in PDF
 		current->need_resched = 1;
 
 fork_out:
