@@ -479,10 +479,10 @@ repeat_lock_task:
 		if (!IS_SHORT(p) && !IS_SHORT(rq->curr) && (p->prio < rq->curr->prio)){	//1
 			reschedCheck=1;
 		}
-		if ((rt_task(p)) && IS_SHORT(p)){	//2
+		if ((rt_task(p)) && IS_SHORT(rq->curr)){	//2
 			reschedCheck=1;
 		}
-		if (IS_SHORT(p) && IS_SHORT(p)){	//3
+		if (IS_SHORT(p) && IS_SHORT(rq->curr)){	//3
 			if (!IS_OVERDUE(p) && !IS_OVERDUE(rq->curr) && (p->prio < rq->curr->prio)){ //3
 				reschedCheck=1;
 			}
