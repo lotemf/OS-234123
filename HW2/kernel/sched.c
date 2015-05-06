@@ -467,11 +467,12 @@ repeat_lock_task:
 		* So when do we need to call resched_task ?
 		//1 - The normal case (both processes aren't SHORT, so the one with the better prio wins)
 		//2 - If p is a Real-Time process, and current is SHORT , RT needs to run
-		//3 - If both of the processes are SHORT
+		//3 - If p is a SHORT process and current is SCHED_OTHER
+		//4- If both of the processes are SHORT
 		      and If both are not OVERDUE, we calculate based on prio
-		//4 - If the current process is OVERDUE and the new one isn't
+		//5 - If the current process is OVERDUE and the new one isn't
 		      we need to resched
-		//5 - If p isn't OVERDUE (because it isn't SHORT) and current is OVERDUE
+		//6 - If p isn't OVERDUE (because it isn't SHORT) and current is OVERDUE
 		  	  we need to resched
 		// *Notice: if both are SHORT_OVERDUE process we don't want to resched because it's FIFO
 		***********************************************************************/
@@ -482,15 +483,18 @@ repeat_lock_task:
 		if ((rt_task(p)) && IS_SHORT(rq->curr)){	//2
 			reschedCheck=1;
 		}
-		if (IS_SHORT(p) && IS_SHORT(rq->curr)){	//3
-			if (!IS_OVERDUE(p) && !IS_OVERDUE(rq->curr) && (p->prio < rq->curr->prio)){ //3
+		if (IS_SHORT(p) && !IS_SHORT(rq->curr) && ((rq->curr->prio) > MAX_RT_PRIO) ){	//3		//TODO - Lotem's Addition 6.5.15
+			reschedCheck=1;
+		}
+		if (IS_SHORT(p) && IS_SHORT(rq->curr)){	//4
+			if (!IS_OVERDUE(p) && !IS_OVERDUE(rq->curr) && (p->prio < rq->curr->prio)){ //5
 				reschedCheck=1;
 			}
 		}
-		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){				//4
+		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){				//6
 			reschedCheck=1;
 		}
-		if (!IS_OVERDUE(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//5			//HW2 Update - Lotem 5.5.15 16.15
+		if (!IS_OVERDUE(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//7			//HW2 Update - Lotem 5.5.15 16.15
 			reschedCheck=1;
 		}
 		/* Making sure we are not switching the same process*/
@@ -930,22 +934,14 @@ void scheduler_tick(int user_tick, int system)
 	 	 3 - If it's still a SHORT process after the changes we dequeue and enqueue
 	 	     in the SHORT prio array, as in RR policy with it's new TimeSlice
 	 **************************************************************************/
-//	/*TEST*/printk("HW2 - 5.5.15:Before the IS_SHORT check scheduler_tick\n");
 	if (IS_SHORT(p)){
-	/*TEST*/printk("HW2 - 5.5.15:After IS_SHORT Before the !OVERDUE Check of scheduler_tick\n");
-
-//		/*TEST*/if ((p->used_trials < p->requested_trials) && (!--p->time_slice)){
 		if ((!IS_OVERDUE(p)) && (!--p->time_slice)){		//1
 			p->used_trials++;
 			int next_time_slice = ((p->requested_time)/(p->used_trials));		//TODO - HW2 - 4.5.15
 			p->time_slice = next_time_slice;
 			dequeue_task(p, rq->SHORT);											//TODO - HW2 change 4.5.15
 			set_tsk_need_resched(p);
-			/*TEST*/printk("HW2 - 5.5.15:Before the OVERDUE Check of scheduler_tick\n");
 			if (IS_OVERDUE(p) || !next_time_slice){							//2
-				/*TEST*/printk("HW2 - 5.5.15: Inside IS_OVERDUE of scheduler_tick\n");
-				/*TEST*/printk("HW2 - 5.5.15:Used Trials of p: %d\n",p->used_trials);
-				/*TEST*/printk("HW2 - 5.5.15:Requested Trials of p: %d\n",p->requested_trials);
 				p->prio = OVERDUE_PRIO;											//TODO - new code 3.5.15 21.30
 				p->used_trials = p->requested_trials + 1;				//THis ensures it will be checked as OVERDUE in the IS_OVERDUE macro
 				enqueue_task(p, rq->SHORT_OVERDUE);
@@ -1034,7 +1030,6 @@ pick_next_task:
 	//HW2 - Lotem 30.4.15
 	array = rq->active;							//TODO 4.5.15 - Runqueue Problem - was NULL before...
 	if (((rq->active)->nr_active || (rq->expired)->nr_active)) {		//There are SCHED_OTHER processes in the system
-//		array = rq->active;
 		if (unlikely(!array->nr_active)) {
 			/*
 			 * Switch the active and expired arrays.
@@ -1089,7 +1084,7 @@ switch_tasks:
 										prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
-//			prev->reason = Default; //this resets the reason after a context switch for debugging
+//			prev->reason = Default; //this resets the reason after a context switch for debugging //TODO - DEBUG CODE
 		}
 //hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);
