@@ -729,7 +729,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	p->first_time_slice = 1;
 	current->time_slice >>= 1;
 	p->sleep_timestamp = jiffies;
-	if (!current->time_slice) {
+	if (!current->time_slice && (!IS_SHORT(current)) ) {						//HW2 - Lotem 7.5.15
 		/*
 		 * This case is rare, it happens when the parent has only
 		 * a single jiffy left from its timeslice. Taking the

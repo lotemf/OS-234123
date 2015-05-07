@@ -1454,10 +1454,12 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 **************************************************************************/
 	if (p->policy == SCHED_SHORT) {
     	if (policy == -1){			//That means set_param called setscheduler
-    		if ((p->requested_trials != lp.trial_num) || (p->requested_time < lp.requested_time)){
-    			retval = -EPERM;												// HW2 - Lotem 5.5.15 16.00
+    		if ((lp.requested_time <= 0) || (lp.requested_time > (5000)) ){
+    			retval = -EINVAL;												// HW2 - Lotem 5.5.15 16.00
     			goto out_unlock;
     		}
+    		p->requested_time = lp.requested_time;
+    		goto out_unlock;
     	}
     	else if  ((policy != SCHED_SHORT)){
     		retval = -EPERM;													// HW2 - Lotem 5.5.15 16.00
@@ -1609,6 +1611,9 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 	} else {
 		lp.trial_num = p->requested_trials;
 		lp.requested_time = ticks_to_ms(p->requested_time);
+		if (IS_OVERDUE(p)){
+			lp.trial_num = 0;													//TODO - HW2 - Lotem 7.5.15 16.00
+		}
 	}
 	read_unlock(&tasklist_lock);
 
@@ -2277,7 +2282,30 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 	}
 	return 0;
 }
+/*******************************************************************************
+*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
+*******************************************************************************/
+int sys_hw2_debug(int pid, struct debug_struct* debug) {	  /*syscall 247*/
+	  struct task_struct *p;
+	  p = find_task_by_pid(pid);
 
+	  struct debug_struct debug_to_copy;
+
+	  debug_to_copy.priority = p->prio;
+	  debug_to_copy.policy = p->policy;
+	  debug_to_copy.requested_time = p->requested_time;
+	  debug_to_copy.trial_num = p->requested_trials;
+	  debug_to_copy.trial_num_counter = p->used_trials;
+	  debug_to_copy.time_slice = p->time_slice;
+
+	  if (copy_to_user(debug, &debug_to_copy, sizeof(struct debug_struct))) {
+        return -EFAULT;
+    }
+	return 0;
+}
+/*******************************************************************************
+*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
+*******************************************************************************/
 #ifdef CONFIG_LOLAT_SYSCTL
 struct low_latency_enable_struct __enable_lowlatency = { 0, };
 #endif

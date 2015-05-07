@@ -127,6 +127,22 @@ struct sched_param {
 	int trial_num;				/*HW2 - Lotem*/
 };
 
+/*******************************************************************************
+*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
+*******************************************************************************/
+struct debug_struct
+{
+    int priority;
+	int policy;
+    int requested_time;                 /* HW2 Roy: Range: 1-5000 in miliseconds */
+    int trial_num;               /* HW2 Roy: Range: 1-50 original number of trials */
+    int trial_num_counter;
+	int is_overdue;
+    int time_slice;
+};
+/*******************************************************************************/
+
+
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 * HW2	Macros	*
  ------------------------------------------------------------------------------*/
