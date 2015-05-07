@@ -1491,7 +1491,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	         	   the HW demands
 	 *******************************************************************************/
     if (policy == SCHED_SHORT) {
-            if ((p->uid != current->uid) && (current->uid != 0)) {				//If it's not root or if it's another user
+            if (((p->uid != current->uid) && (current->uid != 0)) || rt_task(p)) {				//If it's not root or if it's another user
                     retval = -EPERM;
                     goto out_unlock;
             }
