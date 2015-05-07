@@ -597,7 +597,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 	retval = -EPERM;
 
-	/* 
+	/*
 	 * CLONE_PID is only allowed for the initial SMP swapper
 	 * calls
 	 */
@@ -636,7 +636,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 */
 	if (nr_threads >= max_threads)
 		goto bad_fork_cleanup_count;
-	
+
 	get_exec_domain(p->exec_domain);
 
 	if (p->binfmt && p->binfmt->module)
@@ -705,10 +705,10 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	if (retval)
 		goto bad_fork_cleanup_namespace;
 	p->semundo = NULL;
-	
+
 	/* Our parent execution domain becomes current domain
 	   These must match for thread signalling to apply */
-	   
+
 	p->parent_exec_id = p->self_exec_id;
 
 	/* ok, now we should be set up.. */
@@ -738,40 +738,37 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 		current->time_slice = 1;
 		scheduler_tick(0,0);
 	}
+	__restore_flags(flags);
 
-	if (IS_SHORT(current)) {  // HW2 - Alon
-        //hw2 - cz - interrupts safety
-		unsigned long flags;
+	/*****************			HW2 - LOTEM 7.5.15			********************
+	 *
+	 * New Fork() code... 		According to the course's piazza demands:
+	 * ----		The new algorythm is the one from the photo (ask Lotem...)
+	***************************************************************************/
+
+	if (IS_SHORT(current)) { 						 // HW2 - Lotem 7.5.15
+		unsigned long flags;													        //hw2 - cz - interrupts safety
         local_irq_save(flags);
 
-		p->policy = current->policy;
 		if (!IS_OVERDUE(current)) {
-			int left_trials = current->requested_trials - current->used_trials;
-			p->static_prio = current->static_prio;
-			if(left_trials > 1) {
-				p->requested_trials = (left_trials + 1) >> 1;
-				current->requested_trials = (left_trials)%2 == 0 ?
-					(current->requested_trials - left_trials/2) :
-						(current->requested_trials - (left_trials/2 + 1));
-			}//if it's the last trial of the father, than the father lose his trial and it becomes the son's
-			else if(left_trials == 1){
-				p->requested_trials = 1;
-				++current->used_trials; //now the father is overdue
-			}
-			p->used_trials = 0;
+
+			int left_trials = (current->requested_trials - current->used_trials + 1);
+			current->requested_trials -= left_trials/2 ;			//Upper value
+			p->used_trials = 1;
+			p->requested_trials = (left_trials + 1)/2;				//Lower value
 		}
 		else {
 			p->reason = Default; //hw2 - cz - monitoring
 			p->requested_trials = current->requested_trials;
-			p->used_trials = p->requested_trials;
+			p->prio = OVERDUE_PRIO;												//HW2 - 7.5.15
+			p->used_trials = current->requested_trials;							//Making it a SHORT-OVERDUE
 		}
 
-        local_irq_restore(flags);				//hw2 - cz - interrupts safety
 		current->reason = A_task_was_created;	//hw2 - cz monitoring
 		p->reason = A_task_was_created;			//hw2 - cz monitoring
-	}
-	__restore_flags(flags);
+	    local_irq_restore(flags);				//hw2 - cz - interrupts safety
 
+	}
 	/*
 	 * Ok, add it to the run-queues and make it
 	 * visible to the rest of the system.

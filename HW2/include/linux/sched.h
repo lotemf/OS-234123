@@ -651,7 +651,7 @@ extern struct exec_domain	default_exec_domain;
     journal_info:	NULL,						\
 	requested_time:		0,							\
 	requested_trials:	0,							\
-	used_trials:		0,							\
+	used_trials:		1,							\
 	reason:				0,							\
 }
 //hw2 - cz - value 0 for reason is DEFAULT for debugging
