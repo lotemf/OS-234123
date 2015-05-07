@@ -16,7 +16,6 @@ typedef struct switch_info {
 * HW2	Macros	and param Struct
 * HW2 - Lotem
  ------------------------------------------------------------------------------*/
-#define SCHED_SHORT    4
 
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
 #define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
@@ -24,12 +23,22 @@ typedef struct switch_info {
 #define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
 			|| (p)->time_slice == 0) ) /* HW2 - Alon */
 
-struct sched_param {
-	int sched_priority;
-	int requested_time;			/*HW2 - Lotem*/
-	int trial_num;				/*HW2 - Lotem*/
+
+/*******************************************************************************
+*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
+*******************************************************************************/
+struct debug_struct
+{
+    int priority;
+	int policy;
+    int requested_time;                 /* HW2 Roy: Range: 1-5000 in miliseconds */
+    int trial_num;               /* HW2 Roy: Range: 1-50 original number of trials */
+    int trial_num_counter;
+	int is_overdue;
+    int time_slice;
 };
-/*HW2 - Lotem*/
+/*******************************************************************************/
+
 
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 *	 The Wrappers	*

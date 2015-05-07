@@ -465,38 +465,25 @@ repeat_lock_task:
 		*
 		*
 		* So when do we need to call resched_task ?
-		//1 - The normal case (both processes aren't SHORT, so the one with the better prio wins)
-		//2 - If p is a Real-Time process, and current is SHORT , RT needs to run
-		//3 - If p is a SHORT process and current is SCHED_OTHER
-		//4- If both of the processes are SHORT
-		      and If both are not OVERDUE, we calculate based on prio
-		//5 - If the current process is OVERDUE and the new one isn't
-		      we need to resched
-		//6 - If p isn't OVERDUE (because it isn't SHORT) and current is OVERDUE
-		  	  we need to resched
-		// *Notice: if both are SHORT_OVERDUE process we don't want to resched because it's FIFO
+		//1 - If p is RT and current isn't - p wins,but if current is RT we check the prio
+		//2 - If p is SHORT, and current is OTHER or OVERDUE - p wins ,but if current is SHORT we check the prio
+		//3 - If p is OTHER, and current is OVERDUE - p wins, but if current is OTHER we check the prio
+		//4 - If p is OVERDUE, and current is IDLE - p wins
 		***********************************************************************/
 		int reschedCheck=0;
-		if (!IS_SHORT(p) && !IS_SHORT(rq->curr) && (p->prio < rq->curr->prio)){	//1
+		if (rt_task(p) && (!rt_task(rq->curr) || (rt_task(rq->curr) && (p->prio < rq->curr->prio )) ) ){
 			reschedCheck=1;
 		}
-		if ((rt_task(p)) && IS_SHORT(rq->curr)){	//2
+		if (IS_SHORT(p) && ( (rq->curr->policy == SCHED_OTHER) || IS_OVERDUE(rq->curr) || (IS_SHORT(rq->curr) && (p->prio < rq->curr->prio)) ) ){
 			reschedCheck=1;
 		}
-		if (IS_SHORT(p) && !IS_SHORT(rq->curr) && ((rq->curr->prio) > MAX_RT_PRIO) ){	//3		//TODO - Lotem's Addition 6.5.15
-			reschedCheck=1;
-		}
-		if (IS_SHORT(p) && IS_SHORT(rq->curr)){	//4
-			if (!IS_OVERDUE(p) && !IS_OVERDUE(rq->curr) && (p->prio < rq->curr->prio)){ //5
+		if ((p->policy == SCHED_OTHER) && ( IS_OVERDUE(rq->curr) || ( (rq->curr->policy == SCHED_OTHER) && (p->prio < rq->curr->prio)) ) ){
 				reschedCheck=1;
-			}
 		}
-		if (!IS_OVERDUE(p) && IS_OVERDUE(rq->curr)){				//6
-			reschedCheck=1;
+		if (IS_OVERDUE(p) && (rq->curr->pid == 0) ){
+				reschedCheck=1;
 		}
-		if (!IS_OVERDUE(p) && !IS_SHORT(rq->curr) && !(rt_task(rq->curr))){	//7			//HW2 Update - Lotem 5.5.15 16.15
-			reschedCheck=1;
-		}
+
 		/* Making sure we are not switching the same process*/
 		if ((reschedCheck == 1) && ((rq->curr) != p) ){
 			(rq->curr)->reason = A_task_with_higher_priority_returns_from_waiting; //hw2 - cz - monitoring
@@ -520,14 +507,26 @@ void wake_up_forked_process(task_t * p)
 {
 	runqueue_t *rq = this_rq_lock();
 
+	/* HW2 - alon the father gives up the cpu */
+	if (IS_SHORT(current)){
+		if(IS_OVERDUE(current))
+		{
+			if (current->array == rq->SHORT){
+				dequeue_task(current, rq->SHORT);
+				current->prio = OVERDUE_PRIO;
+				enqueue_task(current, rq->SHORT_OVERDUE);
+			}
+		}
+		else
+		{
+			dequeue_task(current, rq->SHORT);
+			enqueue_task(current, rq->SHORT);
+		}
+	}
+	/* HW2 - alon end of additions */
+
 	p->state = TASK_RUNNING;
-	/*HW2 - Lotem 30.4.15*/
-	if (IS_OVERDUE(p)){
-		p->prio = OVERDUE_PRIO;						//HW2 - change lotem 2.5.15
-	} else if (IS_SHORT(p)){
-		p->prio = p->static_prio;
-	/*End of HW2 Additions - Lotem 30.4.15*/
-	} else if (!rt_task(p)) {
+	if (!rt_task(p)) {
 		/*
 		 * We decrease the sleep average of forking parents
 		 * and children as well, to keep max-interactive tasks
@@ -537,17 +536,7 @@ void wake_up_forked_process(task_t * p)
 		p->sleep_avg = p->sleep_avg * CHILD_PENALTY / 100;
 		p->prio = effective_prio(p);
 	}
-	/* HW2 - alon the father gives up the cpu */
-	if(IS_OVERDUE(current) && (current->array == rq->SHORT)){
-		dequeue_task(current, rq->SHORT);
-		current->prio = OVERDUE_PRIO;
-		enqueue_task(current, rq->SHORT_OVERDUE);
-	}
-	else if (IS_SHORT(current)) {
-		dequeue_task(current, rq->SHORT);
-		enqueue_task(current, rq->SHORT);
-	}
-	/* HW2 - alon end of additions */
+
 	p->cpu = smp_processor_id();
 	activate_task(p, rq);
 
@@ -937,6 +926,7 @@ void scheduler_tick(int user_tick, int system)
 			p->time_slice = next_time_slice;
 			dequeue_task(p, rq->SHORT);
 			set_tsk_need_resched(p);
+
 			if (IS_OVERDUE(p) || !next_time_slice){							//2
 				p->prio = OVERDUE_PRIO;
 				p->used_trials = p->requested_trials + 1;
@@ -1508,14 +1498,15 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
                     deactivate_task(p, task_rq(p));
             p->requested_trials = lp.trial_num;
             p->requested_time = ms_to_ticks(lp.requested_time);					// Converting requested time to ticks
-            int already_used_trials = p->used_trials;
-            if (!already_used_trials) {
-            	already_used_trials = 1;										//Making sure we are not dividing by zero
-            }
-            p->time_slice = ms_to_ticks(lp.requested_time)/already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
-            p->prio = p->static_prio;		/*According to the PDF...*/
+//            int already_used_trials = p->used_trials;
+//            if (!already_used_trials) {
+//            	already_used_trials = 1;										//Making sure we are not dividing by zero
+//            }
+            p->time_slice = ms_to_ticks(lp.requested_time);				// /already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
+            p->prio = p->static_prio;							/*According to the PDF...*/
             p->policy = policy;
-            if (IS_OVERDUE(p)) {												//Changing it to overdue...
+            p->rt_priority = 0;
+            if (p->time_slice == 0) {						//TODO HW2 7.5.15 - Lotem						//Changing it to overdue...
                     p->prio = OVERDUE_PRIO;
             }
             if (array) {
