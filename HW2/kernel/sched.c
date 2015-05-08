@@ -1070,7 +1070,6 @@ switch_tasks:
 										prev->reason);
 			rq->p_events_count++;
 			INC_RECORD_IDX(rq);
-//			prev->reason = Default; //this resets the reason after a context switch for debugging //TODO - DEBUG CODE
 		}
 //hw2 - cz - end of recording/monitoring additions
 		prepare_arch_switch(rq);
@@ -1108,7 +1107,6 @@ int sys_get_scheduling_statistic(switch_info_t* tasks_info){
     switch_info_t returned_record[TOTAL_MAX_TO_MONITOR];
 
     if (rq->is_round_completed_flag){
-    	printk("\n\tHW2 DEBUG, round is completed flag is on\n");
 
     	for (idx = 0; idx < TOTAL_MAX_TO_MONITOR; idx++){
 
@@ -1444,7 +1442,6 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 **************************************************************************/
 	if (p->policy == SCHED_SHORT) {
     	if (policy == -1){			//That means set_param called setscheduler
-    		printk("HW2 - setcheduler (setparam) - Trying to change a SHORT process\n");
     		if ((lp.requested_time <= 0) || (lp.requested_time > (5000)) ){
     			retval = -EINVAL;												// HW2 - Lotem 5.5.15 16.00
     			goto out_unlock;
@@ -1483,29 +1480,22 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	         	   the HW demands
 	 *******************************************************************************/
     if (policy == SCHED_SHORT) {
-    	/*TEST*/ printk ("HW2 - Inside setscheduler, for a SHORT policy \n");
     	if (((p->uid != current->uid) && (current->uid != 0)) || rt_task(p)) {				//If it's not root or if it's another user
-            printk("HW2 - setcheduler ERROR - Access Denied!\n");
             retval = -EPERM;
             goto out_unlock;
         }
         if ((lp.trial_num < 1) || (lp.trial_num > 50)){
-        	printk("HW2 - setcheduler ERROR - Illegal trial_num input value\n");
-            goto out_unlock;												//Checking input values
+            goto out_unlock;													//Checking input values
         }
-        if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
-            printk("HW2 - setcheduler ERROR - Illegal requested_time input value\n");
+        if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){			//TODO - Change it back to 5000 after the tests
             goto out_unlock;
         }
-        current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
-        /*TEST*/printk("HW2 - setcheduler blaa #1\n");
+        current->reason = A_task_with_higher_priority_returns_from_waiting;		//hw2 - cz - monitoring
 
         array = p->array;
         if (array){
-            /*TEST*/printk("HW2 - setcheduler deactivated task\n");
         	deactivate_task(p, task_rq(p));
         }
-        /*TEST*/printk("HW2 - setcheduler blaa #2\n");
 
         p->requested_trials = lp.trial_num;
         current->need_resched = 1;
@@ -1514,13 +1504,8 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
         p->prio = p->static_prio;												/*According to the PDF...*/
         p->policy = policy;
         p->rt_priority = 0;
-        /*TEST*/printk("HW2 - setcheduler blaa #3\n");
 
-        if (p->time_slice == 0) {												//TODO HW2 7.5.15 - Lotem						//Changing it to overdue...
-        	p->prio = OVERDUE_PRIO;
-        }
         if (array) {
-            /*TEST*/printk("HW2 - setcheduler activated task\n");
         	activate_task(p, task_rq(p));
         }
         retval = 0;
@@ -2285,35 +2270,7 @@ int ll_copy_from_user(void *to, const void *from_user, unsigned long len)
 	}
 	return 0;
 }
-/*******************************************************************************
-*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
-*******************************************************************************/
-int sys_hw2_debug(int pid, struct debug_struct* debug) {	  /*syscall 247*/
-	  struct task_struct *p;
-	  p = find_task_by_pid(pid);
 
-	  struct debug_struct debug_to_copy;
-
-	  debug_to_copy.priority = p->prio;
-	  debug_to_copy.policy = p->policy;
-	  debug_to_copy.requested_time = p->requested_time;
-	  debug_to_copy.trial_num = p->requested_trials;
-	  debug_to_copy.trial_num_counter = p->used_trials;
-	  debug_to_copy.time_slice = p->time_slice;
-	  if (IS_OVERDUE(p)){
-		  debug_to_copy.is_overdue = 1;
-	  } else {
-		  debug_to_copy.is_overdue = 0;
-	  }
-
-	  if (copy_to_user(debug, &debug_to_copy, sizeof(struct debug_struct))) {
-        return -EFAULT;
-    }
-	return 0;
-}
-/*******************************************************************************
-*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
-*******************************************************************************/
 #ifdef CONFIG_LOLAT_SYSCTL
 struct low_latency_enable_struct __enable_lowlatency = { 0, };
 #endif

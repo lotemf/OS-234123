@@ -723,7 +723,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 */
 	__save_flags(flags);
 	__cli();
-	if (!current->time_slice)
+	if (!current->time_slice && !IS_OVERDUE(current))							//HW2 - Lotem 8.5.2015
 		BUG();
 	p->time_slice = (current->time_slice + 1) >> 1;
 	p->first_time_slice = 1;
@@ -746,8 +746,8 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 	 * ----		The new algorythm is the one from the photo (ask Lotem...)
 	***************************************************************************/
 
-	if (IS_SHORT(current)) { 						 // HW2 - Lotem 7.5.15
-		unsigned long flags;													        //hw2 - cz - interrupts safety
+	if (IS_SHORT(current)) { 													 // HW2 - Lotem 7.5.15
+		unsigned long flags;													 //hw2 - cz - interrupts safety
         local_irq_save(flags);
 
 		if (!IS_OVERDUE(current)) {
@@ -756,15 +756,15 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 			if (left_trials == 1){
 				current->used_trials = current->requested_trials + 1;					//Making it a SHORT-OVERDUE
 			}
-			current->requested_trials -= left_trials/2 ;			//Lower value
+			current->requested_trials -= left_trials/2 ;						//Lower value
 			p->used_trials = 1;
-			p->requested_trials = (left_trials + 1)/2;				//Upper value
+			p->requested_trials = (left_trials + 1)/2;							//Upper value
 		}
 		else {
 			p->reason = Default; //hw2 - cz - monitoring
 			p->requested_trials = current->requested_trials;
 			p->prio = OVERDUE_PRIO;												//HW2 - 7.5.15
-			p->used_trials = current->requested_trials + 1;							//Making it a SHORT-OVERDUE
+			p->used_trials = current->requested_trials + 1;						//Making it a SHORT-OVERDUE manually
 		}
 
 		current->reason = A_task_was_created;	//hw2 - cz monitoring

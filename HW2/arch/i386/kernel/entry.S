@@ -655,7 +655,6 @@ ENTRY(sys_call_table)
 	.long SYMBOL_NAME(sys_remaining_time)				/* HW2 - Lotem */
 	.long SYMBOL_NAME(sys_remaining_trials)				/* HW2 - Lotem */
 	.long SYMBOL_NAME(sys_get_scheduling_statistic)		/* HW2 - Lotem */
-	.long SYMBOL_NAME(sys_hw2_debug)					/* HW2 - Lotem */
 	/*New Code HW2 - Lotem - 25.4.2015 17.00*/
 
 	.rept NR_syscalls-(.-sys_call_table)/4

@@ -14,7 +14,6 @@ const char* policy[] =
                         "SCHED_OTHER",
                         "SCHED_FIFO",
                         "SCHED_RR",
-						"SCHED_FUCKERS_FROM_LAST_SEMESETER",
                         "SCHED_SHORT"
 };
 const char* context_switching_reason[] =

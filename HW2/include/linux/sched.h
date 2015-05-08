@@ -127,30 +127,16 @@ struct sched_param {
 	int trial_num;				/*HW2 - Lotem*/
 };
 
-/*******************************************************************************
-*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
-*******************************************************************************/
-struct debug_struct
-{
-    int priority;
-	int policy;
-    int requested_time;                 /* HW2 Roy: Range: 1-5000 in miliseconds */
-    int trial_num;               /* HW2 Roy: Range: 1-50 original number of trials */
-    int trial_num_counter;
-	int is_overdue;
-    int time_slice;
-};
-/*******************************************************************************/
 
 
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 * HW2	Macros	*
  ------------------------------------------------------------------------------*/
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
-#define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
+#define REMAINING_TIME(p) (long)(p->time_slice)									/* HW2 - Lotem */
 #define IS_SHORT(p) (p->policy == SCHED_SHORT)
 #define IS_OVERDUE(p) ( (IS_SHORT(p)) && ( ( (p)->used_trials > ( (p)->requested_trials) ) ))/* HW2 - Alon */ /*HW2 - Lotem*/
-				//Change - Lotem 2.5.15 - Removed Error in the code upstairs (no need for timeslice check)...
+
 /* hw2 - cz - adding monitoring defines and macros*/
 
 #define TOTAL_MAX_TO_MONITOR 	150
@@ -263,7 +249,7 @@ extern int current_is_keventd(void);
 #define MAX_RT_PRIO		MAX_USER_RT_PRIO
 
 #define MAX_PRIO		(MAX_RT_PRIO + 40)
-#define OVERDUE_PRIO	(MAX_RT_PRIO - 1)
+#define OVERDUE_PRIO	(MAX_PRIO - 1)
 
 
 /*

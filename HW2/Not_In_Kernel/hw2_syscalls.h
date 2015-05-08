@@ -23,23 +23,6 @@ typedef struct switch_info {
 #define IS_OVERDUE(p) (IS_SHORT(p) && ( ((p)->used_trials >= (p)->requested_trials) \
 			|| (p)->time_slice == 0) ) /* HW2 - Alon */
 
-
-/*******************************************************************************
-*		THIS IS A DEBUG FUNCTION						**-TO_DELETE			//TODO - delete later
-*******************************************************************************/
-struct debug_struct
-{
-    int priority;
-	int policy;
-    int requested_time;                 /* HW2 Roy: Range: 1-5000 in miliseconds */
-    int trial_num;               /* HW2 Roy: Range: 1-50 original number of trials */
-    int trial_num_counter;
-	int is_overdue;
-    int time_slice;
-};
-/*******************************************************************************/
-
-
 /*------------------------------------------------------------------------------
  	 	 	 	 	 	 	 *	 The Wrappers	*
  ------------------------------------------------------------------------------*/
@@ -132,27 +115,4 @@ int get_scheduling_statistic(struct switch_info * info){
 		errno = -(__res); __res = -1;
 		}
 		return (int)(__res);
-}
-/*******************************************************************************
- * 						DEBUG PRINTS FUNC
- ******************************************************************************/
-int hw2_debug(int pid, struct debug_struct* debug)                  /*247 - for debug using*/
-{
-    unsigned int res;
-    __asm__ volatile (
-            "movl $247, %%eax;"
-            "movl %1, %%ebx;"
-            "movl %2, %%ecx;"
-            "int $0x80;"
-            "movl %%eax,%0"
-            : "=m" (res)
-            : "m" (pid), "m" ((long)debug)
-            : "%eax","%ebx","%ecx"
-    );
-     if (res>=(unsigned long)(-125))
-    {
-        errno = -res;
-        res = -1;
-    }
-    return (int) res;
 }
