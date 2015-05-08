@@ -1444,11 +1444,12 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	 **************************************************************************/
 	if (p->policy == SCHED_SHORT) {
     	if (policy == -1){			//That means set_param called setscheduler
+    		printk("HW2 - setcheduler (setparam) - Trying to change a SHORT process\n");
     		if ((lp.requested_time <= 0) || (lp.requested_time > (5000)) ){
     			retval = -EINVAL;												// HW2 - Lotem 5.5.15 16.00
     			goto out_unlock;
     		}
-    		p->requested_time = lp.requested_time;
+    		p->requested_time = ms_to_ticks(lp.requested_time);
     		retval = 0;															//Success
     		goto out_unlock;
     	}
@@ -1497,25 +1498,32 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
             goto out_unlock;
         }
         current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
+        /*TEST*/printk("HW2 - setcheduler blaa #1\n");
+
         array = p->array;
         if (array){
+            /*TEST*/printk("HW2 - setcheduler deactivated task\n");
         	deactivate_task(p, task_rq(p));
         }
-        p->requested_trials = lp.trial_num;
+        /*TEST*/printk("HW2 - setcheduler blaa #2\n");
 
+        p->requested_trials = lp.trial_num;
+        current->need_resched = 1;
         p->requested_time = ms_to_ticks(lp.requested_time);						// Converting requested time to ticks
         p->time_slice = ms_to_ticks(lp.requested_time);							// /already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
         p->prio = p->static_prio;												/*According to the PDF...*/
         p->policy = policy;
         p->rt_priority = 0;
+        /*TEST*/printk("HW2 - setcheduler blaa #3\n");
+
         if (p->time_slice == 0) {												//TODO HW2 7.5.15 - Lotem						//Changing it to overdue...
         	p->prio = OVERDUE_PRIO;
         }
         if (array) {
+            /*TEST*/printk("HW2 - setcheduler activated task\n");
         	activate_task(p, task_rq(p));
         }
         retval = 0;
-        current->need_resched = 1;
 
         goto out_unlock;
     }
@@ -1605,7 +1613,7 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 		lp.sched_priority = p->rt_priority;
 	} else {
 		lp.trial_num = p->requested_trials;
-		lp.requested_time = (p->requested_time);								//TODO - HW2 Lotem 7.5.15
+		lp.requested_time = ticks_to_ms(p->requested_time);								//TODO - HW2 Lotem 7.5.15
 		if (IS_OVERDUE(p)){
 			lp.trial_num = 0;													//TODO - HW2 - Lotem 7.5.15 16.00
 		}
