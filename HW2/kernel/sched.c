@@ -1449,6 +1449,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
     			goto out_unlock;
     		}
     		p->requested_time = lp.requested_time;
+    		retval = 0;															//Success
     		goto out_unlock;
     	}
     	else if  ((policy != SCHED_SHORT)){

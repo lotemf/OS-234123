@@ -149,7 +149,7 @@ struct debug_struct
 #define REMAINING_TRIALS(p) (int)( (p->requested_trials) - (p->used_trials) )
 #define REMAINING_TIME(p) (long)(p->time_slice)	/* HW2 - Lotem */
 #define IS_SHORT(p) (p->policy == SCHED_SHORT)
-#define IS_OVERDUE(p) ( (IS_SHORT(p)) && ( ( (p)->used_trials >= ( (p)->requested_trials) ) ))/* HW2 - Alon */ /*HW2 - Lotem*/
+#define IS_OVERDUE(p) ( (IS_SHORT(p)) && ( ( (p)->used_trials > ( (p)->requested_trials) ) ))/* HW2 - Alon */ /*HW2 - Lotem*/
 				//Change - Lotem 2.5.15 - Removed Error in the code upstairs (no need for timeslice check)...
 /* hw2 - cz - adding monitoring defines and macros*/
 
@@ -263,7 +263,7 @@ extern int current_is_keventd(void);
 #define MAX_RT_PRIO		MAX_USER_RT_PRIO
 
 #define MAX_PRIO		(MAX_RT_PRIO + 40)
-#define OVERDUE_PRIO		(MAX_RT_PRIO - 1)
+#define OVERDUE_PRIO	0	/*TEST*///(MAX_RT_PRIO - 1)
 
 
 /*
