@@ -2300,6 +2300,11 @@ int sys_hw2_debug(int pid, struct debug_struct* debug) {	  /*syscall 247*/
 	  debug_to_copy.trial_num = p->requested_trials;
 	  debug_to_copy.trial_num_counter = p->used_trials;
 	  debug_to_copy.time_slice = p->time_slice;
+	  if (IS_OVERDUE(p)){
+		  debug_to_copy.is_overdue = 1;
+	  } else {
+		  debug_to_copy.is_overdue = 0;
+	  }
 
 	  if (copy_to_user(debug, &debug_to_copy, sizeof(struct debug_struct))) {
         return -EFAULT;
