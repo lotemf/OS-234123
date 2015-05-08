@@ -365,8 +365,8 @@ void testBecomingOverdueBecauseOfTime()
 
 void testChangeRequestedTimeForShort()
 {
-	/*TEST*/printf("\n\n\n ...before the fork() \n\n");
-	/*TEST*/print_debug(getpid());
+//	/*TEST*/printf("\n\n\n ...before the fork() \n\n");
+//	/*TEST*/print_debug(getpid());
     int id = fork();
     int status;
     if (id > 0) {
@@ -378,16 +378,16 @@ void testChangeRequestedTimeForShort()
         paramIn.requested_time = expected_requested_time;
         paramIn.trial_num = expected_trials;
 
-    	/*TEST*/printf("\n\n\n ...Inside father code, before the call to setscheduler... \n\n");
-    	/*TEST*/print_debug(getpid());
-     	/*TEST*/print_debug(id);
+//    	/*TEST*/printf("\n\n\n ...Inside father code, before the call to setscheduler... \n\n");
+//    	/*TEST*/print_debug(getpid());
+//     	/*TEST*/print_debug(id);
 
         sched_setscheduler(id, SCHED_SHORT, &paramIn); //make son short			//TODO - Something isn't working right with setsched
 
-        /*TEST*/printf("\n\n\n...After the call to setsched wit LEGAL values...\n\n\n");
-    	/*TEST*/print_debug(getpid());
-        /*TEST*/print_debug(id);
-        /*TEST*/assert(is_SHORT(id) == 1);
+//        /*TEST*/printf("\n\n\n...After the call to setsched wit LEGAL values...\n\n\n");
+//    	/*TEST*/print_debug(getpid());
+//        /*TEST*/print_debug(id);
+//        /*TEST*/assert(is_SHORT(id) == 1);
 
 
         assert(sched_getscheduler(id) == SCHED_SHORT);
@@ -417,9 +417,9 @@ void testChangeRequestedTimeForShort()
         paramIn.trial_num = expected_trials;
 
         assert(sched_setparam(id, &paramIn) == 0);
-        /*TEST*/print_debug(id);
+//        /*TEST*/print_debug(id);
         assert(sched_getparam(id, &paramOut) == 0);
-        /*TEST*/printf("param out's requested time field is: %d\n",paramOut.requested_time );
+//        /*TEST*/printf("param out's requested time field is: %d\n",paramOut.requested_time );
         assert(paramOut.requested_time == new_expected_requested_time); //should be 1000
 
         wait(&status);
@@ -737,11 +737,11 @@ void testSHORTRoundRobin()
                 {
                     if(is_SHORT(getpid()) == 1)
                     {
-                        printf("A (RR)\n");
+                        printf("\t A (RR)\n");
                     }
                     else if (is_SHORT(getpid()) == 0)
                     {
-                        printf("A (FIFO)\n");
+                        printf("\t A  (FIFO)\n");
                     }
                     while(currentTrial >= i)
                     {
@@ -762,11 +762,11 @@ void testSHORTRoundRobin()
                 {
                     if(is_SHORT(getpid()) == 1)
                     {
-                        printf("C (RR)\n");
+                        printf("\t\t\t C (RR)\n");
                     }
                     else if (is_SHORT(getpid()) == 0)
                     {
-                        printf("C (FIFO)\n");
+                        printf("\t\t\t C (FIFO)\n");
                     }
                     while(currentTrial >= i)
                     {
@@ -788,11 +788,11 @@ void testSHORTRoundRobin()
             {
                 if(is_SHORT(getpid()) == 1)
                 {
-                    printf("B (RR)\n");
+                    printf("\t\t B (RR)\n");
                 }
                 else if (is_SHORT(getpid()) == 0)
                 {
-                    printf("B (FIFO)\n");
+                    printf("\t\t B (FIFO)\n");
                 }
                 while(currentTrial >= i)
                 {
@@ -859,11 +859,11 @@ void testShortOverdueFIFO()
             {
                 if(is_SHORT(getpid()) == 1)
                 {
-                    printf("B (RR)\n");
+                    printf("\t\t B (RR)\n");
                 }
                 else if (is_SHORT(getpid()) == 0)
                 {
-                    printf("B (FIFO)\n");
+                    printf("\t\t B (FIFO)\n");
                 }
                 doLongTask();
             }
@@ -1011,11 +1011,11 @@ int main()
 //
 //    printf("Testing becoming overdue because of Time... \n");
 //    testBecomingOverdueBecauseOfTime();
-
-    printf("testChangeRequestedTimeForShort... \n");
-    testChangeRequestedTimeForShort();
-
-//    printf("\nTesting race: RT vs. SHORT (RT is supposed to win)...\n");
+//
+//    printf("testChangeRequestedTimeForShort... \n");
+//    testChangeRequestedTimeForShort();
+//
+//    printf("\nTesting race: RT vs. SHORT (RT is supposed to win)...\n");		//Todo  - This test might make the vm reboot
 //    testScheduleRealTimeOverShort();
 //
 //    printf("\nTesting race: SHORT vs. OTHER #1(SHORT is supposed to win)\n");
@@ -1040,13 +1040,13 @@ int main()
 //    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
 //    testScheduleOtherOverOVERDUEBecauseOfTime2();
 
-//    printf("\nTesting OVERDUE processes FIFO... \n");
-//    printf("You should see the FIFO behaviour in the prints, e.g A A A A B B B B... \n");
-//    testShortOverdueFIFO();
+    printf("\nTesting OVERDUE processes FIFO... \n");
+    printf("You should see the FIFO behaviour in the prints, e.g A A A A B B B B... \n");
+    testShortOverdueFIFO();
 
 //    printf("Testing OVERDUE processes FIFO with prints... \n");
 //    testShortOverdueFIFOWithPrints();
-
+//
 //    printf("\nTesting SHORT processes Round-Robin... \n");
 //    printf("You should see the Round-Robin behaviour in the prints, e.g A B C A B C A... \n");
 //    testSHORTRoundRobin();
