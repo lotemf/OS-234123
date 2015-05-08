@@ -1482,39 +1482,42 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
 	         	   the HW demands
 	 *******************************************************************************/
     if (policy == SCHED_SHORT) {
-            if (((p->uid != current->uid) && (current->uid != 0)) || rt_task(p)) {				//If it's not root or if it's another user
-                    retval = -EPERM;
-                    goto out_unlock;
-            }
-            if ((lp.trial_num < 1) || (lp.trial_num > 50)){
-            	goto out_unlock;												//Checking input values
-            }
-            if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
-            	goto out_unlock;
-            }
-            current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
-            current->need_resched = 1;
-            array = p->array;
-            if (array)
-                    deactivate_task(p, task_rq(p));
-            p->requested_trials = lp.trial_num;
-            p->requested_time = ms_to_ticks(lp.requested_time);					// Converting requested time to ticks
-//            int already_used_trials = p->used_trials;
-//            if (!already_used_trials) {
-//            	already_used_trials = 1;										//Making sure we are not dividing by zero
-//            }
-            p->time_slice = ms_to_ticks(lp.requested_time);				// /already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
-            p->prio = p->static_prio;							/*According to the PDF...*/
-            p->policy = policy;
-            p->rt_priority = 0;
-            if (p->time_slice == 0) {						//TODO HW2 7.5.15 - Lotem						//Changing it to overdue...
-                    p->prio = OVERDUE_PRIO;
-            }
-            if (array) {
-                    activate_task(p, task_rq(p));
-            }
-            retval = 0;
+    	/*TEST*/ printk ("HW2 - Inside setscheduler, for a SHORT policy \n");
+    	if (((p->uid != current->uid) && (current->uid != 0)) || rt_task(p)) {				//If it's not root or if it's another user
+            printk("HW2 - setcheduler ERROR - Access Denied!\n");
+            retval = -EPERM;
             goto out_unlock;
+        }
+        if ((lp.trial_num < 1) || (lp.trial_num > 50)){
+        	printk("HW2 - setcheduler ERROR - Illegal trial_num input value\n");
+            goto out_unlock;												//Checking input values
+        }
+        if ((lp.requested_time <= 0) || (lp.requested_time > (5000))){		//TODO - Change it back to 5000 after the tests
+            printk("HW2 - setcheduler ERROR - Illegal requested_time input value\n");
+            goto out_unlock;
+        }
+        current->reason = A_task_with_higher_priority_returns_from_waiting;	//hw2 - cz - monitoring
+        array = p->array;
+        if (array){
+        	deactivate_task(p, task_rq(p));
+        }
+        p->requested_trials = lp.trial_num;
+
+        p->requested_time = ms_to_ticks(lp.requested_time);						// Converting requested time to ticks
+        p->time_slice = ms_to_ticks(lp.requested_time);							// /already_used_trials;		//Not sure If I should use the ms_to_ticks MACRO
+        p->prio = p->static_prio;												/*According to the PDF...*/
+        p->policy = policy;
+        p->rt_priority = 0;
+        if (p->time_slice == 0) {												//TODO HW2 7.5.15 - Lotem						//Changing it to overdue...
+        	p->prio = OVERDUE_PRIO;
+        }
+        if (array) {
+        	activate_task(p, task_rq(p));
+        }
+        retval = 0;
+        current->need_resched = 1;
+
+        goto out_unlock;
     }
     /*******				End of HW2 additions 				************/	//Lotem - 28.4.2015 - 22.00
 
@@ -1602,7 +1605,7 @@ asmlinkage long sys_sched_getparam(pid_t pid, struct sched_param *param)
 		lp.sched_priority = p->rt_priority;
 	} else {
 		lp.trial_num = p->requested_trials;
-		lp.requested_time = ticks_to_ms(p->requested_time);
+		lp.requested_time = (p->requested_time);								//TODO - HW2 Lotem 7.5.15
 		if (IS_OVERDUE(p)){
 			lp.trial_num = 0;													//TODO - HW2 - Lotem 7.5.15 16.00
 		}

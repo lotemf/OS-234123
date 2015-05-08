@@ -754,7 +754,7 @@ int do_fork(unsigned long clone_flags, unsigned long stack_start,
 
 			int left_trials = (current->requested_trials - current->used_trials + 1);
 			if (left_trials == 1){
-				current->used_trials = requested_trials + 1;					//Making it a SHORT-OVERDUE
+				current->used_trials = current->requested_trials + 1;					//Making it a SHORT-OVERDUE
 			}
 			current->requested_trials -= left_trials/2 ;			//Lower value
 			p->used_trials = 1;
