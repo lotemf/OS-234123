@@ -106,6 +106,7 @@ void print_debug(int pid)
 
 void doLongTask()
 {
+	/*TEST*/printf("Inside doLongTask \n");
     long i;
     for (i=1; i > 0; i++)
     {
@@ -115,6 +116,7 @@ void doLongTask()
 
 void doShortTask()
 {
+	/*TEST*/printf("Inside doShortTask \n");
     short i;
     for (i=1; i != 0; i++)
     {
@@ -124,6 +126,7 @@ void doShortTask()
 
 void doMediumTask()
 {
+	/*TEST*/printf("Inside doMediumTask \n");
     int j;
     for(j=0; j<1000; j++)
     {
@@ -343,6 +346,9 @@ void testBecomingOverdueBecauseOfTime()
     int id = fork();
     int status;
     if (id > 0) {
+        /*TEST*/print_debug(getpid());
+        /*TEST*/print_debug(id);
+
         struct sched_param param;
         int expected_requested_time = 5;
         int expected_trials = 50;
@@ -353,8 +359,8 @@ void testBecomingOverdueBecauseOfTime()
         wait(&status);
         printf("OK\n");
     } else if (id == 0) {
-        int myId = getpid();
         doLongTask();
+        /*TEST*/print_debug(getpid());
         assert(is_SHORT(getpid())==0);
         struct sched_param resultParam;
         assert(sched_getparam(getpid(), &resultParam) == 0);
@@ -817,21 +823,47 @@ void testShortOverdueFIFO()
         struct sched_param param;
         param.requested_time = 5;
         param.trial_num = 15;
+
+    	/*TEST*/printf("\n\n\n ...Inside father code, BEFORE the call for setscheduler \n\n");
+       	/*TEST*/print_debug(getpid());
+        /*TEST*/print_debug(Manager);
+
         sched_setscheduler(Manager, SCHED_SHORT, &param); //make the son (SHORT1) a short
+
+//    	/*TEST*/printf("\n\n\n ...Inside father code, AFTER the call for setscheduler \n\n");
+//       	/*TEST*/print_debug(getpid());
+//        /*TEST*/print_debug(Manager);
+
         wait(&status);
     }
     else if (Manager == 0)
     {
+    	/*TEST*/printf("\n\n\n ...Inside SHORT1 code, BEFORE the doLongTask() \n\n");
+       	/*TEST*/print_debug(getpid());
         //this is the SHORT1 (son of manager)
-        doLongTask();
-        assert(is_SHORT(getpid())==0); //make sure its overdue
+
+       	doLongTask();															//TODO - it seems the test gets stuck here
+        /*TEST*/print_debug(getpid());
+       	assert(is_SHORT(getpid())==0); //make sure its overdue
+
+
+      	/*TEST*/printf("\n\n\n ...Inside SHORT1 code, BEFORE the fork() \n\n");
+        /*TEST*/print_debug(getpid());
+
         int SHORT2 = fork(); //Create SHORT2
+
+        /*TEST*/printf("\n\n\n ...Inside SHORT1 code, AFTER the fork() \n\n");
+        /*TEST*/print_debug(SHORT2);
         if(SHORT2 > 0)
         {
             //this is the SHORT1 (son of manager)
             struct sched_param param;
             param.requested_time = 5;
             param.trial_num = 15;
+
+        	/*TEST*/printf("\n\n\n ...Inside SHORT1 code after the fork(), BEFORE the loop\n\n");
+//           	/*TEST*/print_debug(Manager);
+//            /*TEST*/print_debug(SHORT2);
 
             int i;
             for (i=0; i<5; i++)
@@ -853,6 +885,10 @@ void testShortOverdueFIFO()
         {
             assert(is_SHORT(getpid())==0); //make sure its overdue
             //this is the SHORT2 (son of SHORT1)
+//
+//        	/*TEST*/printf("\n\n\n ...Inside SHORT2 code, BEFORE the loop\n\n");
+//           	/*TEST*/print_debug(Manager);
+//            /*TEST*/print_debug(SHORT2);
 
             int i;
             for (i=0; i<5; i++)
@@ -873,97 +909,7 @@ void testShortOverdueFIFO()
     }
 }
 
-void testShortOverdueFIFOWithPrints()
-{
-    int Manager = fork();
-    int status;
-    /*TEST*/printf("First entry in OVERDUE-FIFO TEST \n",Manager);
-    if(Manager > 0)
-    {
-        //this is the manager process, the value of int Manager is the son created from fork
-        //make SHORT1 a short
-        struct sched_param param;
-        param.requested_time = 5;
-        param.trial_num = 15;
-        /*TEST*/printf("Father's print debug\n");
-        /*TEST*/print_debug(getpid());
 
-        sched_setscheduler(Manager, SCHED_SHORT, &param); //make the son (SHORT1) a short
-        /*TEST*/printf("Father's print debug\n");
-        /*TEST*/print_debug(getpid());
-        /*TEST*/printf("Manager contains: %d \n",Manager);
-        wait(&status);
-    }
-    else if (Manager == 0)
-    {
-        //this is the SHORT1 (son of manager)
-        /*TEST*/printf("Inside first SHORT SON \n");					//Fast-run
-        /*TEST*/print_debug(getpid());
-        doLongTask();
-        assert(is_SHORT(getpid())==0); //make sure its overdue
-        int SHORT2 = fork(); //Create SHORT2
-        /*TEST*/printf("SHORT2 contains: %d \n",SHORT2);
-        if(SHORT2 > 0)
-        {
-            /*TEST*/printf("Inside second SHORT SON \n");
-            /*TEST*/print_debug(getpid());
-            //this is the SHORT1 (son of manager)
-            struct sched_param param;
-            param.requested_time = 5;
-            param.trial_num = 15;
-            /*TEST*/printf("is_SHORT for SHORT1 returns : %d\n",is_SHORT(getpid()));
-            /*TEST*/assert(sched_setscheduler(SHORT2, SCHED_SHORT, &param) == 0);
-            int i;
-            for (i=0; i<5; i++)
-            {
-                /*TEST*/print_debug(getpid());
-                /*TEST*/printf("Inside first loop");
-                if(is_SHORT(getpid()) == 1)
-                {
-                    printf("\t\tOVERDUE1 is in RR mode\n");
-                }
-                else if (is_SHORT(getpid()) == 0)
-                {
-                    printf("\t\tOVERDUE1 is in FIFO mode\n");
-                }
-                doLongTask();
-            }
-            wait(&status);
-            printf("OK\n");
-        }
-        else if (SHORT2 == 0)
-        {
-            /*TEST*/printf("is_SHORT for SHORT2 returns : %d\n",is_SHORT(getpid()));
-            /*TEST*/print_debug(getpid());
-            assert(is_SHORT(getpid())==0); //make sure its overdue
-            //this is the SHORT2 (son of SHORT1)
-
-            int i;
-            for (i=0; i<5; i++)
-            {
-                /*TEST*/print_debug(getpid());
-                /*TEST*/printf("Inside second loop");
-                if(is_SHORT(getpid()) == 1)
-                {
-                    printf("OVERDUE2 is in RR mode\n");
-                }
-                else if (is_SHORT(getpid()) == 0)
-                {
-                    printf("OVERDUE2 is in FIFO mode\n");
-                }
-                doLongTask();
-            }
-            /*TEST*/printf("The test is about to perform the first exit...\n");
-            _exit(0);
-            /*TEST*/print_debug(getpid());
-
-        }
-        /*TEST*/print_debug(getpid());
-        /*TEST*/printf("****    ERROR! : The function never entered The second son for some reason!   *****\n");
-        /*TEST*/printf("The test is about to perform the second exit...\n");
-        _exit(0);
-    }
-}
 void testMakeShort()
 {
     int thisId = getpid();
@@ -1043,9 +989,6 @@ int main()
     printf("\nTesting OVERDUE processes FIFO... \n");
     printf("You should see the FIFO behaviour in the prints, e.g A A A A B B B B... \n");
     testShortOverdueFIFO();
-
-//    printf("Testing OVERDUE processes FIFO with prints... \n");
-//    testShortOverdueFIFOWithPrints();
 //
 //    printf("\nTesting SHORT processes Round-Robin... \n");
 //    printf("You should see the Round-Robin behaviour in the prints, e.g A B C A B C A... \n");
