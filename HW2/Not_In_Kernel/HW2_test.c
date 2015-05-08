@@ -352,7 +352,13 @@ void testChangeRequestedTimeForShort()
         paramIn.requested_time = expected_requested_time;
         paramIn.trial_num = expected_trials;
 
-        sched_setscheduler(id, SCHED_SHORT, &paramIn); //make son short
+        /*TEST*/print_debug(getpid());
+
+        sched_setscheduler(id, SCHED_SHORT, &paramIn); //make son short			//TODO - Something isn't working right with setsched
+
+        /*TEST*/assert(is_SHORT(getpid()) == 1);
+        /*TEST*/print_debug(getpid());
+
         assert(sched_getscheduler(id) == SCHED_SHORT);
 
         assert(sched_getparam(id, &paramOut) == 0);
@@ -380,8 +386,9 @@ void testChangeRequestedTimeForShort()
         paramIn.trial_num = expected_trials;
 
         assert(sched_setparam(id, &paramIn) == 0);
-
+        /*TEST*/print_debug(getpid());
         assert(sched_getparam(id, &paramOut) == 0);
+        /*TEST*/printf("param out's requested time field is: %d\n",paramOut.requested_time );
         assert(paramOut.requested_time == new_expected_requested_time); //should be 1000
 
         wait(&status);
@@ -977,30 +984,30 @@ int main()
     printf("testChangeRequestedTimeForShort... \n");
     testChangeRequestedTimeForShort();
 
-    printf("\nTesting race: RT vs. SHORT (RT is supposed to win)...\n");
-    testScheduleRealTimeOverShort();
-
-    printf("\nTesting race: SHORT vs. OTHER #1(SHORT is supposed to win)\n");
-    testScheduleShortOverOther();
-
-    printf("\nTesting race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
-    testScheduleShortOverOther2();
-
-    printf("\nTesting race: OTHER vs. OVERDUE #1(OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTrials();
-
-    printf("\nTesting race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTrials2();
-
-    printf("\nTesting race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTime();
-
-    printf("\nTesting race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");
-    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
-    testScheduleOtherOverOVERDUEBecauseOfTime2();
+//    printf("\nTesting race: RT vs. SHORT (RT is supposed to win)...\n");
+//    testScheduleRealTimeOverShort();
+//
+//    printf("\nTesting race: SHORT vs. OTHER #1(SHORT is supposed to win)\n");
+//    testScheduleShortOverOther();
+//
+//    printf("\nTesting race: SHORT vs. OTHER #2(SHORT is supposed to win)\n");
+//    testScheduleShortOverOther2();
+//
+//    printf("\nTesting race: OTHER vs. OVERDUE #1(OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTrials();
+//
+//    printf("\nTesting race: OTHER vs. OVERDUE #2(OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Trials...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTrials2();
+//
+//    printf("\nTesting race: OTHER vs. OVERDUE #1 (OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTime();
+//
+//    printf("\nTesting race: OTHER vs. OVERDUE #2 (OTHER is supposed to win)\n");
+//    printf("The OVERDUE process was created as SHORT and consumed all of it's Time...\n\n");
+//    testScheduleOtherOverOVERDUEBecauseOfTime2();
 
     printf("\nTesting OVERDUE processes FIFO... \n");
     printf("You should see the FIFO behaviour in the prints, e.g A A A A B B B B... \n");

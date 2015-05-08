@@ -263,7 +263,7 @@ extern int current_is_keventd(void);
 #define MAX_RT_PRIO		MAX_USER_RT_PRIO
 
 #define MAX_PRIO		(MAX_RT_PRIO + 40)
-#define OVERDUE_PRIO	0	/*TEST*///(MAX_RT_PRIO - 1)
+#define OVERDUE_PRIO	(MAX_RT_PRIO - 1)
 
 
 /*
