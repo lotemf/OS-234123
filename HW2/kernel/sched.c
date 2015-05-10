@@ -1450,7 +1450,7 @@ static int setscheduler(pid_t pid, int policy, struct sched_param *param)
     		retval = 0;															//Success
     		goto out_unlock;
     	}
-    	else if  ((policy != SCHED_SHORT)){
+    	else {
     		retval = -EPERM;													// HW2 - Lotem 5.5.15 16.00
     		goto out_unlock;
     	}

@@ -12,15 +12,6 @@
 #include <unistd.h>
 
 
-//struct sched_param {
-//    int sched_priority;
-//    int requested_time;                 /* HW2 Roy: Range: 1-5000 in miliseconds */
-//    int trial_num;               /* HW2 Roy: Range: 1-50 original number of trials */
-//};
-
-#define HZ 512
-#define SCHED_SHORT    4               /* HW2 - Roy for sched_tester.c*/
-
 struct switch_info {
 	int arr[6];
 };
@@ -42,6 +33,7 @@ static int become_short(unsigned int req_time, unsigned int trial_num) {
 
 	p.req_time = req_time;
 	p.trial_num = trial_num;
+	/*TEST*/printf("Inside become_short function...\n");
 	return sched_setscheduler(getpid(), 4, (struct sched_param *) &p);
 }
 
@@ -63,6 +55,8 @@ static int run_forked(int (*func)() ) {
 	if (!pid) {
 		ret = func();
 		write(pipes[1], &ret, sizeof (int));
+		printf("The remaining_trials inside fork() is : %d \n",rem_trials(getpid()));
+
 		exit(0);
 	} else {
 		err = waitpid(pid, NULL, 0);
@@ -205,7 +199,7 @@ static int test_rem_time_not_overdue() {
 
 // 10		check num of trialsssss
 static int rem_trails_not_overdue() {
-	if (become_short(3, 2) == -1)
+	if (become_short(1000, 5) == -1)
 		return 0;
 	return (rem_trials(getpid()) > 0);
 }
@@ -234,29 +228,25 @@ static int rem_trials_overdue() {
 	errno = 0;
 	int start = time(NULL);
 	if (become_short(5, 1) == -1) {
-		printf("test 12 - setsched errno is");
+		perror("test 12 - setsched errno is");
 		return 0;
 	}
-	printf("The is_SHORT value is : %d \n",is_short(getpid()));
 	while (time(NULL) - start < 2)
 		;
-//	printf("...rem_trials output is: %d \n",rem_trials(getpid()));
 	return (rem_trials(getpid())==0 && is_short(getpid())==0);
 }
 static int test_rem_trials_overdue() {
-	int res = run_forked(rem_trials_overdue);
-	printf("... The return value of test_rem_trials_overdue() function is: %d \n", res);
-	return res;
+	return run_forked(rem_trials_overdue);
 }
 
 
-// 13	?????????????????????????????
+// 13
 static int short_preempts_other() {
 	int start;
-	if (become_short(5000, 1) == -1)
+	if (become_short(5000, 50) == -1)
 		return 0;
 	start = time(NULL);
-	while(time(NULL) - start < 5)
+	while(time(NULL) - start < 2)
 		;
 	return 1;
 }
@@ -283,13 +273,13 @@ static int test_short_preempts_other() {
 		}
 		waitpid(pid, NULL, 0);
 	}
-	if (end.tv_sec - start.tv_sec < 5)
+	if (end.tv_sec - start.tv_sec < 1)
 		return 0;
 	return 1;
 }
 
 
-// 14		????????????????????????????????????
+// 14
 static int other_preempts_overdue() {
 	int start;
 	if (become_short(1, 1) == -1)
@@ -364,31 +354,49 @@ static int __fork_child_trials() {
 
 // 16	trials/2
 static int fork_child_trials_even() {
+	printf("Inside fork_child_trials_even()...\n");
 	int trials = 20;
-	if (become_short(1000, trials) == -1)
+	if (become_short(5000, trials) == -1){
+		printf("ERROR!!!\n");
 		return 0;
-	return (run_forked(__fork_child_trials) == (trials/2));
+	}
+	printf("Before run forked...\n");
+	int res = run_forked(__fork_child_trials);
+	printf("The value of res is: %d\n", res);
+	printf("The remaining_trials is : %d \n",rem_trials(getpid()));
+	return  ( (res == (trials/2) ) && (rem_trials(getpid()) == (trials/2)) );
 }
 static int test_fork_child_trials_even() {
 	return run_forked(fork_child_trials_even);
 }
-
 
 // 17	trials/2 +1
 static int fork_child_trials_odd() {
 	int trials = 21;
 	if (become_short(1000, trials) == -1)
 		return 0;
-	return (run_forked(__fork_child_trials) == (trials/2)+1);
+	return (run_forked(__fork_child_trials) == (trials/2)+1 && rem_trials(getpid()) == (trials/2));
 }
 static int test_fork_child_trials_odd() {
 	return run_forked(fork_child_trials_odd);
 }
 
-// 18		parent childd
+// 18 parent trials=1
+static int fork_child_trials_one() {
+	if (become_short(1, 1) == -1)
+		return 0;
+	return (run_forked(__fork_child_trials) == 1 && rem_trials(getpid()) == 0);
+}
+static int test_fork_child_trials_one() {
+	return run_forked(fork_child_trials_one);
+}
+
+
+// 19		parent childd
 static int fork_parent_remaining_time() {
 	int rem;
-	if (become_short(1000, 2) == -1)
+	int rem_after_fork;
+	if (become_short(1000, 20) == -1)
 		return 0;
 	rem = rem_time(getpid());		//before fork 
 	switch (fork()) {
@@ -397,19 +405,42 @@ static int fork_parent_remaining_time() {
 	case 0:
 		exit(1);
 	}		
-	return((rem/2) == rem_time(getpid()));	//after fork
+	rem_after_fork = rem_time(getpid());
+	return((rem/2) == rem_after_fork);	//after fork
 }
 static int test_fork_remaining_time() {
 	return run_forked(fork_parent_remaining_time);
 }
 
 
-// 19
+// 20		parent childd
+static int fork_parent_remaining_time_overdue() {
+	int rem;
+	int rem_after_fork;
+	if (become_short(2, 1) == -1)
+		return 0;
+	rem = rem_time(getpid());		//before fork
+	switch (fork()) {
+	case -1:
+		perror("fork failed");
+	case 0:
+		exit(1);
+	}
+	rem_after_fork = rem_time(getpid());
+	return(rem_after_fork == 0);	//after fork
+
+static int test_fork_remaining_time_overdue() {
+	return run_forked(fork_parent_remaining_time_overdue);
+}
+}
+static int test_fork_remaining_time_overdue() {
+	return run_forked(fork_parent_remaining_time_overdue);
+}
 
 /*
 static int test_read_stats_150_records() {
 	struct switch_info infos[150];
-	return 150 == read_stats(&infos);
+	return 150 == get_sched_stats(&infos);
 }
 */
 
@@ -429,20 +460,22 @@ struct test_def tests[] = {
 //	DEFINE_TEST(test_trials_too_small),			// 3
 //	DEFINE_TEST(test_trials_too_big),			// 4
 //	DEFINE_TEST(test_setsched_success),			// 5
-	DEFINE_TEST(test_setsched_twice),			// 6
+//	DEFINE_TEST(test_setsched_twice),			// 6
 //	DEFINE_TEST(test_setparam_after_setsched),	// 7
 //	DEFINE_TEST(test_getparam),					// 8
 //	DEFINE_TEST(test_rem_time_not_overdue),		// 9
 //	DEFINE_TEST(test_rem_trails_not_overdue),	// 10
 //	DEFINE_TEST(test_rem_time_overdue),			// 11
-	DEFINE_TEST(test_rem_trials_overdue),		// 12
+//	DEFINE_TEST(test_rem_trials_overdue),		// 12
 //	DEFINE_TEST(test_short_preempts_other),		// 13
 //	DEFINE_TEST(test_other_preempts_overdue),	// 14
 //	DEFINE_TEST(test_fork_requested_time),		// 15
-//	DEFINE_TEST(test_fork_child_trials_even),	// 16
+	DEFINE_TEST(test_fork_child_trials_even),	// 16
 //	DEFINE_TEST(test_fork_child_trials_odd),	// 17
-//	DEFINE_TEST(test_fork_remaining_time),		// 18
-
+//	DEFINE_TEST(test_fork_child_trials_one),	// 18
+//	DEFINE_TEST(test_fork_remaining_time),		// 19
+//	DEFINE_TEST(test_fork_remaining_time_overdue),		// 20
+//	DEFINE_TEST(test_read_stats_150_records),
 
 	{ NULL, "The End" },
 };

@@ -50,6 +50,9 @@ int sys_remaining_time(int pid){
 sys_remaining_trials(int pid){
 	int check = sys_is_SHORT(pid);
 	if (check != 1){
+		if (!check){
+			return 0;
+		}
 		return -EINVAL;
 	}
 	task_t *p = NULL;
