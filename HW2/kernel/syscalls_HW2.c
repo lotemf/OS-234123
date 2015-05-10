@@ -58,7 +58,7 @@ sys_remaining_trials(int pid){
 	task_t *p = NULL;
 	p = find_task_by_pid(pid);
 
-	return REMAINING_TRIALS(p);
+	return (REMAINING_TRIALS(p) + 1);
 
 }
 
