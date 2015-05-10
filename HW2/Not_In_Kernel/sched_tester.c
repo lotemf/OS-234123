@@ -3,10 +3,19 @@
 #include <stdio.h>
 #include <assert.h>
 
+
 //defines
 #define MAX_TO_MONITOR 150
 #define MEDIUM_TIME 3000
+#define HZ 512
+#define SCHED_SHORT    4
 
+
+struct sched_param {
+    int sched_priority;
+    int requested_time;
+    int trial_num;
+};
 
 //helper structs
 const char* policy[] =
@@ -30,11 +39,11 @@ const char* context_switching_reason[] =
 
 //helper functions
 void printMonitoringUsage(switch_info_t switch_info){
-	printf("\tcurent pid: %20d\n", switch_info.previous_pid);
+	printf("\tcurrent pid: %20d\n", switch_info.previous_pid);
 	printf("\tnext pid: %20d, \n", switch_info.next_pid);
 	printf("\tpolicy: %20s\n", policy[switch_info.previous_policy]);
 	printf("\tnext policy is: %s, \n", policy[switch_info.next_policy]);
-	printf("\ttime in ticks is: %s, \n", switch_info.time);
+	printf("\ttime in ticks is: %lu, \n", switch_info.time);
 	switch (switch_info.reason) {
 		case 0:
 			printf("\treason is Default, means reason of context switch wasn't monitoreds\n\n");
