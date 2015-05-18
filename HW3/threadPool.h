@@ -27,7 +27,7 @@ typedef struct thread_pool
 	pthread_mutex_t* tasksMutex;
 	bool destroyFlag;
 	bool finishAllFlag;
- //semaphur
+ //semaphore
  //number of threads
  //pointer to queue of tasks
  //array of pointers to thread ids
