@@ -93,6 +93,7 @@ ThreadPool* tpCreate(int numOfThreads){
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
+		return null;
 	}
 //step 5: allocate array
 	tp->threadsArray = malloc(sizeof(pthread_t)*numOfThreads);
@@ -102,6 +103,7 @@ ThreadPool* tpCreate(int numOfThreads){
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
+		return null;
 	}
 //step 6: creating threads
 	for (int i = 0; i < numOfThreads; ++i){
@@ -112,12 +114,13 @@ ThreadPool* tpCreate(int numOfThreads){
 			destroySemaphore(tp);
 			destroyTasksQueue(tp);
 			destroyThreadPool(tp);
+			return null;
 		}
 	}
 //step 7: init values of numOfThreads and destroyFlag
 	tp->destroyFlag = false;
 	tp->finishAllFlag = false;
 	tp->numOfThreads = numOfThreads;
-//step 8: return thread pool struct
+//step 8: return thread pool struct pointer
 	return tp;
 }
