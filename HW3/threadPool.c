@@ -18,12 +18,13 @@
 	//need to check which params we need
 void startThreadRoutine(void* d){
 	ThreadPool* tp = (ThreadPool*)d;
-	sem_t sem = tp->semaphore;
+	sem_t* sem = tp->semaphore;
+//	int retVal;
 	OsQueue* tasksQueue = tp->tasksQueue;
-	while (!tp->destroyFlag){//TODO to handle finishAllTasks flag
-		while (!sem_trywait(sem)){/*condition <=0 */}
-			//TODO check if trywait/wait is needed
-			//TODO take from queue
+	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
+		while (!sem_wait(sem)){}
+		//TODO take from queue
+
 	}
 }
 
@@ -108,6 +109,7 @@ ThreadPool* tpCreate(int numOfThreads){
 	}
 //step 7: init values of numOfThreads and destroyFlag
 	tp->destroyFlag = false;
+	tp->finishAllFlag = false;
 	tp->numOfThreads = numOfThreads;
 //step 8: return thread pool struct
 	return tp;
