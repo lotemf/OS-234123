@@ -20,6 +20,7 @@ typedef struct thread_pool
 	sem_t* semaphore;
 	pthread_mutex_t* tasksMutex;
 	bool destroyFlag;
+	bool finishAllFlag;
  //semaphur
  //number of threads
  //pointer to queue of tasks
