@@ -19,12 +19,19 @@
 void startThreadRoutine(void* d){
 	ThreadPool* tp = (ThreadPool*)d;
 	sem_t* sem = tp->semaphore;
-//	int retVal;
+	FuncStruct node;
 	OsQueue* tasksQueue = tp->tasksQueue;
+
 	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
 		while (!sem_wait(sem)){}
 		//TODO take from queue
-
+		pthread_mutex_lock(tp->tasksMutex);
+		if (osIsQueueEmpty(tp->tasksQueue)){
+			continue;
+		}
+		node = osDequeue(tp->tasksQueue);
+		pthread_mutex_unlock(tp->tasksMutex);
+		*(node.func)(node.param);
 	}
 }
 
@@ -81,7 +88,7 @@ ThreadPool* tpCreate(int numOfThreads){
 //step 4: allocate mutex
 	tp->tasksMutex = malloc(sizeof(pthread_mutex_t));
 
-	if ((!tp->tasksMutex) || (pthread_mutex_init(tp->tasksMutex,) != 0)){
+	if ((!tp->tasksMutex) || (pthread_mutex_init(tp->tasksMutex,PTHREAD_MUTEX_ERRORCHECK) != 0)){
 		printf("Memory allocation error\n");
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
