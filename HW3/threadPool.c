@@ -20,10 +20,10 @@ void startThreadRoutine(void* d){
 	ThreadPool* tp = (ThreadPool*)d;
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
-	OsQueue* tasksQueue = tp->tasksQueue;
+	OsQueue* tasksQueue = tp->tasksQueue; //maybe inside the while...
 
 	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
-		while (!sem_wait(sem)){}
+		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
@@ -123,4 +123,30 @@ ThreadPool* tpCreate(int numOfThreads){
 	tp->numOfThreads = numOfThreads;
 //step 8: return thread pool struct pointer
 	return tp;
+}
+
+int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* param) {
+	ThreadPool* tp = (ThreadPool*)d;
+	sem_t* sem = tp->semaphore;
+	//if destroy was called, we do not insert more tasks to the queue
+	if(tp->destroyFlag) {return -1;}
+
+	OsQueue* tasksQueue = tp->tasksQueue;
+	pthread_mutex_lock(tp->tasksMutex);
+
+	FuncStruct* node = (FuncStruct*) malloc(sizeof(FuncStruct));
+	if(!node) {
+		printf("Memory allocation error\n");
+		pthread_mutex_unlock(tp->tasksMutex);
+		return -1;
+	}
+	node->func = computeFunc;
+	node->func_param = param;
+	osEnqueue(tasksQueue, node);
+
+	sem_post(sem);
+
+	pthread_mutex_unlock(tp->tasksMutex);
+
+	return 0;
 }

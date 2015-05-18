@@ -21,8 +21,8 @@ typedef struct function_struct{
 typedef struct thread_pool
 {
 	int numOfThreads;
-	OsQueue* tasksQueue;
 	pthread_t* threadsArrPtr;
+	OsQueue* tasksQueue;
 	sem_t* semaphore;
 	pthread_mutex_t* tasksMutex;
 	bool destroyFlag;
