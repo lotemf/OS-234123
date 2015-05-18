@@ -24,9 +24,9 @@ void startThreadRoutine(void* d){
 
 	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
 		while (!sem_wait(sem)){}
-		//TODO take from queue
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
+			pthread_mutex_unlock(tp->tasksMutex);
 			continue;
 		}
 		node = osDequeue(tp->tasksQueue);
