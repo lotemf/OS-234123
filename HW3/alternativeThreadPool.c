@@ -27,12 +27,22 @@ void startThreadRoutine(void* d){
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
+			/*New Test Code - Lotem    -  This ensures us we don't keep trying to withdraw when we need to stop*/
+			if (tp->destroyFlag) {
+				pthread_exit();
+			}
+			/*New Test Code - Lotem*/
 			continue;
 		}
 		node = osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
 		*(node.func)(node.param);
 	}
+
+	/*New Test Code - Lotem    -  If every thread exits when he checks the flag, we don't need to close all of them manually*/
+	pthread_exit();
+	/*New Test Code - Lotem*/
+
 }
 
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
@@ -43,6 +53,13 @@ void destroyThreadsPool(ThreadPool* tp){
 void destroyThreadsArray(ThreadPool* tp, int untilIndex){
 	for (int i = 0; i < untilIndex; ++i){
 		pthread_cancel(array[i]);
+	}
+	free(tp->threadsArray);
+}
+//join all the threads in the array
+void joinThreadsArray(ThreadPool* tp, int untilIndex){							//HW3 - Lotem's Addition 18.5.2015
+	for (int i = 0; i < untilIndex; ++i){
+		pthread_join(array[i]);
 	}
 	free(tp->threadsArray);
 }
@@ -179,22 +196,22 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 		}
 		goto finishLabel;		//TestCode
 	}
-//	//Before we check the tasksQueue we need to lock it, then we check if it's empty
-//	if (osIsQueueEmpty(threadPool->tasksQueue)){
-////		pthread_mutex_lock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
-//		while (sem_getvalue(threadPool->semaphore)){									//If there are no more tasks we would like to empty the semaphore's queue
-//			sem_post(threadPool->semaphore);
-//		}
-////		joinThreadsArray(threadPool,threadPool->numOfThreads);					//We will wait for all of the threads to finish...
-///*Mutx*/pthread_mutex_unlock(threadPool->tasksMutex);
-////		pthread_mutex_unlock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
-//
-//		destroyMutex(tp);		//Maybe use goto... (because it's strictly code duplication)
-//		destroySemaphore(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		destroyTasksQueue(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		destroyThreadPool(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		return;					//Maybe use goto... (because it's strictly code duplication)
-//	}
+	//Before we check the tasksQueue we need to lock it, then we check if it's empty
+	if (osIsQueueEmpty(threadPool->tasksQueue)){
+//		pthread_mutex_lock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
+		while (sem_getvalue(threadPool->semaphore)){									//If there are no more tasks we would like to empty the semaphore's queue
+			sem_post(threadPool->semaphore);
+		}
+//		joinThreadsArray(threadPool,threadPool->numOfThreads);					//We will wait for all of the threads to finish...
+/*Mutx*/pthread_mutex_unlock(threadPool->tasksMutex);
+//		pthread_mutex_unlock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
+
+		destroyMutex(tp);		//Maybe use goto... (because it's strictly code duplication)
+		destroySemaphore(tp);	//Maybe use goto... (because it's strictly code duplication)
+		destroyTasksQueue(tp);	//Maybe use goto... (because it's strictly code duplication)
+		destroyThreadPool(tp);	//Maybe use goto... (because it's strictly code duplication)
+		return;					//Maybe use goto... (because it's strictly code duplication)
+	}
 
 	//If we arrived here, we want to clean all of the remaining tasks without running them, and to finish the current threads tasks
 
