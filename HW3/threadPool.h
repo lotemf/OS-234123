@@ -12,6 +12,12 @@
 /*
  * Structs  and Enums
  */
+//struct of functions to perform - should be inserted to osQueue
+typedef struct function_struct{
+	void (*func)(void*);
+	void* func_param;
+} FuncStruct;
+
 typedef struct thread_pool
 {
 	int numOfThreads;
@@ -31,13 +37,6 @@ typedef struct thread_pool
 /*
  * Thread Pool Public Functions
  */
-
-//step 1: create an array of pthread_t
-//step 2: create all threads
-//step 3: create the semaphore
-//step 3: create the task queue
-//TODO create destroy functions for each field in struct.
-
 ThreadPool* tpCreate(int numOfThreads);
 
 void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks);
