@@ -28,9 +28,9 @@ void startThreadRoutine(void* d){
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
 			/*New Test Code - Lotem    -  This ensures us we don't keep trying to withdraw when we need to stop*/
-			if (tp->destroyFlag) {
-				pthread_exit();
-			}
+			if (tp->destroyFlag) { //alon - we do not need this check.
+				pthread_exit();	   // if the destroyFlag is on, we might still need to withdraw tasks
+			}					   // because of finishAllFlag. if finishAllFlag is off, the thread won't enter the while again
 			/*New Test Code - Lotem*/
 			continue;
 		}

@@ -21,6 +21,7 @@ typedef struct function_struct{
 typedef struct thread_pool
 {
 	int numOfThreads;
+	int numOfActive;
 	pthread_t* threadsArrPtr;
 	OsQueue* tasksQueue;
 	sem_t* semaphore;

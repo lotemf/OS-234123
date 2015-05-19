@@ -21,18 +21,33 @@ void startThreadRoutine(void* d){
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
 	OsQueue* tasksQueue = tp->tasksQueue; //maybe inside the while...
+	//TODO check if the head of the queue changes between parallel threads
 
 	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
 		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
+			if(tp->destroyFlag) { // alon - hw3
+				--tp->numOfActive;
+				pthread_exit();
+			}
 			continue;
 		}
+		//TODO add mutex_dequeueMutex and lock it here **
+		if(tp->destroyFlag && !tp->finishAllFlag) {
+			//if true, unlock it here **
+			pthread_mutex_unlock(tp->tasksMutex);
+			continue; // or just --tp->numOfActive + pthread_exit()
+		}
+		//unlock it here **
 		node = osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
 		*(node.func)(node.param);
+
 	}
+	--tp->numOfActive;
+	pthread_exit();
 }
 
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
@@ -125,6 +140,7 @@ ThreadPool* tpCreate(int numOfThreads){
 	tp->destroyFlag = false;
 	tp->finishAllFlag = false;
 	tp->numOfThreads = numOfThreads;
+	tp->numOfActive = numOfThreads;
 //step 8: return thread pool struct pointer
 	return tp;
 }
@@ -170,11 +186,19 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 		printf("Illegal input values!\n");
 		return;
 	}
-
+	// TODO lock the mutex_dequeueMutex here
 	threadPool->destroyFlag = true;
 	threadPool->finishAllFlag = (shouldWaitForTasks != 0);
-	pthread_mutex_lock(threadPool->tasksMutex);
-	while (!osIsQueueEmpty(threadPool->tasksQueue)) {
+	// unlock it here
+
+	/*if (shouldWaitForTasks != 0){
+		while (threadPool->numOfActive > 0)
+			sem_post(threadPool->semaphore);
+	}*/
+	while (threadPool->numOfActive > 0)
+		sem_post(threadPool->semaphore);
+
+	/*while (!osIsQueueEmpty(threadPool->tasksQueue)) {
 		if (shouldWaitForTasks != 0){
 			//unlock
 			//join all threads
@@ -182,9 +206,15 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 		}else{
 			//unlock and cancel all threads
 		}
-	}
+	}*/
+	//destroy for mutex_dequeueMutex
+	destroyMutex(tp);
+	destroySemaphore(tp);
+	destroyTasksQueue(tp);
+	destroyThreadsArray(tp, tp->numOfThreads)
+	destroyThreadPool(tp);
 
-
+	return;
 }
 
 
