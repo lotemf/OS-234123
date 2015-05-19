@@ -28,16 +28,17 @@ void startThreadRoutine(void* d){
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
-			if(tp->destroyFlag) { // alon - hw3
+			//if the queue is empty and destroyFlag is on, a thread should end on anyway
+			if(tp->destroyFlag) { // alon
 				--tp->numOfActive;
 				pthread_exit();
 			}
 			continue;
 		}
 		//TODO add mutex_dequeueMutex and lock it here **
-		if(tp->destroyFlag && !tp->finishAllFlag) {
-			//if true, unlock it here **
-			pthread_mutex_unlock(tp->tasksMutex);
+		if(tp->destroyFlag && !tp->finishAllFlag) {		//if the queue is not empty, but destroyFlag is on &
+			//if true, unlock it here **				//finishAllFlag is off, a thread will "continue" and
+			pthread_mutex_unlock(tp->tasksMutex);		//then will end
 			continue; // or just --tp->numOfActive + pthread_exit()
 		}
 		//unlock it here **
@@ -195,6 +196,7 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 		while (threadPool->numOfActive > 0)
 			sem_post(threadPool->semaphore);
 	}*/
+	//on anyway, we need to let all threads to finish. the conditions are taking care by the startRoutine
 	while (threadPool->numOfActive > 0)
 		sem_post(threadPool->semaphore);
 
