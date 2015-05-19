@@ -60,6 +60,10 @@ void destroyMutex(ThreadPool* tp){
 void destroyTasksQueue(ThreadPool* tp){
 	tp->tasksQueueosDestroyQueue(tp->tasksQueue);
 }
+//destroy function struct, in osQueue - currently not in use
+void destroyFuncStruct(FuncStruct* fStruct){
+	free(fStruct);
+}
 /*****************************************************************
  * Interface API Functions
  *****************************************************************/
@@ -126,77 +130,60 @@ ThreadPool* tpCreate(int numOfThreads){
 }
 
 int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* param) {
-	ThreadPool* tp = (ThreadPool*)d;
+	//ThreadPool* tp = (ThreadPool*)d;  - not clear what it supposed to be.
+	ThreadPool* tp = threadPool;
 	sem_t* sem = tp->semaphore;
-	//if destroy was called, we do not insert more tasks to the queue
-	if(tp->destroyFlag) {return -1;}
-
+	FuncStruct* node;
 	OsQueue* tasksQueue = tp->tasksQueue;
-	pthread_mutex_lock(tp->tasksMutex);
 
-	FuncStruct* node = (FuncStruct*) malloc(sizeof(FuncStruct));
-	if(!node) {
-		printf("Memory allocation error\n");
-		pthread_mutex_unlock(tp->tasksMutex);
+	//if destroy was called, we do not insert more tasks to the queue
+	if(tp->destroyFlag) {
 		return -1;
 	}
+
 	node->func = computeFunc;
 	node->func_param = param;
-	osEnqueue(tasksQueue, node);
 
-	sem_post(sem);
-
-	pthread_mutex_unlock(tp->tasksMutex);
-
+	pthread_mutex_lock(tp->tasksMutex);
+	if (tp->destroyFlag){//we check again inside lock
+		pthread_mutex_unlock(tp->tasksMutex);
+		return -1;
+	}else {
+//todo consider sem_post outside/inside the lock
+		osEnqueue(tasksQueue, node);
+		pthread_mutex_unlock(tp->tasksMutex);
+		sem_post(sem);
+	}
 	return 0;
 }
 
 
 void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 	//first thing we do is lock the tasksQueue because maybe we don't want to withdraw new tasks
-	pthread_mutex_lock(threadPool->tasksMutex);
 
 	if 	(threadPool->destroyFlag){
+		//cz - this case is not going to be tested
 		printf("tpDestroy was called on this threadPool before...\n");
-		pthread_mutex_unlock(threadPool->tasksMutex);
 		return;
 	}
 	if (!threadPool){
 		printf("Illegal input values!\n");
-		pthread_mutex_unlock(threadPool->tasksMutex);
 		return;
 	}
 
 	threadPool->destroyFlag = true;
-	if (shouldWaitForTasks != 0){									//
-		threadPool->finishAllFlag = true;
-		pthread_mutex_unlock(threadPool->tasksMutex);					//We want to continue run tasks from the queue
-	}
-	//We enter only if there tasks left in the tasks queue, and we want to run them all
-	if  ((threadPool->finishAllFlag) && !osIsQueueEmpty(threadPool->tasksQueue)) {
-		while (!osIsQueueEmpty(threadPool->tasksQueue)){							//Running all of the remaining tasks
-			//We will wait for all of the threads to finish all of the tasks...
+	threadPool->finishAllFlag = (shouldWaitForTasks != 0);
+	pthread_mutex_lock(threadPool->tasksMutex);
+	while (!osIsQueueEmpty(threadPool->tasksQueue)) {
+		if (shouldWaitForTasks != 0){
+			//unlock
+			//join all threads
+			//
+		}else{
+			//unlock and cancel all threads
 		}
-		goto finishLabel;		//TestCode
 	}
-//	//Before we check the tasksQueue we need to lock it, then we check if it's empty
-//	if (osIsQueueEmpty(threadPool->tasksQueue)){
-////		pthread_mutex_lock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
-//		while (sem_getvalue(threadPool->semaphore)){									//If there are no more tasks we would like to empty the semaphore's queue
-//			sem_post(threadPool->semaphore);
-//		}
-////		joinThreadsArray(threadPool,threadPool->numOfThreads);					//We will wait for all of the threads to finish...
-///*Mutx*/pthread_mutex_unlock(threadPool->tasksMutex);
-////		pthread_mutex_unlock(threadPool->semaphoreMutex);		/*Maybe we need a new mutex on the semaphore so no threads will be added to wait queue of it */
-//
-//		destroyMutex(tp);		//Maybe use goto... (because it's strictly code duplication)
-//		destroySemaphore(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		destroyTasksQueue(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		destroyThreadPool(tp);	//Maybe use goto... (because it's strictly code duplication)
-//		return;					//Maybe use goto... (because it's strictly code duplication)
-//	}
 
-	//If we arrived here, we want to clean all of the remaining tasks without running them, and to finish the current threads tasks
 
 }
 
