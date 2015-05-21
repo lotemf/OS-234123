@@ -25,14 +25,14 @@ void startThreadRoutine(void* d) {
 //destroy was called and doesn't need to finish tasks
 		if (tp->destroyFlag && !tp->finishAllFlag) {
 			pthread_mutex_unlock(tp->tasksMutex);
-			pthread_exit();
+			pthread_exit(NULL);
 		}
 //destroy was called and need to finish all tasks
 		if (tp->destroyFlag && tp->finishAllFlag) {
 			if (sem_trywait(sem) != 0) {
 				//no tasks to finish
 				pthread_mutex_unlock(tp->tasksMutex);
-				pthread_exit();
+				pthread_exit(NULL);
 			} else{
 				//wait succeeded - thread can take tasks
 				if (!osIsQueueEmpty(tp->tasksQueue)) {
@@ -43,7 +43,7 @@ void startThreadRoutine(void* d) {
 				}else {
 					//task queue is empty - finish/exit thread
 					pthread_mutex_unlock(tp->tasksMutex);
-					pthread_exit();
+					pthread_exit(NULL);
 				}
 			}
 		}
