@@ -31,20 +31,20 @@ void* startThreadRoutine(void* d) {
 			printf("inside startRoutine. destroy flag is on, finishAll flag is on\n");
 			if (sem_trywait(sem) != 0) {
 				//no tasks to finish
-				printf("inside startRoutine. trywait != 0");
+				printf("inside startRoutine. trywait != 0\n");
 				pthread_mutex_unlock(tp->tasksMutex);
 				pthread_exit(NULL);
 			} else{
 				//wait succeeded - thread can take tasks
 				if (!osIsQueueEmpty(tp->tasksQueue)) {
-					printf("inside startRoutine. trywait == 0 and tasks queue is not empty");
+					printf("inside startRoutine. trywait == 0 and tasks queue is not empty\n");
 					//task queue is not empty - take task
 					node = (FuncStruct) osDequeue(tp->tasksQueue);
 					pthread_mutex_unlock(tp->tasksMutex);
 					(*(node->func))(node->func_param);
 				}else {
 					//task queue is empty - finish/exit thread
-					printf("inside startRoutine. trywait == 0 and tasks queue is empty");
+					printf("inside startRoutine. trywait == 0 and tasks queue is empty\n");
 					pthread_mutex_unlock(tp->tasksMutex);
 					pthread_exit(NULL);
 				}
