@@ -9,12 +9,11 @@
 /*****************************************************************
  * Defines
  ****************************************************************/
-void startThreadRoutine(void* d);
 /*****************************************************************
  * Helper Functions
  ****************************************************************/
 //start routine function for threads
-void startThreadRoutine(void* d) {
+void* startThreadRoutine(void* d) {
 	ThreadPool* tp = (ThreadPool*) d;
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
@@ -38,7 +37,7 @@ void startThreadRoutine(void* d) {
 					//task queue is not empty - take task
 					node = (FuncStruct) osDequeue(tp->tasksQueue);
 					pthread_mutex_unlock(tp->tasksMutex);
-					*(node->func)(node->func_param);
+					(*(node->func))(node->func_param);
 				}else {
 					//task queue is empty - finish/exit thread
 					pthread_mutex_unlock(tp->tasksMutex);
@@ -52,7 +51,7 @@ void startThreadRoutine(void* d) {
 		pthread_mutex_lock(tp->tasksMutex);
 		node = (FuncStruct) osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
-		*(node->func)(node->func_param);
+		(*(node->func))(node->func_param);
 	}
 }
 
@@ -76,9 +75,7 @@ void destroySemaphore(ThreadPool* tp) {
 //destroy tasks and flags mutex's
 void destroyMutex(ThreadPool* tp) {
 	pthread_mutex_destroy(tp->tasksMutex);
-	pthread_mutex_destroy(tp->flagsMutex);
 	free(tp->tasksMutex);
-	free(tp->flagsMutex);
 }
 //destroy tasks queue - no need to free as it is freed in OSQueue
 void destroyTasksQueue(ThreadPool* tp) {
@@ -116,13 +113,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 	}
 //step 4: allocate mutex
 	tp->tasksMutex = malloc(sizeof(pthread_mutex_t));
-	tp->flagsMutex = malloc(sizeof(pthread_mutex_t));
-
-	if ((!tp->tasksMutex)
-			|| (pthread_mutex_init(tp->tasksMutex, NULL)
-					!= 0)(!tp->flagsMutex)
-			|| (pthread_mutex_init(tp->flagsMutex, NULL)
-					!= 0)) {
+	if ((!tp->tasksMutex)|| (pthread_mutex_init(tp->tasksMutex, NULL)!= 0) {
 		printf("Memory allocation error\n");
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
