@@ -21,28 +21,34 @@ void startThreadRoutine(void* d){
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
 	OsQueue* tasksQueue = tp->tasksQueue; //maybe inside the while...
+	//TODO check if the head of the queue changes between parallel threads
 
 	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag){//TODO to handle finishAllTasks flag
 		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
 		if (osIsQueueEmpty(tp->tasksQueue)){
 			pthread_mutex_unlock(tp->tasksMutex);
-			/*New Test Code - Lotem    -  This ensures us we don't keep trying to withdraw when we need to stop*/
-			if (tp->destroyFlag) {
-				pthread_exit();	   // if the destroyFlag is on, we might still need to withdraw tasks
-			}					   // because of finishAllFlag. if finishAllFlag is off, the thread won't enter the while again
-			/*New Test Code - Lotem*/
+			//if the queue is empty and destroyFlag is on, a thread should end on anyway
+			if(tp->destroyFlag) { // alon
+				--tp->numOfActive;
+				pthread_exit();
+			}
 			continue;
 		}
+		//TODO add mutex_dequeueMutex and lock it here **
+		if(tp->destroyFlag && !tp->finishAllFlag) {		//if the queue is not empty, but destroyFlag is on &
+			//if true, unlock it here **				//finishAllFlag is off, a thread will "continue" and
+			pthread_mutex_unlock(tp->tasksMutex);		//then will end
+			continue; // or just --tp->numOfActive + pthread_exit()
+		}
+		//unlock it here **
 		node = osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
 		*(node.func)(node.param);
+
 	}
-
-	/*New Test Code - Lotem    -  If every thread exits when he checks the flag, we don't need to close all of them manually*/
+	--tp->numOfActive;
 	pthread_exit();
-	/*New Test Code - Lotem*/
-
 }
 
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
@@ -179,6 +185,8 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc) (void *), void* par
  * 	  count as busy-wait according to the course's definitions
  * 	4.I have added a function that is based on Chen's cancel all,
  * 	  that utilizes a for loop to join all of the threads
+ * 	5.Maybe there is an option to unlock the tasksQueue a lot sooner,
+ * 	  after we set the flags  (We didn't add the lock on the flags yet..)
  ******************************************************************************/
 void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 
@@ -209,11 +217,12 @@ void tpDestroy(ThreadPool* threadPool, int shouldWaitForTasks){
 		while (!osIsQueueEmpty(threadPool->tasksQueue)){							//Running all of the remaining tasks
 					//We will wait for all of the threads to finish all of the tasks...
 		}
+
 		goto finishLabel;
 	}
 
 	/*	**Important Notice - Because we only unlock the mutex on the tasks queue, if shouldWaitForTaks is lit
-						     when we get to this scope, the mutex lock on the tasks queue is till locked
+						     when we get to this scope, the mutex lock on the tasks queue is still locked
 						     or we would have jumped to the finishLabel, and return form tpDestroy			*/
 
 	if (osIsQueueEmpty(threadPool->tasksQueue)){
@@ -234,11 +243,3 @@ finishLabel:													//Freeing all of the mallocs
 		destroyThreadPool(tp);
 		return;
 }
-
-
-
-
-
-
-
-
