@@ -22,33 +22,40 @@ void* startThreadRoutine(void* d) {
 		pthread_mutex_lock(tp->tasksMutex);
 //destroy was called and doesn't need to finish tasks
 		if (tp->destroyFlag && !tp->finishAllFlag) {
+			printf("inside startRoutine. destroy flag is on, finishAll flag is off\n");
 			pthread_mutex_unlock(tp->tasksMutex);
 			pthread_exit(NULL);
 		}
 //destroy was called and need to finish all tasks
 		if (tp->destroyFlag && tp->finishAllFlag) {
+			printf("inside startRoutine. destroy flag is on, finishAll flag is on\n");
 			if (sem_trywait(sem) != 0) {
 				//no tasks to finish
+				printf("inside startRoutine. trywait != 0");
 				pthread_mutex_unlock(tp->tasksMutex);
 				pthread_exit(NULL);
 			} else{
 				//wait succeeded - thread can take tasks
 				if (!osIsQueueEmpty(tp->tasksQueue)) {
+					printf("inside startRoutine. trywait == 0 and tasks queue is not empty");
 					//task queue is not empty - take task
 					node = (FuncStruct) osDequeue(tp->tasksQueue);
 					pthread_mutex_unlock(tp->tasksMutex);
 					(*(node->func))(node->func_param);
 				}else {
 					//task queue is empty - finish/exit thread
+					printf("inside startRoutine. trywait == 0 and tasks queue is empty");
 					pthread_mutex_unlock(tp->tasksMutex);
 					pthread_exit(NULL);
 				}
 			}
 		}
 //normal operation of thread
+		printf("inside startRoutine. both destroy flag and finishAll flag are off\n");
 		pthread_mutex_unlock(tp->tasksMutex);
 		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
+		printf("inside startRoutine. both destroy flag and finishAll flag are off. after sem_wait\n");
 		node = (FuncStruct) osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
 		(*(node->func))(node->func_param);
@@ -61,10 +68,10 @@ void destroyThreadsPool(ThreadPool* tp) {
 }
 //destroy array until index
 void destroyThreadsArray(ThreadPool* tp, int untilIndex) {
-	int i;
+	/*int i;
 	for (i = 0; i < untilIndex; ++i) {
 		pthread_cancel(tp->threadsArray[i]);
-	}
+	}*/
 	free(tp->threadsArray);
 }
 //destroy semaphore
@@ -164,10 +171,12 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param
 //if destroy was called, we do not insert more tasks to the queue
 	pthread_mutex_lock(tp->tasksMutex);
 	if (tp->destroyFlag) {
+		printf("inside insert, destroy flag is on\n");
 		pthread_mutex_unlock(tp->tasksMutex);
 		return -1;
 	}
 //enqueue task
+	printf("inside insert, destroy flag is off\n");
 	osEnqueue(tasksQueue, node);
 	sem_post(sem);
 	pthread_mutex_unlock(tp->tasksMutex);
