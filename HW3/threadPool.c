@@ -205,13 +205,13 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 //update flags value
 	tp->destroyFlag = true;
 	tp->finishAllFlag = (shouldWaitForTasks != 0);
-	pthread_mutex_unlock(tp->tasksMutex);
 //this loop is KASTACH in case we have threads that wait for tasks and destroy was called
 	int i;
 	printf("[DEBUG]\tin tpDestroy function before increasing semaphore counter\n");
 	for (i = 0; i < tp->numOfThreads; ++i) {
 		sem_post(tp->semaphore);
 	}
+	pthread_mutex_unlock(tp->tasksMutex);
 //wait for all threads to finish their tasks/all tasks if needed
 //TODO printf of check if threads are alive
 	printf("[DEBUG]\tin tpDestroy function before pthread_join loop\n");
