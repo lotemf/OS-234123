@@ -219,9 +219,9 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 //wait for all threads to finish their tasks/all tasks if needed
 //TODO printf of check if threads are alive
 //	printf("[DEBUG]\tin tpDestroy function before pthread_join loop\n");
-	for (i = 0; i < tp->numOfThreads; ++i) {
-		pthread_join(tp->threadsArray[i], NULL);
-	}
+//	for (i = 0; i < tp->numOfThreads; ++i) {
+//		pthread_join(tp->threadsArray[i], NULL);
+//	}
 //	printf("[DEBUG]\tin tpDestroy function before releasing flags\n");
 //destroy for mutex_dequeueMutex
 	destroyMutex(tp);
