@@ -55,10 +55,14 @@ void* startThreadRoutine(void* d) {
 		pthread_mutex_unlock(tp->tasksMutex);
 		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
-		printf("inside startRoutine. both destroy flag and finishAll flag are off. after sem_wait\n");
-		node = (FuncStruct) osDequeue(tp->tasksQueue);
+
+		if (!tp->destroyFlag) {
+			printf("inside startRoutine. both destroy flag and finishAll flag are off. after sem_wait\n");
+			node = (FuncStruct) osDequeue(tp->tasksQueue);
+			pthread_mutex_unlock(tp->tasksMutex);
+			(*(node->func))(node->func_param);
+		}
 		pthread_mutex_unlock(tp->tasksMutex);
-		(*(node->func))(node->func_param);
 	}
 }
 
