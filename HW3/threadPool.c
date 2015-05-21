@@ -180,6 +180,7 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 //"while tp detroy is waiting for tasks to finish other tpdestroy calls should be blocked"
 //check that tpDestroy is not in progress
 //check valid parameteres
+
 	if (!tp) {
 		printf("Illegal input values!\n");
 		return;
@@ -191,20 +192,24 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 		printf("tpDestroy was called on this threadPool before...\n");
 		return;
 	}
+	printf("[DEBUG]\tin tpDestroy function before updating flags\n");
 //update flags value
 	tp->destroyFlag = true;
 	tp->finishAllFlag = (shouldWaitForTasks != 0);
 	pthread_mutex_unlock(tp->tasksMutex);
 //this loop is KASTACH in case we have threads that wait for tasks and destroy was called
 	int i;
+	printf("[DEBUG]\tin tpDestroy function before increasing semaphore counter\n");
 	for (i = 0; i < tp->numOfThreads; ++i) {
 		sem_post(tp->semaphore);
 	}
 //wait for all threads to finish their tasks/all tasks if needed
 //TODO printf of check if threads are alive
+	printf("[DEBUG]\tin tpDestroy function before pthread_join loop\n");
 	for (i = 0; i < tp->numOfThreads; ++i) {
 		pthread_join(tp->threadsArray[i], NULL);
 	}
+	printf("[DEBUG]\tin tpDestroy function before releasing flags\n");
 //destroy for mutex_dequeueMutex
 	destroyMutex(tp);
 	destroySemaphore(tp);
