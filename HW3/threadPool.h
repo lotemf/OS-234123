@@ -6,6 +6,7 @@
  */
 #include <pthread.h>
 #include <semaphore.h>
+#include <stdbool.h>
 #include <stdlib.h>
 #include "osqueue.h"
 
