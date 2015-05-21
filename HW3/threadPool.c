@@ -89,7 +89,7 @@ void destroyFuncStruct(FuncStruct* fStruct) {
  * Interface API Functions
  *****************************************************************/
 ThreadPool* tpCreate(int numOfThreads) {
-	int i;
+
 //step 1: allocate thread pool memory
 	ThreadPool* tp = malloc(sizeof(ThreadPool));
 	if (!tp) {
@@ -113,7 +113,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 	}
 //step 4: allocate mutex
 	tp->tasksMutex = malloc(sizeof(pthread_mutex_t));
-	if ((!tp->tasksMutex)|| (pthread_mutex_init(tp->tasksMutex, NULL)!= 0) {
+	if ((!tp->tasksMutex)|| (pthread_mutex_init(tp->tasksMutex, NULL)!= 0)) {
 		printf("Memory allocation error\n");
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
@@ -131,6 +131,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 		return NULL;
 	}
 //step 6: creating threads
+	int i;
 	for (i = 0; i < numOfThreads; ++i) {
 		if (pthread_create(&((tp->threadsArray)[i]), NULL, &startThreadRoutine,
 				tp) != 0) {
