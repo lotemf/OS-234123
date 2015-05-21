@@ -18,64 +18,44 @@ void startThreadRoutine(void* d) {
 	ThreadPool* tp = (ThreadPool*) d;
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
-	OsQueue* tasksQueue = tp->tasksQueue; //maybe inside the while...
+	OsQueue* tasksQueue = tp->tasksQueue;
+
 	while (1) {
 		pthread_mutex_lock(tp->tasksMutex);
+//destroy was called and doesn't need to finish tasks
 		if (tp->destroyFlag && !tp->finishAllFlag) {
 			pthread_mutex_unlock(tp->tasksMutex);
 			pthread_exit();
-		} else if (!tp->destroyFlag) {
-			//this is normal operation
-			pthread_mutex_unlock(tp->tasksMutex);
-			sem_wait(sem);
-			pthread_mutex_lock(tp->tasksMutex);
-			node = osDequeue(tp->tasksQueue);
-			pthread_mutex_unlock(tp->tasksMutex);
-			*(node.func)(node.param);
-		} else {
-			//tpDetroy was called and need to finish all tasks
+		}
+//destroy was called and need to finish all tasks
+		if (tp->destroyFlag && tp->finishAllFlag) {
 			if (sem_trywait(sem) != 0) {
+				//no tasks to finish
 				pthread_mutex_unlock(tp->tasksMutex);
 				pthread_exit();
-			} else {
-				node = osDequeue(tp->tasksQueue);
-				if (!node){
+			} else{
+				//wait succeeded - thread can take tasks
+				if (!osIsQueueEmpty(tp->tasksQueue)) {
+					//task queue is not empty - take task
+					node = osDequeue(tp->tasksQueue);
+					pthread_mutex_unlock(tp->tasksMutex);
+					*(node.func)(node.param);
+				}else {
+					//task queue is empty - finish/exit thread
 					pthread_mutex_unlock(tp->tasksMutex);
 					pthread_exit();
 				}
-				pthread_mutex_unlock(tp->tasksMutex);
-				*(node.func)(node.param);
 			}
 		}
+//normal operation of thread
+		pthread_mutex_unlock(tp->tasksMutex);
+		sem_wait(sem);
+		pthread_mutex_lock(tp->tasksMutex);
+		node = osDequeue(tp->tasksQueue);
+		pthread_mutex_unlock(tp->tasksMutex);
+		*(node.func)(node.param);
 	}
 }
-//	while (!tp->destroyFlag || (tp->destroyFlag && tp->finishAllFlag) {
-//				sem_wait(sem);
-//				pthread_mutex_lock(tp->tasksMutex);
-//				if (osIsQueueEmpty(tp->tasksQueue)) {
-//					pthread_mutex_unlock(tp->tasksMutex);
-//					//if the queue is empty and destroyFlag is on, a thread should end on anyway -
-//					if(tp->destroyFlag) { // alon
-//						--tp->numOfActive;
-//						pthread_exit();
-//					}
-//					continue;
-//				}
-//				//TODO add mutex_dequeueMutex and lock it here **
-//				if(tp->destroyFlag && !tp->finishAllFlag) {//if the queue is not empty, but destroyFlag is on &
-//					//if true, unlock it here **				//finishAllFlag is off, a thread will "continue" and
-//					pthread_mutex_unlock(tp->tasksMutex);//then will end
-//					continue;// or just --tp->numOfActive + pthread_exit()
-//				}
-//				//unlock it here **
-//				node = osDequeue(tp->tasksQueue);
-//				pthread_mutex_unlock(tp->tasksMutex);
-//				*(node.func)(node.param);
-//
-//			}
-//			--tp->numOfActive;
-//			pthread_exit();
-//		}
 
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
 void destroyThreadsPool(ThreadPool* tp) {
@@ -180,11 +160,9 @@ ThreadPool* tpCreate(int numOfThreads) {
 	return tp;
 }
 
-int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),
-		void* param) {
+int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param) {
 	ThreadPool* tp = threadPool;
 	sem_t* sem = tp->semaphore;
-	FuncStruct* node;
 	OsQueue* tasksQueue = tp->tasksQueue;
 	node->func = computeFunc;
 	node->func_param = param;
@@ -224,9 +202,7 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 	threadPool->finishAllFlag = (shouldWaitForTasks != 0);
 	pthread_mutex_unlock(tp->tasksMutex);
 
-//FIXME wait for all threads, make semaphore to work.
-//on anyway, we need to let all threads to finish. the conditions are taking care by the startRoutine
-	while (tp->numOfActive > 0) {
+	for (int i = 0; i < tp->numOfThreads; ++i) {
 		sem_post(tp->semaphore);
 	}
 //wait for all threads to finish their tasks/all tasks if needed
