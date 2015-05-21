@@ -18,7 +18,7 @@ void startThreadRoutine(void* d) {
 	ThreadPool* tp = (ThreadPool*) d;
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
-	OsQueue* tasksQueue = tp->tasksQueue;
+	OSQueue* tasksQueue = tp->tasksQueue;
 
 	while (1) {
 		pthread_mutex_lock(tp->tasksMutex);
@@ -80,11 +80,11 @@ void destroyMutex(ThreadPool* tp) {
 	free(tp->tasksMutex);
 	free(tp->flagsMutex);
 }
-//destroy tasks queue - no need to free as it is freed in osQueue
+//destroy tasks queue - no need to free as it is freed in OSQueue
 void destroyTasksQueue(ThreadPool* tp) {
 	tp->tasksQueueosDestroyQueue(tp->tasksQueue);
 }
-//destroy function struct, in osQueue - currently not in use
+//destroy function struct, in OSQueue - currently not in use
 void destroyFuncStruct(FuncStruct* fStruct) {
 	free(fStruct);
 }
@@ -163,7 +163,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param) {
 	ThreadPool* tp = threadPool;
 	sem_t* sem = tp->semaphore;
-	OsQueue* tasksQueue = tp->tasksQueue;
+	OSQueue* tasksQueue = tp->tasksQueue;
 	node->func = computeFunc;
 	node->func_param = param;
 
@@ -201,7 +201,7 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 	threadPool->destroyFlag = true;
 	threadPool->finishAllFlag = (shouldWaitForTasks != 0);
 	pthread_mutex_unlock(tp->tasksMutex);
-
+//this loop is KASTACH in case we have threads that wait for tasks and destroy was called
 	for (int i = 0; i < tp->numOfThreads; ++i) {
 		sem_post(tp->semaphore);
 	}

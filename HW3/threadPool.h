@@ -23,7 +23,7 @@ typedef struct thread_pool
 	int numOfThreads;
 	int numOfActive;  //alon
 	pthread_t* threadsArrPtr;
-	OsQueue* tasksQueue;
+	OSQueue* tasksQueue;
 	sem_t* semaphore;
 	pthread_mutex_t *tasksMutex, *flagsMutex;
 	bool destroyFlag;
