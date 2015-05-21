@@ -9,7 +9,7 @@
 /*****************************************************************
  * Defines
  ****************************************************************/
-
+void startThreadRoutine(void* d);
 /*****************************************************************
  * Helper Functions
  ****************************************************************/
@@ -18,7 +18,6 @@ void startThreadRoutine(void* d) {
 	ThreadPool* tp = (ThreadPool*) d;
 	sem_t* sem = tp->semaphore;
 	FuncStruct node;
-	OSQueue* tasksQueue = tp->tasksQueue;
 
 	while (1) {
 		pthread_mutex_lock(tp->tasksMutex);
@@ -37,9 +36,9 @@ void startThreadRoutine(void* d) {
 				//wait succeeded - thread can take tasks
 				if (!osIsQueueEmpty(tp->tasksQueue)) {
 					//task queue is not empty - take task
-					node = osDequeue(tp->tasksQueue);
+					node = (FuncStruct) osDequeue(tp->tasksQueue);
 					pthread_mutex_unlock(tp->tasksMutex);
-					*(node.func)(node.param);
+					*(node->func)(node->func_param);
 				}else {
 					//task queue is empty - finish/exit thread
 					pthread_mutex_unlock(tp->tasksMutex);
@@ -51,20 +50,21 @@ void startThreadRoutine(void* d) {
 		pthread_mutex_unlock(tp->tasksMutex);
 		sem_wait(sem);
 		pthread_mutex_lock(tp->tasksMutex);
-		node = osDequeue(tp->tasksQueue);
+		node = (FuncStruct) osDequeue(tp->tasksQueue);
 		pthread_mutex_unlock(tp->tasksMutex);
-		*(node.func)(node.param);
+		*(node->func)(node->func_param);
 	}
 }
 
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
 void destroyThreadsPool(ThreadPool* tp) {
-	free (tp)
+	free (tp);
 }
 //destroy array until index
 void destroyThreadsArray(ThreadPool* tp, int untilIndex) {
-	for (int i = 0; i < untilIndex; ++i) {
-		pthread_cancel(array[i]);
+	int i;
+	for (i = 0; i < untilIndex; ++i) {
+		pthread_cancel(tp->threadsArray[i]);
 	}
 	free(tp->threadsArray);
 }
@@ -82,7 +82,7 @@ void destroyMutex(ThreadPool* tp) {
 }
 //destroy tasks queue - no need to free as it is freed in OSQueue
 void destroyTasksQueue(ThreadPool* tp) {
-	tp->tasksQueueosDestroyQueue(tp->tasksQueue);
+	osDestroyQueue(tp->tasksQueue);
 }
 //destroy function struct, in OSQueue - currently not in use
 void destroyFuncStruct(FuncStruct* fStruct) {
@@ -92,18 +92,19 @@ void destroyFuncStruct(FuncStruct* fStruct) {
  * Interface API Functions
  *****************************************************************/
 ThreadPool* tpCreate(int numOfThreads) {
+	int i;
 //step 1: allocate thread pool memory
 	ThreadPool* tp = malloc(sizeof(ThreadPool));
 	if (!tp) {
 		printf("Memory allocation error\n");
-		return null;
+		return NULL;
 	}
 //step 2: allocate tasks queue
 	tp->tasksQueue = osCreateQueue();
 	if (!tp->tasksQueue) {
 		printf("Memory allocation error\n");
 		destroyThreadsPool(tp);
-		return null;
+		return NULL;
 	}
 //step 3: allocate semaphore
 	tp->semaphore = malloc(sizeof(sem_t));
@@ -111,22 +112,22 @@ ThreadPool* tpCreate(int numOfThreads) {
 		printf("Memory allocation error\n");
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
-		return null;
+		return NULL;
 	}
 //step 4: allocate mutex
 	tp->tasksMutex = malloc(sizeof(pthread_mutex_t));
 	tp->flagsMutex = malloc(sizeof(pthread_mutex_t));
 
 	if ((!tp->tasksMutex)
-			|| (pthread_mutex_init(tp->tasksMutex, PTHREAD_MUTEX_ERRORCHECK)
+			|| (pthread_mutex_init(tp->tasksMutex, NULL)
 					!= 0)(!tp->flagsMutex)
-			|| (pthread_mutex_init(tp->flagsMutex, PTHREAD_MUTEX_ERRORCHECK)
+			|| (pthread_mutex_init(tp->flagsMutex, NULL)
 					!= 0)) {
 		printf("Memory allocation error\n");
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
-		return null;
+		return NULL;
 	}
 //step 5: allocate array
 	tp->threadsArray = malloc(sizeof(pthread_t) * numOfThreads);
@@ -136,19 +137,19 @@ ThreadPool* tpCreate(int numOfThreads) {
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
-		return null;
+		return NULL;
 	}
 //step 6: creating threads
-	for (int i = 0; i < numOfThreads; ++i) {
-		if (pthread_create(&((tp->threadsArray)[i]), null, &startThreadRoutine,
+	for (i = 0; i < numOfThreads; ++i) {
+		if (pthread_create(&((tp->threadsArray)[i]), NULL, &startThreadRoutine,
 				tp) != 0) {
 			printf("Memory allocation error\n");
 			destroyThreadsArray(tp, i);
 			destroyMutex(tp);
 			destroySemaphore(tp);
 			destroyTasksQueue(tp);
-			destroyThreadPool(tp);
-			return null;
+			destroyThreadsPool(tp);
+			return NULL;
 		}
 	}
 //step 7: init values of numOfThreads and destroyFlag
@@ -164,6 +165,7 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param
 	ThreadPool* tp = threadPool;
 	sem_t* sem = tp->semaphore;
 	OSQueue* tasksQueue = tp->tasksQueue;
+	FuncStruct node;
 	node->func = computeFunc;
 	node->func_param = param;
 
@@ -198,24 +200,25 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 		return;
 	}
 //update flags value
-	threadPool->destroyFlag = true;
-	threadPool->finishAllFlag = (shouldWaitForTasks != 0);
+	tp->destroyFlag = true;
+	tp->finishAllFlag = (shouldWaitForTasks != 0);
 	pthread_mutex_unlock(tp->tasksMutex);
 //this loop is KASTACH in case we have threads that wait for tasks and destroy was called
-	for (int i = 0; i < tp->numOfThreads; ++i) {
+	int i;
+	for (i = 0; i < tp->numOfThreads; ++i) {
 		sem_post(tp->semaphore);
 	}
 //wait for all threads to finish their tasks/all tasks if needed
 //TODO printf of check if threads are alive
-	for (int i = 0; i < tp->numOfThreads; ++i) {
-		pthread_join(tp->threadsArrPtr[i], NULL);
+	for (i = 0; i < tp->numOfThreads; ++i) {
+		pthread_join(tp->threadsArray[i], NULL);
 	}
 //destroy for mutex_dequeueMutex
 	destroyMutex(tp);
 	destroySemaphore(tp);
 	destroyTasksQueue(tp);
-	destroyThreadsArray(tp, tp->numOfThreads)
-	destroyThreadPool(tp);
+	destroyThreadsArray(tp, tp->numOfThreads);
+	destroyThreadsPool(tp);
 
 	return;
 }
