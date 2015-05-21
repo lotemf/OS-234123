@@ -7,6 +7,7 @@
 #include <pthread.h>
 #include <semaphore.h>
 #include <stdbool.h>
+#include <stdio.h>
 #include <stdlib.h>
 #include "osqueue.h"
 
@@ -17,13 +18,13 @@
 typedef struct function_struct{
 	void (*func)(void*);
 	void* func_param;
-} FuncStruct;
+}* FuncStruct;
 
 typedef struct thread_pool
 {
 	int numOfThreads;
 	int numOfActive;  //alon
-	pthread_t* threadsArrPtr;
+	pthread_t* threadsArray;
 	OSQueue* tasksQueue;
 	sem_t* semaphore;
 	pthread_mutex_t *tasksMutex, *flagsMutex;
