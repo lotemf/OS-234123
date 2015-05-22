@@ -106,20 +106,20 @@ ThreadPool* tpCreate(int numOfThreads) {
 //step 1: allocate thread pool memory
 	ThreadPool* tp = malloc(sizeof(ThreadPool));
 	if (!tp) {
-		printf("[DEBUG]\tMemory allocation error in creating threads pool\n");
+		printf("[DEBUG-tpCreate]\tMemory allocation error in creating threads pool\n");
 		return NULL;
 	}
 //step 2: allocate tasks queue
 	tp->tasksQueue = osCreateQueue();
 	if (!tp->tasksQueue) {
-		printf("[DEBUG]\tMemory allocation error in creating tasks queue\n");
+		printf("[DEBUG-tpCreate]\tMemory allocation error in creating tasks queue\n");
 		destroyThreadsPool(tp);
 		return NULL;
 	}
 //step 3: allocate semaphore
 	tp->semaphore = malloc(sizeof(sem_t));
 	if ((!tp->semaphore) || (sem_init(tp->semaphore, 0, 0) != 0)) {
-		printf("[DEBUG]\tMemory allocation error in creating semaphore\n");
+		printf("[DEBUG-tpCreate]\tMemory allocation error in creating semaphore\n");
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
 		return NULL;
@@ -127,7 +127,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 //step 4: allocate mutex
 	tp->tasksMutex = malloc(sizeof(pthread_mutex_t));
 	if ((!tp->tasksMutex)|| (pthread_mutex_init(tp->tasksMutex, NULL)!= 0)) {
-		printf("[DEBUG]\tMemory allocation error in creating mutex\n");
+		printf("[DEBUG-tpCreate]\tMemory allocation error in creating mutex\n");
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
 		destroyThreadsPool(tp);
@@ -136,7 +136,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 //step 5: allocate array
 	tp->threadsArray = malloc(sizeof(pthread_t) * numOfThreads);
 	if (!tp->threadsArray) {
-		printf("[DEBUG]\tMemory allocation error in creating threads array\n");
+		printf("[DEBUG-tpCreate]\tMemory allocation error in creating threads array\n");
 		destroyMutex(tp);
 		destroySemaphore(tp);
 		destroyTasksQueue(tp);
@@ -148,7 +148,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 	for (i = 0; i < numOfThreads; ++i) {
 		if (pthread_create(&((tp->threadsArray)[i]), NULL, &startThreadRoutine,
 				tp) != 0) {
-			printf("[DEBUG]\tMemory allocation error in creating each thread\n");
+			printf("[DEBUG-tpCreate]\tMemory allocation error in creating each thread\n");
 			destroyThreadsArray(tp, i);
 			destroyMutex(tp);
 			destroySemaphore(tp);
@@ -168,7 +168,7 @@ ThreadPool* tpCreate(int numOfThreads) {
 
 int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param) {
 	ThreadPool* tp = threadPool;
-	FuncStruct node;
+	/*Test*/FuncStruct node;			/*Test - For T2 Compilation*/
 	node->func = computeFunc;
 	node->func_param = param;
 
@@ -233,7 +233,7 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 	destroyThreadsArray(tp, tp->numOfThreads);
 	destroyThreadsPool(tp);
 
-	printf("[DEBUG]\tAll memory resourced were destroyed/released\n");
+	printf("[DEBUG-tpDestroy]\tAll memory resourced were destroyed/released\n");
 	return;
 }
 

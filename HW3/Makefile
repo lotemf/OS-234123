@@ -1,6 +1,6 @@
 all:	osqueue.c threadPool.c threadPool.h
 
-	gcc -pthread -c -Wall -Werror -D_GNU_SOURCE threadPool.c osqueue.c
+	gcc -pthread -c -Wall -D_GNU_SOURCE threadPool.c osqueue.c
 	ar rcs libthreadPool.a threadPool.o osqueue.o
 
 
