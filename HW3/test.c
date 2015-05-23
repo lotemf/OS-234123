@@ -333,6 +333,7 @@ void test_destroy_should_wait_for_tasks_1()
 
    tpDestroy(tp,1);
 
+   /*TEST - Lotem*/printf("The awesomeNum is: %d\n",con.awesomeNum);
    assert(con.awesomeNum==1);
    printOK();
    printf(" \n");
@@ -362,6 +363,7 @@ void test_destroy_should_wait_for_tasks_2()
 
    tpDestroy(tp,1);
 
+//   /*TEST - Lotem*/printf("The awesomeNum is: %d",con.awesomeNum);
    assert(con.awesomeNum==1);
    printOK();
    printf(" \n");
@@ -483,18 +485,18 @@ int main()
    printf("\n");
 
 
-   printf("test_create_and_destroy...\n");
-   test_create_and_destroy();
-
-
+//   printf("test_create_and_destroy...\n");
+//   test_create_and_destroy();
+//
+//
    printf("test_thread_pool_sanity...\n");
    test_thread_pool_sanity();
-
-
+//
+//
 //   printf("test_agressive, this might take a while...\n");
 //   test_agressive();
-
-
+//
+//
 //   printf("test_single_thread_many_tasks...\n");
 //   test_single_thread_many_tasks();
 //
