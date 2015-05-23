@@ -18,7 +18,7 @@
 typedef struct function_struct{
 	void (*func)(void*);
 	void* func_param;
-}* FuncStruct;
+} FuncStruct;
 
 typedef struct thread_pool
 {

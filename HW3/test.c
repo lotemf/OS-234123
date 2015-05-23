@@ -264,7 +264,6 @@ void test_thread_pool_sanity()
    int i;
    
    ThreadPool* tp = tpCreate(3);
-   /*Test*/printf("'Lotem' - tpCreate succeeded \n"); /*Test*/
    for(i=0; i<3; ++i)
    {
       tpInsertTask(tp,hello,NULL);
@@ -482,10 +481,10 @@ int main()
 {
    printStart();
    printf("\n");
-//
-//
-//   printf("test_create_and_destroy...\n");
-//   test_create_and_destroy();
+
+
+   printf("test_create_and_destroy...\n");
+   test_create_and_destroy();
 
 
    printf("test_thread_pool_sanity...\n");
@@ -494,8 +493,8 @@ int main()
 
 //   printf("test_agressive, this might take a while...\n");
 //   test_agressive();
-//
-//
+
+
 //   printf("test_single_thread_many_tasks...\n");
 //   test_single_thread_many_tasks();
 //
