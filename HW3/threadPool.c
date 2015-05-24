@@ -112,6 +112,11 @@ void destroyMutex(ThreadPool* tp) {
 }
 //destroy tasks queue - no need to free as it is freed in OSQueue
 void destroyTasksQueue(ThreadPool* tp) {
+	FuncStruct* node;
+	while((node = osDequeue(tp->tasksQueue)) != NULL)
+	{
+	   free(node);
+	}
 	osDestroyQueue(tp->tasksQueue);
 }
 //destroy function struct, in OSQueue - currently not in use
