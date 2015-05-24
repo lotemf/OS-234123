@@ -168,7 +168,13 @@ ThreadPool* tpCreate(int numOfThreads) {
 		destroyThreadsPool(tp);
 		return NULL;
 	}
-//step 6: creating threads
+//step 6: init values of numOfThreads and destroyFlag
+		tp->destroyFlag = false;
+		tp->finishAllFlag = false;
+		tp->numOfThreads = numOfThreads;
+		tp->numOfActive = numOfThreads;		//Lotem - Not sure if it's needed
+
+//step 7: creating threads
 	int i;
 	for (i = 0; i < numOfThreads; ++i) {
 		if (pthread_create(&((tp->threadsArray)[i]), NULL, &startThreadRoutine,
@@ -182,11 +188,6 @@ ThreadPool* tpCreate(int numOfThreads) {
 			return NULL;
 		}
 	}
-//step 7: init values of numOfThreads and destroyFlag
-	tp->destroyFlag = false;
-	tp->finishAllFlag = false;
-	tp->numOfThreads = numOfThreads;
-	tp->numOfActive = numOfThreads;		//Lotem - Not sure if it's needed
 //	/*Test*/printf("[DEBUG-tpCreate]\t  NumOfActive threads is: %d\n",tp->numOfActive);
 
 //step 8: return thread pool struct pointer
