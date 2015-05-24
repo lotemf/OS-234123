@@ -14,27 +14,19 @@
  ****************************************************************/
 //destroy thread pool allocation  - in order to destroy the whole pool you should call all of the following three functions
 void destroyThreadsPool(ThreadPool* tp) {
-//	printf("[DEBUG] \tin destroyThreadsPool\n");
 	free (tp);
 }
 //destroy array until index
 void destroyThreadsArray(ThreadPool* tp, int untilIndex) {
-	/*int i;
-	for (i = 0; i < untilIndex; ++i) {
-		pthread_cancel(tp->threadsArray[i]);
-	}*/
-
 	free(tp->threadsArray);
 }
 //destroy semaphore
 void destroySemaphore(ThreadPool* tp) {
 	sem_destroy(&(tp->semaphore));
-//	free(tp->semaphore);
 }
 //destroy tasks and flags mutex's
 void destroyMutex(ThreadPool* tp) {
 	pthread_mutex_destroy(&(tp->tasksMutex));
-//	free(tp->tasksMutex);
 }
 //destroy tasks queue - no need to free as it is freed in OSQueue
 void destroyTasksQueue(ThreadPool* tp) {
@@ -52,17 +44,13 @@ void destroyFuncStruct(FuncStruct* fStruct) {
 
 
 
-
 //start routine function for threads
 void* startThreadRoutine(void* d) {
 	ThreadPool* tp = (ThreadPool*) d;
 	sem_t* sem = &(tp->semaphore);
 	FuncStruct* node;
 
-//	/*Test*/printf("[DEBUG-startThreadRoutine]\t Inside Function!!!\n");
-
 	while (1) {
-//	/*Test*/printf("[DEBUG-startThreadRoutine]\t Inside While Loop!!!\n");
 		pthread_mutex_lock(&(tp->tasksMutex));
 //destroy was called and doesn't need to finish tasks
 		if (tp->destroyFlag && !tp->finishAllFlag) {
@@ -73,7 +61,6 @@ void* startThreadRoutine(void* d) {
 //destroy was called and need to finish all tasks
 		if (tp->destroyFlag && tp->finishAllFlag) {
 //			printf("inside startRoutine. destroy flag is on, finishAll flag is on\n");
-///*Test*/printf("[DEBUG-startThreadRoutine]\t Before sem_trywait(sem)\n");
 			if (sem_trywait(sem) != 0) {
 				//no tasks to finish
 //				printf("inside startRoutine. trywait != 0\n");
@@ -99,16 +86,12 @@ void* startThreadRoutine(void* d) {
 			}
 		}
 //normal operation of thread
-//		printf("inside startRoutine. both destroy flag and finishAll flag are off\n");
 		pthread_mutex_unlock(&(tp->tasksMutex));
-///*Test*/printf("[DEBUG-startThreadRoutine]\t DestroyFlag is %d\n",tp->destroyFlag);
-///*Test*/printf("[DEBUG-startThreadRoutine]\t FinishAllFlag is %d\n",tp->finishAllFlag);
 ///*Test*/printf("[DEBUG-startThreadRoutine]\t Before sem_wait(sem)\n");
 		sem_wait(sem);
 		pthread_mutex_lock(&(tp->tasksMutex));
 
 		if (!tp->destroyFlag) {
-//			printf("inside startRoutine. both destroy flag and finishAll flag are off. after sem_wait\n");
 			node = osDequeue(tp->tasksQueue);
 
 			pthread_mutex_unlock(&(tp->tasksMutex));
@@ -166,7 +149,6 @@ ThreadPool* tpCreate(int numOfThreads) {
 	tp->destroyFlag = false;
 	tp->finishAllFlag = false;
 	tp->numOfThreads = numOfThreads;
-
 //step 7: creating threads
 	int i;
 	for (i = 0; i < numOfThreads; ++i) {
@@ -181,8 +163,6 @@ ThreadPool* tpCreate(int numOfThreads) {
 			return NULL;
 		}
 	}
-
-
 //step 8: return thread pool struct pointer
 	return tp;
 }
@@ -200,7 +180,7 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param
 	pthread_mutex_lock(&(tp->tasksMutex));
 	if (tp->destroyFlag) {
 //		printf("inside insert, destroy flag is on\n");
-		/*Test-Lotem*/destroyFuncStruct(node);
+		destroyFuncStruct(node);
 		pthread_mutex_unlock(&(tp->tasksMutex));
 		return -1;
 	}
@@ -216,19 +196,14 @@ int tpInsertTask(ThreadPool* threadPool, void (*computeFunc)(void *),void* param
 
 void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 
-//"while tp detroy is waiting for tasks to finish other tpdestroy calls should be blocked"
+//"while tpDestroy is waiting for tasks to finish other tpDestroy calls should be blocked"
 //check that tpDestroy is not in progress
-//check valid parameteres
+//check valid parameters
 
 	if (!tp) {
 	//	printf("Illegal input values!\n");
 		return;
 	}
-
-//	/*Test*/printf("[DEBUG-tpDestroy]\t Lotem - #1 -  numOfThreads initialized with: %d\n",tp->numOfThreads);
-//	/*Test*/printf("[DEBUG-tpDestroy]\t Lotem - #2 -  numOfActive is: %d\n",tp->numOfActive);
-
-
 	pthread_mutex_lock(&(tp->tasksMutex));
 	if (tp->destroyFlag) {
 		pthread_mutex_unlock(&(tp->tasksMutex));
@@ -251,16 +226,12 @@ void tpDestroy(ThreadPool* tp, int shouldWaitForTasks) {
 //wait for all threads to finish their tasks/all tasks if needed
 
 //	printf("[DEBUG-tpDestroy]\tinside tpDestroy function before pthread_join loop\n");
-//	printf("[DEBUG-tpDestroy]\tthere are %d active Threads\n", activeAmount);
 	for(i = 0; i < tp->numOfThreads; ++i) {
 		pthread_join((tp->threadsArray[i]), NULL);
 	}
 
 //	printf("[DEBUG-tpDestroy]\tin tpDestroy function before releasing flags\n");
-//
-//	printf("[DEBUG-tpDestroy]\t (after join) numOfThreads initialized with: %d\n",tp->numOfThreads);
-//	printf("[DEBUG-tpDestroy]\tin tpDestroy function before releasing ThreadPool\n");
-//	printf("[DEBUG-tpDestroy]\t number of active threads in tp before releasing ThreadPool is: %d \n",tp->numOfActive);
+
 //destroy for mutex_dequeueMutex
 	destroyMutex(tp);
 	destroySemaphore(tp);
