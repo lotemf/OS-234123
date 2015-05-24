@@ -491,42 +491,42 @@ int main()
 
    printf("test_thread_pool_sanity...\n");
    test_thread_pool_sanity();
-//
-//
-//   printf("test_agressive, this might take a while...\n");
-//   test_agressive();
-//
-//
-//   printf("test_single_thread_many_tasks...\n");
-//   test_single_thread_many_tasks();
-//
-//
-//   printf("test_many_threads_single_task...\n");
-//   test_many_threads_single_task();
-//
-//
-//   printf("test_destroy_should_wait_for_tasks #1 (more threads then tasks)...\n");
-//   test_destroy_should_wait_for_tasks_1();
-//
-//
-//   printf("test_destroy_should_wait_for_tasks #2 (more tasks then threads)...\n");
-//   test_destroy_should_wait_for_tasks_2();
-//
-//
-//   printf("test_destroy_should_not_wait_for_tasks...\n");
-//   test_destroy_should_not_wait_for_tasks();
-//
-//
-//   printf("test_destroy_twice...\n");
-//   test_destroy_twice();
-//
-//
-//   printf("test_insert_task_after_destroy #1...\n");
-//   test_insert_task_after_destroy_1();
-//
-//
-//   printf("test_insert_task_after_destroy #2...\n");
-//   test_insert_task_after_destroy_2();
+
+
+   printf("test_agressive, this might take a while...\n");
+   test_agressive();
+
+
+   printf("test_single_thread_many_tasks...\n");
+   test_single_thread_many_tasks();
+
+
+   printf("test_many_threads_single_task...\n");
+   test_many_threads_single_task();
+
+
+   printf("test_destroy_should_wait_for_tasks #1 (more threads then tasks)...\n");
+   test_destroy_should_wait_for_tasks_1();
+
+
+   printf("test_destroy_should_wait_for_tasks #2 (more tasks then threads)...\n");
+   test_destroy_should_wait_for_tasks_2();
+
+
+   printf("test_destroy_should_not_wait_for_tasks...\n");
+   test_destroy_should_not_wait_for_tasks();
+
+
+   printf("test_destroy_twice...\n");
+   test_destroy_twice();
+
+
+   printf("test_insert_task_after_destroy #1...\n");
+   test_insert_task_after_destroy_1();
+
+
+   printf("test_insert_task_after_destroy #2...\n");
+   test_insert_task_after_destroy_2();
 
 
    printEnd();

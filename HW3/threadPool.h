@@ -23,11 +23,11 @@ typedef struct function_struct{
 typedef struct thread_pool
 {
 	int numOfThreads;
-	int numOfActive;  //alon
+//	int numOfActive;  //alon
 	pthread_t* threadsArray;
 	OSQueue* tasksQueue;
-	sem_t* semaphore;
-	pthread_mutex_t *tasksMutex, *flagsMutex;
+	sem_t semaphore;
+	pthread_mutex_t tasksMutex, flagsMutex;
 	bool destroyFlag;
 	bool finishAllFlag;
  //semaphore
