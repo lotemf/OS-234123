@@ -233,6 +233,8 @@ void aux_test_for_agressive(int num)
    int i;
    
    ThreadPool* tp = tpCreate(num);
+//   /*Test*/printf("This is aggressive Test No. %d\n",i);
+
    for(i=0; i<num; ++i)
    {
       tpInsertTask(tp,simpleTask,NULL);
@@ -277,20 +279,20 @@ int main()
    printf("\n");
    
 
-//   printf("test_create_and_destroy...\n");
-//   test_create_and_destroy();
-//
-//
-//   printf("test_thread_pool_sanity...\n");
-//   test_thread_pool_sanity();
+   printf("test_create_and_destroy...\n");
+   test_create_and_destroy();
+
+
+   printf("test_thread_pool_sanity...\n");
+   test_thread_pool_sanity();
 
 
    printf("test_agressive, this might take a while...\n");
    test_agressive();
 
 
-//   printf("test_single_thread_many_tasks...\n");
-//   test_single_thread_many_tasks();
+   printf("test_single_thread_many_tasks...\n");
+   test_single_thread_many_tasks();
 
 
 //   printf("test_many_threads_single_task...\n");
