@@ -4,7 +4,7 @@ all:	osqueue.c threadPool.c threadPool.h
 	ar rcs libthreadPool.a threadPool.o osqueue.o
 
 
-	gcc -L. test.c -lthreadPool -lpthread  -o a.out
+	gcc -g -L. test.c -lthreadPool -lpthread  -o a.out
 	./a.out
 clean:
 

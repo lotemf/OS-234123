@@ -485,10 +485,10 @@ int main()
    printf("\n");
 
 
-//   printf("test_create_and_destroy...\n");
-//   test_create_and_destroy();
-//
-//
+   printf("test_create_and_destroy...\n");
+   test_create_and_destroy();
+
+
    printf("test_thread_pool_sanity...\n");
    test_thread_pool_sanity();
 //
