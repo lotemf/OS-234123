@@ -26,7 +26,7 @@ typedef struct thread_pool
 	pthread_t* threadsArray;
 	OSQueue* tasksQueue;
 	sem_t semaphore;
-	pthread_mutex_t tasksMutex, flagsMutex;
+	pthread_mutex_t tasksMutex;
 	bool destroyFlag;
 	bool finishAllFlag;
  //semaphore
