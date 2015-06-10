@@ -1,5 +1,6 @@
 #include <linux/errno.h>
 #include <linux/module.h>
+#include <asm/uaccess.h>
 #include <linux/fs.h>
 #include <linux/slab.h>         // for using the kmalloc function
 #include <linux/spinlock.h>
@@ -10,7 +11,7 @@
 //#include <asm/semaphore.h>
 //#include <linux/wait.h>
 
-#include "hw3q1.c"
+#include "hw3q1.h"
 #include "snake.h"
 MODULE_LICENSE("GPL");
 
@@ -20,21 +21,19 @@ MODULE_LICENSE("GPL");
 /*******************************************************************************
 		Variables to be used in the implementation of the new module
 *******************************************************************************/
+/*TEST*/
 static int major = -1;
 struct file_operations fops;
 int maxGames = 0;
+Matrix* game_matrix;
 int* players_num;
 int* is_played;							//A flag that notes if the game started or not
-int* black_player_pid;
-int* white_player_pid;	//Every game hold the pids of the players (of the two processes)
+//int* black_player_pid;
+//int* white_player_pid;	//Every game hold the pids of the players (of the two processes)
 
 //Locks
-struct semaphore* game_sema;
+struct semaphore* game_sema, *write_sema;
 spinlock_t* players_lock;				//The spinlock is used to check the legal number of players for each device (which is 2 players)
-
-//Wait queue for the device, so if one of the players is playing the other one is in the wait queue
-wait_queue_head_t* wait_queue;
-
 
 MODULE_PARM(maxGames,"i");	//This is the only input needed for the module
 							//But still it is unclear how we receive this param
@@ -44,6 +43,7 @@ MODULE_PARM(maxGames,"i");	//This is the only input needed for the module
 
 typedef struct {
     int minor;				//In the char Device based on this model
+    int player_color;
 //	int max_games;			//every device has it's own maxGames amount and minor (maybe more fields...)
 } dev_private_data;
 
@@ -79,26 +79,30 @@ int snake_open(struct inode* inode, struct file* fileptr){
     	return -ENOMEM;
     }
 
-    dev_private_data* dev_p_data = (device_private_data*)(filp->private_data);
+    dev_private_data* dev_p_data = (dev_private_data*)(fileptr->private_data);
     dev_p_data->minor = minor;
-//    dev_p_data->max_games = maxGames;
 
     spin_lock(players_lock[minor]);
     if (!players_num[minor]){		//This means this player should get the white color
     	players_num[minor]++;
-    	white_player_pid[minor]=getpid();				//set white color for this player
+        dev_p_data->player_color = WHITE_COLOR;
     	//** make this device wait on the semaphore
     } else if (players_num[minor] == 1){
     	players_num[minor]++;
-    	dev_p_data->black_player_pid=getpid();				//set black color for this player
-    	//** make this device free the semaphore (using signal or up or whatever...)
-    	up(&game_sema[minor]);
+    	dev_p_data->player_color = BLACK_COLOR;
+    	up(&game_sema[minor]);		//Waking up the other player process from the semaphore
+    	is_played[minor] = 1;		//Setting the flag for the game start
     	return 0;					//We return from the function because we wouldn't like to make another wait on the semaphore
     }
     spin_unlock(players_lock[minor]);
 
-    down_interruptible(&game_sema[minor]);					//We wait on the semaphore
-	return 0;
+    if (!is_played[minor]){
+    	down_interruptible(&game_sema[minor]);					//We wait on the semaphore
+    } else {
+    	return Game_Init(&game_matrix[minor]);	//Tell Alon to match this signature in HW3Q1.c...
+    }
+
+    return 0;
 }
 /*******************************************************************************
  * snake_release - Freeing the allocated private data, and reducing the amount
@@ -112,7 +116,6 @@ int snake_release(struct inode* inode, struct file* filp){
 	//Update counters:
 	spin_lock(players_lock[minor]);
 	players_num[minor]--;
-		//Maybe we need to add some more lines here after the changes in snake_open
 	spin_unlock(players_lock[minor]);
 
 	kfree(filp->private_data);
@@ -121,24 +124,33 @@ int snake_release(struct inode* inode, struct file* filp){
 }
 /*******************************************************************************
  * snake_read - This function prints the board, using the buffer supplied.
- 	 	 	 	If a partial print was performed, we need to edit the buffer
- 	 	 	 	so the output of it will be a string (add "/0");
+ 	 	 	 	If the buffer that was supplied to us by the user is bigger
+ 	 	 	 	than the string, we add "/0" to the unused buffer;
 
-
+	**NOTICE - We still need to synchronize (maybe...)
 *******************************************************************************/
 ssize_t snake_read(struct file* filp, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
 	//Checking it's a legal game
 	int minor = ((dev_private_data *)((filp)->private_data))->minor;
+	int board_print_size;
+	char* temp_buffer = kmalloc(sizeof(char)*count ,GFP_KERNEL);					//Creating a new buffer
 
-	if ( (players_num[minor] == 2) && (is_played[minor]) ){		//This means it's a legit game and we can do a read
-		//Use alon's Function to print the board but handle the synchronization so the second player couldn't write to the board
-		//Make him change the print function in the hw3q1 so it will return a erady buffer
+	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game and we can do a read
+		Game_Print(&game_matrix[minor],temp_buffer,board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
 
-		char* new_buffer;
-		//Get the length of the function using strlen
-		//and then use copy to user...
+		int need_upholster = count - board_print_size;
+		int i;
+		for (i=0;i<need_upholster;i++){
+			temp_buffer[board_print_size + i] = '\0';					//Adding /0 for the unused spaces in the buffer
+		}
+
+		int left_to_copy;
+		left_to_copy = copy_to_user(temp_buffer,buffer,count);			//Copying the data to the user space
+		kfree(temp_buffer);
+		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
-	return 0;
+
+	return -ENXIO;														//Because there is no game (device) for it
 }
 /*******************************************************************************
  *  snake_write - This is the complex part because we need to synchronize
@@ -148,6 +160,7 @@ ssize_t snake_read(struct file* filp, char* buffer, size_t count, loff_t* f_pos)
  	 	 	 	  write...  //Talk to chen about it
 *******************************************************************************/
 ssize_t snake_write(struct file* filp, const char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
+
 	return 0;
 }
 /*******************************************************************************
@@ -159,9 +172,12 @@ loff_t snake_llseek(struct file* filp, loff_t irrelevant, int num){
 }
 /*******************************************************************************
  * snake_ioctl - Control Commands API according to the supplied header file
+
+ 	 **NOTICE - We still need to understand how to use the GET_WINNER func
 *******************************************************************************/
 int snake_ioctl(struct inode* inode, struct file* filp, unsigned int command, unsigned long var){
-	int minor = MINOR(inode->i_rdev);
+//	int minor = MINOR(inode->i_rdev);
+	int color;
 
 	switch(command) {
             case SNAKE_GET_WINNER:
@@ -169,14 +185,11 @@ int snake_ioctl(struct inode* inode, struct file* filp, unsigned int command, un
             	//maybe we need to make a new field in the private data struct
                 break;
             case SNAKE_GET_COLOR:
-				if (getpid() == black_player_pid[minor]){
-					return BLACK_COLOR;
-				} else if (getpid() == white_player_pid[minor]){
-					return WHITE_COLOR;
-				} else {
-					return -ENOTTY;
-				}
-            	//maybe we need to make a new field in the private data struct
+            	color = ( (dev_private_data *)((filp)->private_data) )->player_color;
+            	if (color == -1 ){				//If the player's color wasn't initialized
+            		return -ENXIO;
+            	}
+            	return color;
             break;
             default: return -ENOTTY;
     }
@@ -205,15 +218,47 @@ int init_module(void){
 		return major;
 	}
 
-	//I think we need to allocate all of the memory for the vars manually
-	//using kmallock because we don't know how many instances we are going to have of the same device
-    players_lock = kmalloc(sizeof(spinlock_t)*maxGames, GFP_KERNEL);		//spinlocks array
-    game_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);		//Not sure about the syntax here //semaphores array
-    players_num = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
-    is_played = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
-    white_player_pid = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
-    black_player_pid = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+	//Using kmallock because we don't know how many instances (games) we are going to have of the same device
 
+    players_lock = kmalloc(sizeof(spinlock_t)*maxGames, GFP_KERNEL);		//spinlocks array
+    if (!players_lock){
+    	return -ENOMEM;
+    }
+    game_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);		//Not sure about the syntax here //semaphores array
+    if (!game_sema){
+    	kfree(players_lock);
+     	return -ENOMEM;
+    }
+    write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//Not sure about the syntax here //semaphores array
+    if (!write_sema){
+    	kfree(players_lock);
+    	kfree(game_sema);
+     	return -ENOMEM;
+    }
+    players_num = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    if (!players_num){
+    	kfree(players_lock);
+    	kfree(game_sema);
+    	kfree(write_sema);
+     	return -ENOMEM;
+    }
+    is_played = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    if (!is_played){
+    	kfree(players_lock);
+    	kfree(game_sema);
+    	kfree(write_sema);
+    	kfree(players_num);
+     	return -ENOMEM;
+    }
+    game_matrix = kmalloc(sizeof(Matrix)*maxGames, GFP_KERNEL);
+    if (!game_matrix){
+    	kfree(players_lock);
+    	kfree(game_sema);
+    	kfree(write_sema);
+    	kfree(players_num);
+    	kfree(is_played);
+     	return -ENOMEM;
+    }
 	//   -- Should we allocate each array as the size of the maxGames we get in the input?
 
 	int i;
@@ -221,9 +266,8 @@ int init_module(void){
 		spin_lock_init(&players_lock[i]);
 		is_played[i] = 0;
 		players_num[i] = 0;
-		black_player_pid[i] = -1;
-		white_player_pid[i] = -1;
         sema_init(&game_sema[i], 1);
+        sema_init(&write_sema[i], 1);
 
 		//still need to add some more variables here
 	}
@@ -243,10 +287,10 @@ void cleanup_module(void){
     //Freeing all of the arrays
     kfree(players_lock);
     kfree(game_sema);
+    kfree(write_sema);
     kfree(players_num);
     kfree(is_played);
-    kfree(black_player_pid);
-    kfree(white_player_pid);
+    kfree(game_matrix);
 
     /*Test*/printk("Goodbye, Cruel World!\n");
     return;
