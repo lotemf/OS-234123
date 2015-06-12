@@ -1,6 +1,9 @@
 #ifndef _HW3Q1_H_
 #define _HW3Q1_H_
 
+//Includes
+#include <linux/sched.h>
+
 /*=========================================================================
 Constants and definitions:
 ==========================================================================*/
@@ -70,10 +73,6 @@ int GetSize(Matrix*, Player);/* gets the size of the snake */
 		-This is the contents of the hw3q1.c file, that didn't work
 		 with the linker of the linux...
 *******************************************************************************/
-
-//Includes
-#include <linux/sched.h>
-#include "hw3q1.h"
 
 //This function returns the winner
 static int Loser_To_Winner(Player player){
@@ -314,7 +313,7 @@ ErrorCode RandFoodLocation(Matrix *matrix)
 	Point p;
 	do
 	{
-		p.x = rand() % N;		//TODO - change the rand
+		p.x = rand() % N;
 		p.y = rand() % N;
 	} while (!(IsAvailable(matrix, p) || IsMatrixFull(matrix)));				//HW4 - Lotem - Added () here to prevent infinite loop
 

@@ -4,7 +4,7 @@
 
 //Includes
 //#include <linux/sched.h>
-//#include "hw3q1.h"
+#include "hw3q1.h"
 
 //This function returns the winner
 static int Loser_To_Winner(Player player){

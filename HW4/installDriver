@@ -4,4 +4,4 @@ rmmod snake
 
 make
 insmod ./snake.o maxGames=2
-mknod /dev/snake c 254 0
+mknod /dev/snake0 c 254 0

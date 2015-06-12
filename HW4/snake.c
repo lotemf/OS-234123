@@ -9,11 +9,6 @@
 #include <linux/wait.h>
 #include <asm/semaphore.h>
 
-
-//#include <linux/spinlock.h>
-//#include <asm/semaphore.h>
-//#include <linux/wait.h>
-
 #include "snake.h"
 #include "hw3q1.h"
 
@@ -43,7 +38,6 @@ MODULE_LICENSE("GPL");
 		Module Variables
 *******************************************************************************/
 static int major = -1;
-//static int minor_counter = 0;		//TODO - (Lotem) Not sure if it's needed because there is a single post in the piazza about it
 struct file_operations fops;
 int maxGames = 0;
 
@@ -304,7 +298,6 @@ loff_t snake_llseek(struct file* filptr, loff_t irrelevant, int num){
 	SNAKE_GET_WINNER - We check if the game is still being played,
 					   and only if it has ended we return the winner
 					   (We return the data from the device...)
-		*TODO	** - We still need to check what happens in case it is a tie
 
 	SNAKE_GET_COLOR - We return the value from the private_data of the process
 *******************************************************************************/
