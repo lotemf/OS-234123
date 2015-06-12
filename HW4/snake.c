@@ -14,9 +14,9 @@
 //#include <asm/semaphore.h>
 //#include <linux/wait.h>
 
-#include "hw3q1.h"
-//#include "hw3q1alt.h"
 #include "snake.h"
+#include "hw3q1.h"
+
 MODULE_LICENSE("GPL");
 
 /*******************************************************************************
@@ -38,6 +38,7 @@ MODULE_LICENSE("GPL");
 
 //Return value
 #define NO_WINNER_YET -1
+#define TIE 5
 /*******************************************************************************
 		Module Variables
 *******************************************************************************/
@@ -122,7 +123,7 @@ int snake_open(struct inode* inode, struct file* fileptr){
     if (is_played[minor] == GAME_NOT_STARTED){					//This check is done outside of the spinlock
     	down_interruptible(&game_sema[minor]);					//to make sure we will not send a player to sleep while holding the CPU
     } else {
-    	return Game_Init(&game_matrix[minor]);			//TODO - Tell Alon to match this signature in HW3Q1.c...
+    	return (int)Game_Init(&(game_matrix[minor]));
     }
     return 0;
 }
@@ -171,7 +172,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 
 	//Extracting the board print from the game to the buffer supplied
 	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
-		Game_Print(&game_matrix[minor],temp_buffer,board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
+		Game_Print(&game_matrix[minor],temp_buffer,&board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
 
 		//Adding /0 for the unused spaces in the buffer
 		int need_upholster = count - board_print_size;
@@ -321,9 +322,9 @@ int snake_ioctl(struct inode* inode, struct file* filptr, unsigned int command, 
 				if (is_played[minor] == GAME_STILL_PLAYING){					//If the game is still being played there is no winner
 					return NO_WINNER_YET;
 				}
-//				if ( (is_played[minor]) && (game_winner[minor] == TIE) ){
-//							return NO_WINNER_YET;	//TODO - what do we return if it's a tie???
-//				}
+				if ( (is_played[minor] == GAME_FINISHED) && (game_winner[minor] == TIE) ){
+							return TIE;
+				}
 				/*TEST*/if (is_played[minor] == GAME_NOT_STARTED){			//Not suppose to happen...
 					return -ENXIO;;
 				}
