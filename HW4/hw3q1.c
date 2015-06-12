@@ -1,37 +1,45 @@
+/******************************************************************************/
+		//This is the .c file
+/******************************************************************************/
 
 //Includes
-#include "hw3q1.h"
+//#include <linux/sched.h>
+//#include "hw3q1.h"
 
 //This function returns the winner
 static int Loser_To_Winner(Player player){
-	if (player == WHITE)){
+	if (player == WHITE){
 		return BLACKWINNER;
 	}
 	return WHITEWINNER;
 }
 
-
-int main()
-{
-	Player player = WHITE;
-	Matrix matrix = { { EMPTY } };
-
-	if (!Init(&matrix))
-	{
-		printf("Illegal M, N parameters.");
-		return -1;
-	}
-	while (Update(&matrix, player))
-	{
-		Print(&matrix);
-		/* switch turns */
-		player = -player;
-	}
-
-	return 0;
+static int rand(){
+	return jiffies % N;
 }
 
-bool Game_Init(Matrix *matrix)
+
+//int main()
+//{
+//	Player player = WHITE;
+//	Matrix matrix = { { EMPTY } };
+//
+//	if (!Init(&matrix))
+//	{
+//		printf("Illegal M, N parameters.");
+//		return -1;
+//	}
+//	while (Update(&matrix, player))
+//	{
+//		Print(&matrix);
+//		/* switch turns */
+//		player = -player;
+//	}
+//
+//	return 0;
+//}
+
+bool Game_Init(Matrix* matrix)
 {
 	int i;
 	/* initialize the snakes location */
@@ -41,11 +49,14 @@ bool Game_Init(Matrix *matrix)
 		(*matrix)[N - 1][i] = BLACK * (i + 1);
 	}
 	/* initialize the food location */
-	srand(time(0));
+//	srand(time(0));						//TODO - Change the use of random
 	if (RandFoodLocation(matrix) != ERR_OK)
 		return FALSE;
-	printf("instructions: white player is represented by positive numbers, \nblack player is represented by negative numbers\n");
-	Print(matrix);
+//	printf("instructions: white player is represented by positive numbers, \nblack player is represented by negative numbers\n");
+	char* buffer = NULL;
+	int board_size = 0;
+
+	Game_Print(matrix,buffer,&board_size);
 
 	return TRUE;
 }
@@ -85,7 +96,7 @@ int Game_Update(Matrix *matrix, Player player,int move)
 
 Point GetInputLoc(Matrix *matrix, Player player,int move)
 {
-	Direction dir;
+//	Direction dir;
 	Point p;
 
 	//The input check isn't needed here...
@@ -234,7 +245,7 @@ ErrorCode RandFoodLocation(Matrix *matrix)
 	Point p;
 	do
 	{
-		p.x = rand() % N;
+		p.x = rand() % N;		//TODO - change the rand
 		p.y = rand() % N;
 	} while (!(IsAvailable(matrix, p) || IsMatrixFull(matrix)));				//HW4 - Lotem - Added () here to prevent infinite loop
 
@@ -259,12 +270,14 @@ bool IsMatrixFull(Matrix *matrix)
 	return TRUE;
 }
 
-void Game_Print(Matrix*,char* buffer,int board_size){/* prints the state of the board */
+void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state of the board */
 
 	//Making the buffer an empty string	- Lotem
-	buffer[0] = '/0';
+	buffer[0] = '\0';
 	int i;
 	Point p;
+	char temp_buffer[3];
+
 	for (i = 0; i < N + 1; ++i)
 		strcat(buffer,"---");
 	strcat(buffer,"\n");
@@ -275,9 +288,13 @@ void Game_Print(Matrix*,char* buffer,int board_size){/* prints the state of the 
 		{
 			switch ((*matrix)[p.y][p.x])
 			{
-			case FOOD:  strcat(buffer,"  *"); break;
-			case EMPTY: strcat(buffer,"  ."); break;
-			default:    strcat(buffer,"% 3d", (*matrix)[p.y][p.x]);
+			case FOOD:  strcat(buffer,"  *");
+			break;
+			case EMPTY: strcat(buffer,"  .");
+			break;
+			default:
+				snprintf(temp_buffer,3,"% 3d", (*matrix)[p.y][p.x]);
+				strcat(buffer,temp_buffer);
 			}
 		}
 		strcat(buffer," |\n");
@@ -287,5 +304,5 @@ void Game_Print(Matrix*,char* buffer,int board_size){/* prints the state of the 
 	strcat(buffer,"\n");
 
 	//Calculating the length of the buffer
-	board_size = strlen(buffer);
+	*board_size = strlen(buffer);
 }
