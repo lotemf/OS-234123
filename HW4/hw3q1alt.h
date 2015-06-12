@@ -1,5 +1,11 @@
-#ifndef _HW3Q1_H_
-#define _HW3Q1_H_
+#ifndef _HW3Q1ALT_H_
+#define _HW3Q1ALT_H_
+/*-------------------------------------------------------------------------
+Include files:
+--------------------------------------------------------------------------*/
+//#include <stdio.h>
+//#include <stdlib.h>
+//#include <time.h>
 
 /*=========================================================================
 Constants and definitions:
@@ -52,18 +58,22 @@ typedef int ErrorCode;
 #define ERR_SNAKE_IS_TOO_HUNGRY ((ErrorCode)-2)
 typedef int Matrix[N][N];
 
-bool Game_Init(Matrix *matrix); /* initialize the board. return false if the board is illegal (should not occur, affected by N, M parameters) */
-int Game_Update(Matrix *matrix, Player player,int move);/* handle all updating to this player. returns whether to continue or not. */
+bool Game_Init(Matrix* matrix); /* initialize the board. return false if the board is illegal (should not occur, affected by N, M parameters) */
+int Game_Update(Matrix* matrix, Player player,int move);/* handle all updating to this player. returns whether to continue or not. */
 void Game_Print(Matrix*,char* buffer,int board_size);/* prints the state of the board */
-Point GetInputLoc(Matrix*, Player,int);/* calculates the location that the player wants to go to */
-bool CheckTarget(Matrix*, Player, Point);/* checks if the player can move to the specified location */
-Point GetSegment(Matrix*, int);/* gets the location of a segment which is numbered by the value */
-bool IsAvailable(Matrix*, Point);/* returns if the point wanted is in bounds and not occupied by any snake */
-ErrorCode CheckFoodAndMove(Matrix*, Player, Point);/* handle food and advance the snake accordingly */
-ErrorCode RandFoodLocation(Matrix*);/* randomize a location for food. return ERR_BOARD_FULL if the board is full */
-void AdvancePlayer(Matrix*, Player, Point);/* advance the snake */
-void IncSizePlayer(Matrix*, Player, Point);/* advance the snake and increase it's size */
-bool IsMatrixFull(Matrix*);/* check if the matrix is full */
-int GetSize(Matrix*, Player);/* gets the size of the snake */
 
-#endif /* _HW3Q1_H_ */
+
+////Temporary implementation for the Compilation Check
+//bool Game_Init(Matrix* matrix){
+//	return 1;
+//}
+//
+//int Game_Update(Matrix* matrix, Player player,int move){
+//	return 0;
+//}
+//
+//void Game_Print(Matrix* matrix ,char* buffer,int board_size){
+//	return;
+//}
+
+#endif /* _HW3Q1ALT_H_ */

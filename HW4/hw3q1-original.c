@@ -1,16 +1,73 @@
+/*-------------------------------------------------------------------------
+Include files:
+--------------------------------------------------------------------------*/
+#include <stdio.h>
+#include <stdlib.h>
+#include <time.h>
 
-//Includes
-#include "hw3q1.h"
+/*=========================================================================
+Constants and definitions:
+==========================================================================*/
+#define N (4) /* the size of the board */
+#define M (3)  /* the initial size of the snake */
+#define K (5)  /* the number of turns a snake can survive without eating */
 
-//This function returns the winner
-static int Loser_To_Winner(Player player){
-	if (player == WHITE)){
-		return BLACKWINNER;
-	}
-	return WHITEWINNER;
-}
+typedef char Player;
+/* PAY ATTENTION! i will use the fact that white is positive one and black is negative
+one to describe the segments of the snake. for example, if the white snake is 2 segments
+long and the black snake is 3 segments long
+white snake is  1   2
+black snake is -1  -2  -3 */
+#define WHITE ( 1) /* id to the white player */
+#define BLACK (-1) /* id to the black player */
+#define EMPTY ( 0) /* to describe an empty point */
+/* to describe a point with food. having the value this big guarantees that there will be no
+overlapping between the snake segments' numbers and the food id */
+#define FOOD  (N*N)
+
+typedef char bool;
+#define FALSE (0)
+#define TRUE  (1)
+
+typedef int Direction;
+#define DOWN  (2)
+#define LEFT  (4)
+#define RIGHT (6)
+#define UP    (8)
+
+/* a point in 2d space */
+typedef struct
+{
+	int x, y;
+} Point;
 
 
+typedef int Matrix[N][N];
+
+typedef int ErrorCode;
+#define ERR_OK      			((ErrorCode) 0)
+#define ERR_BOARD_FULL			((ErrorCode)-1)
+#define ERR_SNAKE_IS_TOO_HUNGRY ((ErrorCode)-2)
+
+bool Init(Matrix*); /* initialize the board. return false if the board is illegal (should not occur, affected by N, M parameters) */
+bool Update(Matrix*, Player);/* handle all updating to this player. returns whether to continue or not. */
+void Print(Matrix*);/* prints the state of the board */
+Point GetInputLoc(Matrix*, Player);/* calculates the location that the player wants to go to */
+bool CheckTarget(Matrix*, Player, Point);/* checks if the player can move to the specified location */
+Point GetSegment(Matrix*, int);/* gets the location of a segment which is numbered by the value */
+bool IsAvailable(Matrix*, Point);/* returns if the point wanted is in bounds and not occupied by any snake */
+ErrorCode CheckFoodAndMove(Matrix*, Player, Point);/* handle food and advance the snake accordingly */
+ErrorCode RandFoodLocation(Matrix*);/* randomize a location for food. return ERR_BOARD_FULL if the board is full */
+void AdvancePlayer(Matrix*, Player, Point);/* advance the snake */
+void IncSizePlayer(Matrix*, Player, Point);/* advance the snake and increase it's size */
+bool IsMatrixFull(Matrix*);/* check if the matrix is full */
+int GetSize(Matrix*, Player);/* gets the size of the snake */
+
+
+
+/*-------------------------------------------------------------------------
+The main program. The program implements a snake game
+-------------------------------------------------------------------------*/
 int main()
 {
 	Player player = WHITE;
@@ -31,7 +88,7 @@ int main()
 	return 0;
 }
 
-bool Game_Init(Matrix *matrix)
+bool Init(Matrix *matrix)
 {
 	int i;
 	/* initialize the snakes location */
@@ -50,66 +107,63 @@ bool Game_Init(Matrix *matrix)
 	return TRUE;
 }
 
-int Game_Update(Matrix *matrix, Player player,int move)
+bool Update(Matrix *matrix, Player player)
 {
 	ErrorCode e;
-	Point p = GetInputLoc(matrix, player,move);
+	Point p = GetInputLoc(matrix, player);
 
 	if (!CheckTarget(matrix, player, p))
 	{
-		return Loser_To_Winner(player);
+		printf("% d lost.", player);
+		return FALSE;
 	}
 	e = CheckFoodAndMove(matrix, player, p);
 	if (e == ERR_BOARD_FULL)
 	{
-//		printf("the board is full, tie");
-//		return FALSE;
-		//TODO - what do I need to return here???
-		return ITS_A_TIE;
+		printf("the board is full, tie");
+		return FALSE;
 	}
 	if (e == ERR_SNAKE_IS_TOO_HUNGRY)
 	{
-		return Loser_To_Winner(player);
+		printf("% d lost. the snake is too hungry", player);
+		return FALSE;
 	}
 	// only option is that e == ERR_OK
 	if (IsMatrixFull(matrix))
 	{
-//		printf("the board is full, tie");
-//		return FALSE;
-		//TODO - what do I need to return here???
-		return ITS_A_TIE;
+		printf("the board is full, tie");
+		return FALSE;
 	}
 
-	return KEEP_PLAYING;
+	return TRUE;
 }
 
-Point GetInputLoc(Matrix *matrix, Player player,int move)
+Point GetInputLoc(Matrix *matrix, Player player)
 {
 	Direction dir;
 	Point p;
 
-	//The input check isn't needed here...
-//	printk("% d, please enter your move(DOWN2, LEFT4, RIGHT6, UP8):\n", player);
-//	do
-//	{
-//		if (scanf("%d", &dir) < 0)
-//		{
-//			printf("an error occurred, the program will now exit.\n");
-//			exit(1);
-//		}
-//		if (move != UP   && move != DOWN && move != LEFT && move != RIGHT)
-//		{
-//			printf("invalid input, please try again\n");
-//		}
-//		else
-//		{
-//			break;
-//		}
-//	} while (TRUE);
+	printf("% d, please enter your move(DOWN2, LEFT4, RIGHT6, UP8):\n", player);
+	do
+	{
+		if (scanf("%d", &dir) < 0)
+		{
+			printf("an error occurred, the program will now exit.\n");
+			exit(1);
+		}
+		if (dir != UP   && dir != DOWN && dir != LEFT && dir != RIGHT)
+		{
+			printf("invalid input, please try again\n");
+		}
+		else
+		{
+			break;
+		}
+	} while (TRUE);
 
 	p = GetSegment(matrix, player);
 
-	switch (move)
+	switch (dir)
 	{
 	case UP:    --p.y; break;
 	case DOWN:  ++p.y; break;
@@ -236,7 +290,7 @@ ErrorCode RandFoodLocation(Matrix *matrix)
 	{
 		p.x = rand() % N;
 		p.y = rand() % N;
-	} while (!(IsAvailable(matrix, p) || IsMatrixFull(matrix)));				//HW4 - Lotem - Added () here to prevent infinite loop
+	} while (!IsAvailable(matrix, p) || IsMatrixFull(matrix));
 
 	if (IsMatrixFull(matrix))
 		return ERR_BOARD_FULL;
@@ -259,33 +313,28 @@ bool IsMatrixFull(Matrix *matrix)
 	return TRUE;
 }
 
-void Game_Print(Matrix*,char* buffer,int board_size){/* prints the state of the board */
-
-	//Making the buffer an empty string	- Lotem
-	buffer[0] = '/0';
+void Print(Matrix *matrix)
+{
 	int i;
 	Point p;
 	for (i = 0; i < N + 1; ++i)
-		strcat(buffer,"---");
-	strcat(buffer,"\n");
+		printf("---");
+	printf("\n");
 	for (p.y = 0; p.y < N; ++p.y)
 	{
-		strcat(buffer,"|");
+		printf("|");
 		for (p.x = 0; p.x < N; ++p.x)
 		{
 			switch ((*matrix)[p.y][p.x])
 			{
-			case FOOD:  strcat(buffer,"  *"); break;
-			case EMPTY: strcat(buffer,"  ."); break;
-			default:    strcat(buffer,"% 3d", (*matrix)[p.y][p.x]);
+			case FOOD:  printf("  *"); break;
+			case EMPTY: printf("  ."); break;
+			default:    printf("% 3d", (*matrix)[p.y][p.x]);
 			}
 		}
-		strcat(buffer," |\n");
+		printf(" |\n");
 	}
 	for (i = 0; i < N + 1; ++i)
-		strcat(buffer,"---");
-	strcat(buffer,"\n");
-
-	//Calculating the length of the buffer
-	board_size = strlen(buffer);
+		printf("---");
+	printf("\n");
 }

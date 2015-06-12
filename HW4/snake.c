@@ -2,64 +2,80 @@
 #include <linux/module.h>
 #include <asm/uaccess.h>
 #include <linux/fs.h>
-#include <linux/slab.h>         // for using the kmalloc function
+#include <linux/slab.h>
 #include <linux/spinlock.h>
 #include <linux/kernel.h>
 #include <linux/sched.h>
+#include <linux/wait.h>
+#include <asm/semaphore.h>
+
 
 //#include <linux/spinlock.h>
 //#include <asm/semaphore.h>
 //#include <linux/wait.h>
 
 #include "hw3q1.h"
+//#include "hw3q1alt.h"
 #include "snake.h"
 MODULE_LICENSE("GPL");
 
-#define SNAKE_ERROR -1
-#define WHITE_COLOR 4						//for the color checks
-#define BLACK_COLOR 2
 /*******************************************************************************
-		Variables to be used in the implementation of the new module
+		Defines
 *******************************************************************************/
-/*TEST*/
+//Color definitions
+#define WHITE_PLAYER 4						//Players colors return values
+#define BLACK_PLAYER 2
+#define WHITE_PLAYER_IN_GAME 1				//Players colors in hw3q1.c for the color checks
+#define BLACK_PLAYER_IN_GAME -1
+
+//is_played flag values
+#define GAME_FINISHED 2
+#define GAME_STILL_PLAYING 1
+#define GAME_NOT_STARTED 0
+
+//Error Codes
+#define PLAYER_LEFT -10						//An error code updated from the piazza
+
+//Return value
+#define NO_WINNER_YET -1
+/*******************************************************************************
+		Module Variables
+*******************************************************************************/
 static int major = -1;
+//static int minor_counter = 0;		//TODO - (Lotem) Not sure if it's needed because there is a single post in the piazza about it
 struct file_operations fops;
 int maxGames = 0;
+
+//Arrays of the module for each of the devices (Games)
 Matrix* game_matrix;
-int* players_num;
-int* is_played;							//A flag that notes if the game started or not
-//int* black_player_pid;
-//int* white_player_pid;	//Every game hold the pids of the players (of the two processes)
+int* players_num;						//The data of every game, that is not tethered
+int* is_played;							//to a specific player, will be held in these
+int* game_winner;						//data structures
+int* next_players_turn;
 
 //Locks
 struct semaphore* game_sema, *write_sema;
-spinlock_t* players_lock;				//The spinlock is used to check the legal number of players for each device (which is 2 players)
+spinlock_t* players_lock;			 	//The spinlock is used to check the legal
+									   	// number of players for each device (which is 2 players)
 
-MODULE_PARM(maxGames,"i");	//This is the only input needed for the module
-							//But still it is unclear how we receive this param
-							//(maybe in the makefile...)
-
-
+MODULE_PARM(maxGames,"i");				//This is the only input needed for the module
+										//But still it is unclear how we receive this param
+										//(maybe in the makefile...)
 
 typedef struct {
-    int minor;				//In the char Device based on this model
-    int player_color;
-//	int max_games;			//every device has it's own maxGames amount and minor (maybe more fields...)
-} dev_private_data;
-
-/******************************************************************************/
-
-
+    int minor;							//Saving the minor inside the PLAYER's private_data
+    int player_color;					//to allow different functions this player is using
+} dev_private_data;						//to know to which game it is connected
 
 /*******************************************************************************
- * snake_open - This function opens a new game on the Snake device.
+ * snake_open - Opens a new game on the Snake device.
  	 	 	 	The process that opens the device will get an automatic
  	 	 	 	white color if it's the first process, or automatically a black
  	 	 	 	color if it's the second process.
 
  	 	 	 	If a process is the first to call open on this device
  	 	 	 	for the game, it should wait on the semaphore until another
- 	 	 	 	process calls open, and then it's GAME ON.
+ 	 	 	 	process calls open,wakes the 1st process and then it's GAME ON.
 
 
  	 	 	 	P.S. - The way to contact this specific game for the two processes
@@ -68,46 +84,56 @@ typedef struct {
 *******************************************************************************/
 int snake_open(struct inode* inode, struct file* fileptr){
 	fileptr->f_op = &fops;
-    int minor = MINOR(inode->i_rdev);										//Extracting the minor from the device
+    int minor = MINOR(inode->i_rdev);							//Extracting the minor from the device
 
-    if (players_num[minor] == 2){
-    	return -EPERM;						//We check if this game is full...
+    //Legal game status checks
+    if (players_num[minor] == 2){								//Checking if this game is already full...
+    	return -EPERM;
+    }
+    if (is_played[minor] == PLAYER_LEFT){						//If one of the player's left the game
+    	return PLAYER_LEFT;
     }
 
-    fileptr->private_data = kmalloc(sizeof(dev_private_data), GFP_KERNEL);	//Allocating the memory for the struct using a kernel alloc
+    //Setting the file pointer of this process's (player) proiate data
+    fileptr->private_data = kmalloc(sizeof(dev_private_data), GFP_KERNEL);
     if (!(fileptr->private_data)){
     	return -ENOMEM;
     }
 
+    //Setting the private_data for this player
     dev_private_data* dev_p_data = (dev_private_data*)(fileptr->private_data);
     dev_p_data->minor = minor;
 
     spin_lock(players_lock[minor]);
-    if (!players_num[minor]){		//This means this player should get the white color
-    	players_num[minor]++;
-        dev_p_data->player_color = WHITE_COLOR;
-    	//** make this device wait on the semaphore
+    if (!players_num[minor]){									//This means this player should get the white color,
+    	players_num[minor]++;									//because he's the first to arrive
+        dev_p_data->player_color = WHITE_PLAYER;
+        //**NOTICE - This player goes to sleep OUTSIDE the spinlock on the semaphore until the second one wakes him up
     } else if (players_num[minor] == 1){
     	players_num[minor]++;
-    	dev_p_data->player_color = BLACK_COLOR;
-    	up(&game_sema[minor]);		//Waking up the other player process from the semaphore
-    	is_played[minor] = 1;		//Setting the flag for the game start
-    	return 0;					//We return from the function because we wouldn't like to make another wait on the semaphore
+    	dev_p_data->player_color = BLACK_PLAYER;
+    	up(&game_sema[minor]);									//Waking up the other player process from the semaphore
+    	is_played[minor] = GAME_STILL_PLAYING;					//Setting the flag for the game start
+    	return 0;												//We return from the function because we wouldn't like to make another wait on the semaphore
     }
     spin_unlock(players_lock[minor]);
 
-    if (!is_played[minor]){
-    	down_interruptible(&game_sema[minor]);					//We wait on the semaphore
+    //Checking if the game should start, or the player needs to sleep on the semaphore
+    if (is_played[minor] == GAME_NOT_STARTED){					//This check is done outside of the spinlock
+    	down_interruptible(&game_sema[minor]);					//to make sure we will not send a player to sleep while holding the CPU
     } else {
-    	return Game_Init(&game_matrix[minor]);	//Tell Alon to match this signature in HW3Q1.c...
+    	return Game_Init(&game_matrix[minor]);			//TODO - Tell Alon to match this signature in HW3Q1.c...
     }
-
     return 0;
 }
 /*******************************************************************************
- * snake_release - Freeing the allocated private data, and reducing the amount
+ * snake_release - Frees the allocated private data, and reducing the amount
  	 	 	 	   of players in the game so when we check the write/read
  	 	 	 	   values we know if it's a legal call or not
+
+ 	 	 **NOTICE - A situation that the flag of a game is GAME_STILL_PLAYING
+ 	 	 	 	 	and the amount of players in it is 1 cannot happen..
+ 	 	 	 	 	It should correspond to the PLAYER_LEFT change we make here
 *******************************************************************************/
 int snake_release(struct inode* inode, struct file* filp){
 
@@ -115,7 +141,8 @@ int snake_release(struct inode* inode, struct file* filp){
 
 	//Update counters:
 	spin_lock(players_lock[minor]);
-	players_num[minor]--;
+	players_num[minor]--;					//TODO - Keep editing the notes
+	is_played[minor] = PLAYER_LEFT;			//Setting the flag to PLAYER_LEFT for this game
 	spin_unlock(players_lock[minor]);
 
 	kfree(filp->private_data);
@@ -123,74 +150,194 @@ int snake_release(struct inode* inode, struct file* filp){
 	return 0;
 }
 /*******************************************************************************
- * snake_read - This function prints the board, using the buffer supplied.
+ * snake_read - Prints the board, using the buffer supplied.
  	 	 	 	If the buffer that was supplied to us by the user is bigger
- 	 	 	 	than the string, we add "/0" to the unused buffer;
+ 	 	 	 	than the string, we add "/0" to the unused buffer (upholstring)
 
 	**NOTICE - We still need to synchronize (maybe...)
 *******************************************************************************/
-ssize_t snake_read(struct file* filp, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
-	//Checking it's a legal game
-	int minor = ((dev_private_data *)((filp)->private_data))->minor;
-	int board_print_size;
-	char* temp_buffer = kmalloc(sizeof(char)*count ,GFP_KERNEL);					//Creating a new buffer
+ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
 
-	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game and we can do a read
+	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
+
+	//Legal game status checks
+	if (is_played[minor] == PLAYER_LEFT){
+    	return PLAYER_LEFT;
+    }
+
+	int board_print_size = 0;
+	//Creating a new, temp buffer
+	char* temp_buffer = kmalloc(sizeof(char)*count ,GFP_KERNEL);
+
+	//Extracting the board print from the game to the buffer supplied
+	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
 		Game_Print(&game_matrix[minor],temp_buffer,board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
 
+		//Adding /0 for the unused spaces in the buffer
 		int need_upholster = count - board_print_size;
 		int i;
 		for (i=0;i<need_upholster;i++){
-			temp_buffer[board_print_size + i] = '\0';					//Adding /0 for the unused spaces in the buffer
+			temp_buffer[board_print_size + i] = '\0';
 		}
 
+		//Copying the temp_buffer that we got form user space to kernel space
 		int left_to_copy;
 		left_to_copy = copy_to_user(temp_buffer,buffer,count);			//Copying the data to the user space
 		kfree(temp_buffer);
 		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
 
-	return -ENXIO;														//Because there is no game (device) for it
+	//TODO - Not sure about this error return value
+	return -ENXIO;				//Because there is no game (device) for it
 }
 /*******************************************************************************
- *  snake_write - This is the complex part because we need to synchronize
- 	 	 	 	  the writes between the two processes using  new semaphore
- 	 	 	 	  maybe we will call it write_sema...
- 	 	 	 	  and we might need a new spinlock for the update of the
- 	 	 	 	  write...  //Talk to chen about it
-*******************************************************************************/
-ssize_t snake_write(struct file* filp, const char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
+ *  snake_write - Enters a move from the player to the game.
+ 	 	 	 	  Uses the hw3q1.c game to change the board, by calling it's
+ 	 	 	 	  update function.
 
-	return 0;
+ 	 	 	 	- The synchronization in this function is to make sure that
+ 	 	 	 	  the two players are playing in turns, so each of them wakes
+ 	 	 	 	  the other up from the semaphore when they are finished making
+ 	 	 	 	  the move, and then he goes to sleep on the semaphore.
+
+ 	 	 	 	 **NOTICE - We may need to implement a buffer for there is a
+ 	 	 	 	  	  	    possibility that the player will send a few moves
+ 	 	 	 	  	  	    at once, and we need to handle this...
+*******************************************************************************/
+ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_t* f_pos){
+
+	int player_color = ((dev_private_data *)((filptr)->private_data))->player_color;
+	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
+
+	//Legal game status checks
+	if (is_played[minor] == PLAYER_LEFT){
+    	return PLAYER_LEFT;
+    }
+	if (is_played[minor] == GAME_FINISHED){
+    	return -EACCES;
+    }
+
+	//Input checks
+	if (!count){
+		return 0;											//Because the player didn't make any move
+	}
+	if (count != 1){										//TODO - This maybe wrong if we want to allow to "save moves" in a buffer
+		return -EPERM;										//Because the input is longer than 1 char
+	}
+
+    //Synchronization - Check
+    if (player_color != next_players_turn[minor]){
+    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
+    }
+
+    //Legal move check
+	if ( (buffer[0] == DOWN) || (buffer[0] == LEFT) || (buffer[0] == RIGHT) || (buffer[0] == UP) ){
+
+	    //The actual gameplay
+		int move,res;
+		Player player;
+		move = (int)(buffer[0]);							//Loading the move from the input
+		if (((dev_private_data *)((filptr)->private_data))->player_color == WHITE_PLAYER){
+			player = WHITE_PLAYER_IN_GAME;
+		} else {											//Setting the player color for the Game_Update call
+			player = BLACK_PLAYER_IN_GAME;
+		}
+
+		//Calling the gameplay changing function with the data
+		res = Game_Update(&(game_matrix[minor]),player_color,move);
+		if (res != KEEP_PLAYING){
+			switch (res){
+				case WHITE_PLAYER:
+					is_played[minor] = GAME_FINISHED;
+					game_winner[minor] = WHITE_PLAYER;
+					//TODO - need to finish here
+					break;
+
+				case BLACK_PLAYER:
+					is_played[minor] = GAME_FINISHED;
+					game_winner[minor] = BLACK_PLAYER;
+					//TODO - need to finish here
+					break;
+
+	            default: return -EIO;
+			}
+		}
+
+	    //Synchronization - Set the next turn if the game hasn't ended yet
+		if (is_played[minor] == GAME_STILL_PLAYING){
+			spin_lock(players_lock[minor]);
+			if (player_color == WHITE_PLAYER){
+				next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
+			}
+			spin_unlock(players_lock[minor]);
+		}
+
+		//Waking up the other player to play his turn
+	    up(&write_sema[minor]);
+		return 0;
+
+	} else {												//If there was an illegal input, the player who made it loses the game
+		//Setting the winner
+		if (player_color == BLACK_PLAYER){
+			game_winner[minor] = WHITE_PLAYER;
+		} else {
+			game_winner[minor] = BLACK_PLAYER;
+		}
+
+		//Finishing the game because of an illegal move
+		is_played[minor] = GAME_FINISHED;
+		up(&write_sema[minor]);								//We don't want to leave the other player asleep if the game has ended
+		return -EPERM;
+	}
 }
 /*******************************************************************************
  * snake_llseek - Overriding the default implementation of the OS
  	 	 	 	  This function doesn't do anything, and shouldn't be called
 *******************************************************************************/
-loff_t snake_llseek(struct file* filp, loff_t irrelevant, int num){
+loff_t snake_llseek(struct file* filptr, loff_t irrelevant, int num){
 	return -ENOSYS;																//HW4 - Lotem -  Finished...
 }
 /*******************************************************************************
  * snake_ioctl - Control Commands API according to the supplied header file
 
- 	 **NOTICE - We still need to understand how to use the GET_WINNER func
+	SNAKE_GET_WINNER - We check if the game is still being played,
+					   and only if it has ended we return the winner
+					   (We return the data from the device...)
+		*TODO	** - We still need to check what happens in case it is a tie
+
+	SNAKE_GET_COLOR - We return the value from the private_data of the process
 *******************************************************************************/
-int snake_ioctl(struct inode* inode, struct file* filp, unsigned int command, unsigned long var){
-//	int minor = MINOR(inode->i_rdev);
-	int color;
+int snake_ioctl(struct inode* inode, struct file* filptr, unsigned int command, unsigned long var){
+
+	int minor = MINOR(inode->i_rdev);
+
+	//Legal game status checks
+    if (is_played[minor] == PLAYER_LEFT){
+    	return PLAYER_LEFT;
+    }
 
 	switch(command) {
             case SNAKE_GET_WINNER:
-				//We still need to understand how to return the winner using the hw3q1.c prog
-            	//maybe we need to make a new field in the private data struct
+				if (is_played[minor] == GAME_STILL_PLAYING){					//If the game is still being played there is no winner
+					return NO_WINNER_YET;
+				}
+//				if ( (is_played[minor]) && (game_winner[minor] == TIE) ){
+//							return NO_WINNER_YET;	//TODO - what do we return if it's a tie???
+//				}
+				/*TEST*/if (is_played[minor] == GAME_NOT_STARTED){			//Not suppose to happen...
+					return -ENXIO;;
+				}
+				if ( (is_played[minor] == GAME_FINISHED) && !game_winner[minor]){
+					return -ENXIO;							//If the game hasn't started or finished with no winner
+				}
+				return game_winner[minor];
                 break;
+
             case SNAKE_GET_COLOR:
-            	color = ( (dev_private_data *)((filp)->private_data) )->player_color;
-            	if (color == -1 ){				//If the player's color wasn't initialized
-            		return -ENXIO;
-            	}
-            	return color;
-            break;
+            	//If the player's color wasn't initialized, it wouldn't been in this game
+            	return ((dev_private_data *)((filptr)->private_data))->player_color;
+            	break;
+
             default: return -ENOTTY;
     }
     return 0;
@@ -214,7 +361,7 @@ int init_module(void){
 
 	major = register_chrdev(0, "snake", &fops);		//Getting the major Dynamically, by sending 0 as first input param
 	if (major < 0){
-		printk("init_module -> Failed registering character device\n");
+		printk("[DEBUG]init_module -> Failed registering character device\n");
 		return major;
 	}
 
@@ -259,17 +406,40 @@ int init_module(void){
     	kfree(is_played);
      	return -ENOMEM;
     }
+    game_winner = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    if (!game_winner){
+    	kfree(players_lock);
+    	kfree(game_sema);
+    	kfree(write_sema);
+    	kfree(players_num);
+    	kfree(is_played);
+    	kfree(game_matrix);
+     	return -ENOMEM;
+    }
+    next_players_turn = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    if (!next_players_turn){
+    	kfree(players_lock);
+    	kfree(game_sema);
+    	kfree(write_sema);
+    	kfree(players_num);
+    	kfree(is_played);
+    	kfree(game_matrix);
+    	kfree(game_winner);
+     	return -ENOMEM;
+    }
 	//   -- Should we allocate each array as the size of the maxGames we get in the input?
 
 	int i;
 	for (i=0;i<maxGames;i++){
 		spin_lock_init(&players_lock[i]);
-		is_played[i] = 0;
+		is_played[i] = GAME_NOT_STARTED;
+		game_winner[i] = GAME_NOT_STARTED;
 		players_num[i] = 0;
-        sema_init(&game_sema[i], 1);
-        sema_init(&write_sema[i], 1);
+		next_players_turn[i] = WHITE_PLAYER;		//According to the PDF the white player starts first
+        sema_init(&game_sema[i], 0);				//We initialize the semaphores with 0 so a player will immediately go to sleep
+        sema_init(&write_sema[i], 0);
 
-		//still need to add some more variables here
+	// -- Still need to add some more variables here
 	}
 
 	/*Test*/printk("Hello, World!\n");
@@ -290,7 +460,10 @@ void cleanup_module(void){
     kfree(write_sema);
     kfree(players_num);
     kfree(is_played);
+    kfree(game_winner);
     kfree(game_matrix);
+    kfree(next_players_turn);
+
 
     /*Test*/printk("Goodbye, Cruel World!\n");
     return;
