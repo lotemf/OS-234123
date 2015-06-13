@@ -107,17 +107,25 @@ int snake_open(struct inode* inode, struct file* fileptr){
     } else if (players_num[minor] == 1){
     	players_num[minor]++;
     	dev_p_data->player_color = BLACK_PLAYER;
+    	is_played[minor] = GAME_STILL_PLAYING;				//Setting the flag for the game start
     	up(&game_sema[minor]);									//Waking up the other player process from the semaphore
-    	is_played[minor] = GAME_STILL_PLAYING;					//Setting the flag for the game start
-    	return 0;												//We return from the function because we wouldn't like to make another wait on the semaphore
     }
     spin_unlock(players_lock[minor]);
+
+//    /*TEST*/printk("[Debug-Snake]->The number of players in snake %d game is: %d \n",minor,players_num[minor]);
 
     //Checking if the game should start, or the player needs to sleep on the semaphore
     if (is_played[minor] == GAME_NOT_STARTED){					//This check is done outside of the spinlock
     	down_interruptible(&game_sema[minor]);					//to make sure we will not send a player to sleep while holding the CPU
-    } else {
-    	return (int)Game_Init(&(game_matrix[minor]));
+
+    	//When the first player will wake up, he will initialize the board
+    	spin_lock(players_lock[minor]);
+    	is_played[minor] = GAME_STILL_PLAYING;				//Setting the flag for the game start
+    	spin_unlock(players_lock[minor]);
+
+    	if (!Game_Init(&(game_matrix[minor]))){			//Only the black player can Initiate the game
+    		return -ENXIO;
+    	}
     }
     return 0;
 }
@@ -152,6 +160,7 @@ int snake_release(struct inode* inode, struct file* filp){
 	**NOTICE - We still need to synchronize (maybe...)
 *******************************************************************************/
 ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
+	/*TEST*/printk("[HW4-DEBUG]->Inside snake_read\n");
 
 	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
 
@@ -167,6 +176,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 	//Extracting the board print from the game to the buffer supplied
 	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
 		Game_Print(&game_matrix[minor],temp_buffer,&board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
+//		/*TEST*/printk("[HW4-DEBUG]->The size if the board to print is: %d \n",board_print_size);
 
 		//Adding /0 for the unused spaces in the buffer
 		int need_upholster = count - board_print_size;
@@ -177,8 +187,9 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 
 		//Copying the temp_buffer that we got form user space to kernel space
 		int left_to_copy;
-		left_to_copy = copy_to_user(temp_buffer,buffer,count);			//Copying the data to the user space
+		left_to_copy = copy_to_user(buffer,temp_buffer,count);			//Copying the data to the user space
 		kfree(temp_buffer);
+//		/*TEST*/printk("[HW4-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
 		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
 
@@ -216,9 +227,6 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 	if (!count){
 		return 0;											//Because the player didn't make any move
 	}
-	if (count != 1){										//TODO - This maybe wrong if we want to allow to "save moves" in a buffer
-		return -EPERM;										//Because the input is longer than 1 char
-	}
 
     //Synchronization - Check
     if (player_color != next_players_turn[minor]){
@@ -226,64 +234,67 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
     }
 
     //Legal move check
-	if ( (buffer[0] == DOWN) || (buffer[0] == LEFT) || (buffer[0] == RIGHT) || (buffer[0] == UP) ){
+    int i;
 
-	    //The actual gameplay
-		int move,res;
-		Player player;
-		move = (int)(buffer[0]);							//Loading the move from the input
-		if (((dev_private_data *)((filptr)->private_data))->player_color == WHITE_PLAYER){
-			player = WHITE_PLAYER_IN_GAME;
-		} else {											//Setting the player color for the Game_Update call
-			player = BLACK_PLAYER_IN_GAME;
-		}
-
-		//Calling the gameplay changing function with the data
-		res = Game_Update(&(game_matrix[minor]),player_color,move);
-		if (res != KEEP_PLAYING){
-			switch (res){
-				case WHITE_PLAYER:
-					is_played[minor] = GAME_FINISHED;
-					game_winner[minor] = WHITE_PLAYER;
-					//TODO - need to finish here
-					break;
-
-				case BLACK_PLAYER:
-					is_played[minor] = GAME_FINISHED;
-					game_winner[minor] = BLACK_PLAYER;
-					//TODO - need to finish here
-					break;
-
-	            default: return -EIO;
+	for (i = 0; i < count; ++i) {
+		if ( (buffer[i] == DOWN) || (buffer[i] == LEFT) || (buffer[i] == RIGHT) || (buffer[i] == UP) ){
+			//The actual gameplay
+			int move,res;
+			Player player;
+			move = (int)(buffer[0]);							//Loading the move from the input
+			if (((dev_private_data *)((filptr)->private_data))->player_color == WHITE_PLAYER){
+				player = WHITE_PLAYER_IN_GAME;
+			} else {											//Setting the player color for the Game_Update call
+				player = BLACK_PLAYER_IN_GAME;
 			}
-		}
 
-	    //Synchronization - Set the next turn if the game hasn't ended yet
-		if (is_played[minor] == GAME_STILL_PLAYING){
-			spin_lock(players_lock[minor]);
-			if (player_color == WHITE_PLAYER){
-				next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
+			//Calling the gameplay changing function with the data
+			res = Game_Update(&(game_matrix[minor]),player_color,move);
+			if (res != KEEP_PLAYING){
+				switch (res){
+					case WHITE_PLAYER:
+						is_played[minor] = GAME_FINISHED;
+						game_winner[minor] = WHITE_PLAYER;
+						//TODO - need to finish here
+						break;
+
+					case BLACK_PLAYER:
+						is_played[minor] = GAME_FINISHED;
+						game_winner[minor] = BLACK_PLAYER;
+						//TODO - need to finish here
+						break;
+
+					default: return -EIO;
+				}
 			}
-			spin_unlock(players_lock[minor]);
+
+			//Synchronization - Set the next turn if the game hasn't ended yet
+			if (is_played[minor] == GAME_STILL_PLAYING){
+				spin_lock(players_lock[minor]);
+				if (player_color == WHITE_PLAYER){
+					next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
+				}
+				spin_unlock(players_lock[minor]);
+			}
+
+			//Waking up the other player to play his turn
+			up(&write_sema[minor]);
+
+		} else {												//If there was an illegal input, the player who made it loses the game
+			//Setting the winner
+			if (player_color == BLACK_PLAYER){
+				game_winner[minor] = WHITE_PLAYER;
+			} else {
+				game_winner[minor] = BLACK_PLAYER;
+			}
+
+			//Finishing the game because of an illegal move
+			is_played[minor] = GAME_FINISHED;
+			up(&write_sema[minor]);								//We don't want to leave the other player asleep if the game has ended
+			return -EPERM;
 		}
-
-		//Waking up the other player to play his turn
-	    up(&write_sema[minor]);
-		return 0;
-
-	} else {												//If there was an illegal input, the player who made it loses the game
-		//Setting the winner
-		if (player_color == BLACK_PLAYER){
-			game_winner[minor] = WHITE_PLAYER;
-		} else {
-			game_winner[minor] = BLACK_PLAYER;
-		}
-
-		//Finishing the game because of an illegal move
-		is_played[minor] = GAME_FINISHED;
-		up(&write_sema[minor]);								//We don't want to leave the other player asleep if the game has ended
-		return -EPERM;
 	}
+    return 0;
 }
 /*******************************************************************************
  * snake_llseek - Overriding the default implementation of the OS
@@ -437,6 +448,9 @@ int init_module(void){
 	}
 
 	/*Test*/printk("Hello, World!\n");
+//	/*Test*/if ((game_sema[0].count) == 0){
+//		printk("The number of waiting processes on the first semaphore is: 0\n");
+//	}
 	return 0;
 }
 /*******************************************************************************
