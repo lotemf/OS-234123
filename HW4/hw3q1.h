@@ -3,6 +3,7 @@
 
 //Includes
 #include <linux/sched.h>
+//#include <string.h>
 
 /*=========================================================================
 Constants and definitions:
@@ -86,30 +87,15 @@ static int rand(){
 	return jiffies % N;
 }
 
-
-//int main()
-//{
-//	Player player = WHITE;
-//	Matrix matrix = { { EMPTY } };
-//
-//	if (!Init(&matrix))
-//	{
-//		printf("Illegal M, N parameters.");
-//		return -1;
-//	}
-//	while (Update(&matrix, player))
-//	{
-//		Print(&matrix);
-//		/* switch turns */
-//		player = -player;
-//	}
-//
-//	return 0;
-//}
-
 bool Game_Init(Matrix* matrix)
 {
-	int i;
+	int i,j;
+
+	for (i=0;i<N;i++){
+		for (j=0;j<N;j++){				//Initializing the matrix to zeros
+			(*matrix)[i][j] = 0;
+			}
+	}
 	/* initialize the snakes location */
 	for (i = 0; i < M; ++i)
 	{
@@ -120,11 +106,6 @@ bool Game_Init(Matrix* matrix)
 //	srand(time(0));						//TODO - Change the use of random
 	if (RandFoodLocation(matrix) != ERR_OK)
 		return FALSE;
-//	printf("instructions: white player is represented by positive numbers, \nblack player is represented by negative numbers\n");
-	char* buffer = NULL;
-	int board_size = 0;
-
-	Game_Print(matrix,buffer,&board_size);
 
 	return TRUE;
 }
@@ -313,8 +294,8 @@ ErrorCode RandFoodLocation(Matrix *matrix)
 	Point p;
 	do
 	{
-		p.x = rand() % N;
-		p.y = rand() % N;
+		p.x = rand();	//TEST - HW4 - Lotem
+		p.y = rand();	//TEST - HW4 - Lotem
 	} while (!(IsAvailable(matrix, p) || IsMatrixFull(matrix)));				//HW4 - Lotem - Added () here to prevent infinite loop
 
 	if (IsMatrixFull(matrix))
