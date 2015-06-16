@@ -54,7 +54,7 @@ int FirstTest()
 			printf("process b has finished opening...\n");
 			retval = read(b, board, 1024);
 			printf("%d\n",retval);
-			printf("Board: \n %s", board);
+			printf("Board: \n%s", board);
 			doMediumTask();
 			_exit(0);
 		} else {

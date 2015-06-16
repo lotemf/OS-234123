@@ -107,7 +107,10 @@ int snake_open(struct inode* inode, struct file* fileptr){
     } else if (players_num[minor] == 1){
     	players_num[minor]++;
     	dev_p_data->player_color = BLACK_PLAYER;
-    	is_played[minor] = GAME_STILL_PLAYING;				//Setting the flag for the game start
+    	is_played[minor] = GAME_STILL_PLAYING;					//Setting the flag for the game start
+     	if (!Game_Init(&(game_matrix[minor]))){					//Only the black player can Initiate the game
+        	return -ENXIO;
+        }
     	up(&game_sema[minor]);									//Waking up the other player process from the semaphore
     }
     spin_unlock(players_lock[minor]);
@@ -117,15 +120,6 @@ int snake_open(struct inode* inode, struct file* fileptr){
     //Checking if the game should start, or the player needs to sleep on the semaphore
     if (is_played[minor] == GAME_NOT_STARTED){					//This check is done outside of the spinlock
     	down_interruptible(&game_sema[minor]);					//to make sure we will not send a player to sleep while holding the CPU
-
-    	//When the first player will wake up, he will initialize the board
-    	spin_lock(players_lock[minor]);
-    	is_played[minor] = GAME_STILL_PLAYING;				//Setting the flag for the game start
-    	spin_unlock(players_lock[minor]);
-
-    	if (!Game_Init(&(game_matrix[minor]))){			//Only the black player can Initiate the game
-    		return -ENXIO;
-    	}
     }
     return 0;
 }
@@ -176,7 +170,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 	//Extracting the board print from the game to the buffer supplied
 	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
 		Game_Print(&game_matrix[minor],temp_buffer,&board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
-//		/*TEST*/printk("[HW4-DEBUG]->The size if the board to print is: %d \n",board_print_size);
+		/*TEST*/printk("[HW4-DEBUG]->The size if the board to print is: %d \n",board_print_size);
 
 		//Adding /0 for the unused spaces in the buffer
 		int need_upholster = count - board_print_size;
@@ -189,7 +183,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 		int left_to_copy;
 		left_to_copy = copy_to_user(buffer,temp_buffer,count);			//Copying the data to the user space
 		kfree(temp_buffer);
-//		/*TEST*/printk("[HW4-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
+		/*TEST*/printk("[HW4-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
 		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
 
@@ -264,7 +258,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 						//TODO - need to finish here
 						break;
 
-					default: return -EIO;
+					default: return -EIO;		//TODO - return value in case of TIE
 				}
 			}
 

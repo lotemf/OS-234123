@@ -94,7 +94,7 @@ bool Game_Init(Matrix* matrix)
 	for (i=0;i<N;i++){
 		for (j=0;j<N;j++){				//Initializing the matrix to zeros
 			(*matrix)[i][j] = 0;
-			}
+		}
 	}
 	/* initialize the snakes location */
 	for (i = 0; i < M; ++i)
@@ -102,6 +102,39 @@ bool Game_Init(Matrix* matrix)
 		(*matrix)[0][i] =   WHITE * (i + 1);
 		(*matrix)[N - 1][i] = BLACK * (i + 1);
 	}
+
+	/*TEST*/
+	printk("\n\n TEST Code \n\n");
+	printk("Printing the board before the food...\n");
+	//Printing the Board in the kernel To check if the problem is in the transfer
+	Point p;
+	for (i = 0; i < N + 1; ++i)
+		printk("---");
+	printk("\n");
+	for (p.y = 0; p.y < N; ++p.y)
+	{
+		printk("|");
+		for (p.x = 0; p.x < N; ++p.x)
+		{
+			switch ((*matrix)[p.y][p.x])
+			{
+			case FOOD:  printk("  *"); break;
+			case EMPTY: printk("  ."); break;
+			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
+			}
+		}
+		printk(" |\n");
+	}
+	for (i = 0; i < N + 1; ++i)
+		printk("---");
+	printk("\n");
+	printk("\n\n End Of TEST Code \n\n");
+
+
+	/*TEST*/
+
+
+
 	/* initialize the food location */
 	if (RandFoodLocation(matrix) != ERR_OK)
 		return FALSE;
@@ -324,16 +357,19 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 	buffer[0] = '\0';
 	int i;
 	Point p;
-	char temp_buffer[3];
+	char temp_buffer[4];
+
 
 	for (i = 0; i < N + 1; ++i)
 		strcat(buffer,"---");
 	strcat(buffer,"\n");
+
 	for (p.y = 0; p.y < N; ++p.y)
 	{
 		strcat(buffer,"|");
 		for (p.x = 0; p.x < N; ++p.x)
 		{
+			int matrixVal = (int)((*matrix)[p.y][p.x]) ;
 			switch ((*matrix)[p.y][p.x])
 			{
 			case FOOD:
@@ -343,12 +379,52 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 				strcat(buffer,"  .");
 				break;
 			default:
-				snprintf(temp_buffer,3,"% 3d", (*matrix)[p.y][p.x]);
+				/*TEST*/
+				temp_buffer[0] = ' ';
+				if (matrixVal < 0){
+					temp_buffer[1] = '-';
+					temp_buffer[2] = (-matrixVal)  + '0';
+				} else {
+					temp_buffer[1] = ' ';
+					temp_buffer[2] = matrixVal  + '0';
+				}
+				temp_buffer[3] = '\0';
+				/*TEST*/
+
 				strcat(buffer,temp_buffer);
 			}
 		}
 		strcat(buffer," |\n");
 	}
+
+	for (i = 0; i < N + 1; ++i)
+		strcat(buffer,"---");
+	strcat(buffer,"\n");
+
+
+
+	//Printing the Board in the kernel To check if the problem is in the transfer
+	for (i = 0; i < N + 1; ++i)
+		printk("---");
+	printk("\n");
+	for (p.y = 0; p.y < N; ++p.y)
+	{
+		printk("|");
+		for (p.x = 0; p.x < N; ++p.x)
+		{
+			switch ((*matrix)[p.y][p.x])
+			{
+			case FOOD:  printk("  *"); break;
+			case EMPTY: printk("  ."); break;
+			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
+			}
+		}
+		printk(" |\n");
+	}
+	for (i = 0; i < N + 1; ++i)
+		printk("---");
+	printk("\n");
+
 //	for (p.y = 0; p.y < N; ++p.y)
 //	{
 //		int currentVal = (int)((*matrix)[p.y][p.x]);
@@ -361,7 +437,7 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 //			strcat(buffer,"  .");
 //		}
 //		else if (currentVal > 0)
-//		{
+//		{										//Roy's Print
 //			strcat(buffer,"  ");
 //			char valToChar[2];
 //			valToChar[0] = currentVal + '0';
@@ -377,9 +453,7 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 //			strcat(buffer,valToChar);
 //		}
 //	}
-//	for (i = 0; i < N + 1; ++i)
-		strcat(buffer,"---");
-	strcat(buffer,"\n");
+
 
 	//Calculating the length of the buffer
 	*board_size = strlen(buffer);
