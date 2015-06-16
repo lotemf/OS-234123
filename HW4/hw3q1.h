@@ -103,38 +103,6 @@ bool Game_Init(Matrix* matrix)
 		(*matrix)[N - 1][i] = BLACK * (i + 1);
 	}
 
-	/*TEST*/
-	printk("\n\n TEST Code \n\n");
-	printk("Printing the board before the food...\n");
-	//Printing the Board in the kernel To check if the problem is in the transfer
-	Point p;
-	for (i = 0; i < N + 1; ++i)
-		printk("---");
-	printk("\n");
-	for (p.y = 0; p.y < N; ++p.y)
-	{
-		printk("|");
-		for (p.x = 0; p.x < N; ++p.x)
-		{
-			switch ((*matrix)[p.y][p.x])
-			{
-			case FOOD:  printk("  *"); break;
-			case EMPTY: printk("  ."); break;
-			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
-			}
-		}
-		printk(" |\n");
-	}
-	for (i = 0; i < N + 1; ++i)
-		printk("---");
-	printk("\n");
-	printk("\n\n End Of TEST Code \n\n");
-
-
-	/*TEST*/
-
-
-
 	/* initialize the food location */
 	if (RandFoodLocation(matrix) != ERR_OK)
 		return FALSE;
@@ -379,7 +347,6 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 				strcat(buffer,"  .");
 				break;
 			default:
-				/*TEST*/
 				temp_buffer[0] = ' ';
 				if (matrixVal < 0){
 					temp_buffer[1] = '-';
@@ -389,7 +356,6 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 					temp_buffer[2] = matrixVal  + '0';
 				}
 				temp_buffer[3] = '\0';
-				/*TEST*/
 
 				strcat(buffer,temp_buffer);
 			}
@@ -402,57 +368,28 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 	strcat(buffer,"\n");
 
 
-
-	//Printing the Board in the kernel To check if the problem is in the transfer
-	for (i = 0; i < N + 1; ++i)
-		printk("---");
-	printk("\n");
-	for (p.y = 0; p.y < N; ++p.y)
-	{
-		printk("|");
-		for (p.x = 0; p.x < N; ++p.x)
-		{
-			switch ((*matrix)[p.y][p.x])
-			{
-			case FOOD:  printk("  *"); break;
-			case EMPTY: printk("  ."); break;
-			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
-			}
-		}
-		printk(" |\n");
-	}
-	for (i = 0; i < N + 1; ++i)
-		printk("---");
-	printk("\n");
-
+//	//Printing the Board in the kernel To check if the problem is in the transfer
+//	for (i = 0; i < N + 1; ++i)
+//		printk("---");
+//	printk("\n");
 //	for (p.y = 0; p.y < N; ++p.y)
 //	{
-//		int currentVal = (int)((*matrix)[p.y][p.x]);
-//		if(currentVal == FOOD)
+//		printk("|");
+//		for (p.x = 0; p.x < N; ++p.x)
 //		{
-//			strcat(buffer,"  *");
+//			switch ((*matrix)[p.y][p.x])
+//			{
+//			case FOOD:  printk("  *"); break;
+//			case EMPTY: printk("  ."); break;
+//			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
+//			}
 //		}
-//		else if (currentVal == EMPTY)
-//		{
-//			strcat(buffer,"  .");
-//		}
-//		else if (currentVal > 0)
-//		{										//Roy's Print
-//			strcat(buffer,"  ");
-//			char valToChar[2];
-//			valToChar[0] = currentVal + '0';
-//			valToChar[1] = '\0';
-//			strcat(buffer,valToChar);
-//		}
-//		else if (currentVal < 0)
-//		{
-//			strcat(buffer," -");
-//			char valToChar[2];
-//			valToChar[0] = (-currentVal) + '0';
-//			valToChar[1] = '\0';
-//			strcat(buffer,valToChar);
-//		}
+//		printk(" |\n");
 //	}
+//	for (i = 0; i < N + 1; ++i)
+//		printk("---");
+//	printk("\n");
+
 
 
 	//Calculating the length of the buffer
