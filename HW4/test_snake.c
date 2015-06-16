@@ -545,7 +545,6 @@ bool PrintBoardTest()
 
 
 		int readRes = read(a, NULL, BUFFER_SIZE);
-		/*TEST*/printf("\t[DEBUG]\t The return value is %d\n",readRes);
 		ASSERT(readRes == -1); // <---- should bring 0 according to the metargelim (piazza return -EFAULT;)
 
 		readRes = read(a, board, 0);
@@ -1789,8 +1788,8 @@ int main(){
 //        RUN_TEST(CreateNewGameTest);
 //        RUN_TEST(CreateGameSameModuleAfterCancelTest);
 //        RUN_TEST(CreateGameWithThreePlayersTest);
-        RUN_TEST(PrintBoardTest);
-//        RUN_TEST(MyFirstMoveTest);
+//        RUN_TEST(PrintBoardTest);
+        RUN_TEST(MyFirstMoveTest);
 //        RUN_TEST(MakeMoveCrashWallTest);
 //        RUN_TEST(MakeMoveIlligalCharacterTest);
 //        RUN_TEST(MakeMultipleMovesTest);

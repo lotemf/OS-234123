@@ -181,7 +181,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 	//Extracting the board print from the game to the buffer supplied
 	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
 		Game_Print(&game_matrix[minor],temp_buffer,&board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
-		/*TEST*/printk("[HW4-DEBUG]->The size if the board to print is: %d \n",board_print_size);
+		/*TEST*/printk("[Read-DEBUG]->The size if the board to print is: %d \n",board_print_size);
 
 		//Adding /0 for the unused spaces in the buffer
 		int need_upholster = count - board_print_size;
@@ -194,11 +194,14 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 		int left_to_copy;
 		left_to_copy = copy_to_user(buffer,temp_buffer,count);			//Copying the data to the user space
 		kfree(temp_buffer);
-		/*TEST*/printk("[HW4-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
+		/*TEST*/printk("\t\t[Read-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
 		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
 
 	//TODO - Not sure about this error return value
+	/*TEST*/printk("\t\t[Read-DEBUG]-> Before -ENXIO\n");
+
+	kfree(temp_buffer);
 	return -ENXIO;				//Because there is no game (device) for it
 }
 /*******************************************************************************
@@ -233,11 +236,6 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 		return 0;											//Because the player didn't make any move
 	}
 
-    //Synchronization - Check
-    if (player_color != next_players_turn[minor]){
-    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
-    }
-
     //Legal move check
     int i;
 
@@ -245,6 +243,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 	    //Synchronization - Check
 	    if (player_color != next_players_turn[minor]){
+			/*TEST*/printk("\t[Write-DEBUG]\t Before Going to sleep \n");
 	    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
 	    }
 
@@ -261,13 +260,13 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			return i;											//In case it's a null terminating string, we need to return and wait for new input
 		}
 
-		move = buffer[i] - '0';									//Loading the move from the input
+		int move = buffer[i] - '0';									//Loading the move from the input
 
 		if ( (move == DOWN) || (move == LEFT) || (move == RIGHT) || (move == UP) ){
 			//The actual gameplay
-			int move,res;
+			int res;
 			Player player;
-			/*TEST*/printk("\t[DEBUG]\t casting from %c to %d\n",buffer[i],move);
+			/*TEST*/printk("\t[Write-DEBUG]\t casting from %c to %d\n",buffer[i],move);
 
 			//Calling the gameplay changing function with the data
 			res = Game_Update(&(game_matrix[minor]),player_color,move);
