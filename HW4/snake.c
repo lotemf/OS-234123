@@ -271,6 +271,8 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			//Calling the gameplay changing function with the data
 			res = Game_Update(&(game_matrix[minor]),player_color,move);
 
+			/*TEST*/printk("\t[Write-DEBUG]\t after game_update);
+
 			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
 				switch (res){
