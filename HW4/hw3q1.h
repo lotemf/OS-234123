@@ -103,7 +103,6 @@ bool Game_Init(Matrix* matrix)
 		(*matrix)[N - 1][i] = BLACK * (i + 1);
 	}
 	/* initialize the food location */
-//	srand(time(0));						//TODO - Change the use of random
 	if (RandFoodLocation(matrix) != ERR_OK)
 		return FALSE;
 
@@ -337,10 +336,12 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 		{
 			switch ((*matrix)[p.y][p.x])
 			{
-			case FOOD:  strcat(buffer,"  *");
-			break;
-			case EMPTY: strcat(buffer,"  .");
-			break;
+			case FOOD:
+				strcat(buffer,"  *");
+				break;
+			case EMPTY:
+				strcat(buffer,"  .");
+				break;
 			default:
 				snprintf(temp_buffer,3,"% 3d", (*matrix)[p.y][p.x]);
 				strcat(buffer,temp_buffer);
@@ -348,7 +349,35 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 		}
 		strcat(buffer," |\n");
 	}
-	for (i = 0; i < N + 1; ++i)
+//	for (p.y = 0; p.y < N; ++p.y)
+//	{
+//		int currentVal = (int)((*matrix)[p.y][p.x]);
+//		if(currentVal == FOOD)
+//		{
+//			strcat(buffer,"  *");
+//		}
+//		else if (currentVal == EMPTY)
+//		{
+//			strcat(buffer,"  .");
+//		}
+//		else if (currentVal > 0)
+//		{
+//			strcat(buffer,"  ");
+//			char valToChar[2];
+//			valToChar[0] = currentVal + '0';
+//			valToChar[1] = '\0';
+//			strcat(buffer,valToChar);
+//		}
+//		else if (currentVal < 0)
+//		{
+//			strcat(buffer," -");
+//			char valToChar[2];
+//			valToChar[0] = (-currentVal) + '0';
+//			valToChar[1] = '\0';
+//			strcat(buffer,valToChar);
+//		}
+//	}
+//	for (i = 0; i < N + 1; ++i)
 		strcat(buffer,"---");
 	strcat(buffer,"\n");
 
