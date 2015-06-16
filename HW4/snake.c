@@ -156,6 +156,17 @@ int snake_release(struct inode* inode, struct file* filp){
 ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
 	/*TEST*/printk("[HW4-DEBUG]->Inside snake_read\n");
 
+	//Input Checks
+	if (!count){
+		return 0;
+	}
+
+	if (!buffer){
+		/*TEST*/printk("\t\t[HW4-DEBUG]->Inside Buffer condition NULL\n");
+
+		return -EFAULT;
+	}
+
 	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
 
 	//Legal game status checks
@@ -231,19 +242,37 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
     int i;
 
 	for (i = 0; i < count; ++i) {
-		if ( (buffer[i] == DOWN) || (buffer[i] == LEFT) || (buffer[i] == RIGHT) || (buffer[i] == UP) ){
+
+	    //Synchronization - Check
+	    if (player_color != next_players_turn[minor]){
+	    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
+	    }
+
+	    //We need to check again every time we wake up
+		//Legal game status checks
+		if (is_played[minor] == PLAYER_LEFT){
+	    	return PLAYER_LEFT;
+	    }
+		if (is_played[minor] == GAME_FINISHED){
+	    	return -EACCES;
+	    }
+
+		if (buffer[i] == '\0'){
+			return i;											//In case it's a null terminating string, we need to return and wait for new input
+		}
+
+		move = buffer[i] - '0';									//Loading the move from the input
+
+		if ( (move == DOWN) || (move == LEFT) || (move == RIGHT) || (move == UP) ){
 			//The actual gameplay
 			int move,res;
 			Player player;
-			move = (int)(buffer[0]);							//Loading the move from the input
-			if (((dev_private_data *)((filptr)->private_data))->player_color == WHITE_PLAYER){
-				player = WHITE_PLAYER_IN_GAME;
-			} else {											//Setting the player color for the Game_Update call
-				player = BLACK_PLAYER_IN_GAME;
-			}
+			/*TEST*/printk("\t[DEBUG]\t casting from %c to %d\n",buffer[i],move);
 
 			//Calling the gameplay changing function with the data
 			res = Game_Update(&(game_matrix[minor]),player_color,move);
+
+			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
 				switch (res){
 					case WHITE_PLAYER:
@@ -267,6 +296,8 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 				spin_lock(players_lock[minor]);
 				if (player_color == WHITE_PLAYER){
 					next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
+				} else {
+					next_players_turn[minor] = WHITE_PLAYER;
 				}
 				spin_unlock(players_lock[minor]);
 			}
@@ -275,12 +306,15 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			up(&write_sema[minor]);
 
 		} else {												//If there was an illegal input, the player who made it loses the game
+
 			//Setting the winner
+			/*TEST*/printk("\t[DEBUG]\t The contents of the buffer from the input is: %c\n",buffer[i]);
 			if (player_color == BLACK_PLAYER){
 				game_winner[minor] = WHITE_PLAYER;
 			} else {
 				game_winner[minor] = BLACK_PLAYER;
 			}
+
 
 			//Finishing the game because of an illegal move
 			is_played[minor] = GAME_FINISHED;
@@ -288,7 +322,12 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			return -EPERM;
 		}
 	}
-    return 0;
+
+	//In case we receive a single char
+	if (count == 1){
+		return 1;
+	}
+    return i;
 }
 /*******************************************************************************
  * snake_llseek - Overriding the default implementation of the OS
