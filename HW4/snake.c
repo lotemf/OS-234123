@@ -156,6 +156,14 @@ int snake_release(struct inode* inode, struct file* filp){
 	is_played[minor] = PLAYER_LEFT;			//Setting the flag to PLAYER_LEFT for this game
 	spin_unlock(players_lock[minor]);
 
+	//Waking up the semaphores
+	int i;
+	for (i=0;i<white_write_sema_counter[minor];i++){
+		up(&white_write_sema[minor]);
+	}
+	for (i=0;i<black_write_sema_counter[minor];i++){
+		up(&black_write_sema[minor]);
+	}
 	kfree(filp->private_data);
 
 	return 0;
@@ -322,12 +330,16 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			//Waking up the other player to play his turn
 			if(player_color == WHITE_PLAYER){
 				printk("\t[Write-DEBUG]\t The WHITE player just woke up the Black sema -1\n");
-				black_write_sema_counter[minor]--;
-				up(&black_write_sema[minor]);
+				if (black_write_sema_counter[minor] > 0){
+					black_write_sema_counter[minor]--;
+					up(&black_write_sema[minor]);
+				}
 			} else {
 				printk("\t[Write-DEBUG]\t The BLACK player just woke up the White sema -1\n");
-				white_write_sema_counter[minor]--;
-				up(&white_write_sema[minor]);
+				if (white_write_sema_counter[minor] > 0) {
+					white_write_sema_counter[minor]--;
+					up(&white_write_sema[minor]);
+				}
 			}
 
 		} else {												//If there was an illegal input, the player who made it loses the game
@@ -347,12 +359,16 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			//We don't want to leave the other player asleep if the game has ended
 			if(player_color == WHITE_PLAYER){
 				printk("\t[Write-DEBUG]\t The WHITE player just woke up the Black sema -1\n");
-				black_write_sema_counter[minor]--;
-				up(&black_write_sema[minor]);
+				if (black_write_sema_counter[minor] > 0){
+					black_write_sema_counter[minor]--;
+					up(&black_write_sema[minor]);
+				}
 			} else {
 				printk("\t[Write-DEBUG]\t The BLACK player just woke up the White sema -1\n");
-				white_write_sema_counter[minor]--;
-				up(&white_write_sema[minor]);
+				if (white_write_sema_counter[minor] > 0) {
+					white_write_sema_counter[minor]--;
+					up(&white_write_sema[minor]);
+				}
 			}
 
 			printk("\t[Write-DEBUG]\tInside snake_write, before return EPERM\n");
