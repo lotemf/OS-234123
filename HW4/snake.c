@@ -229,27 +229,25 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 	//Input Checks
 	if (!count){
+		printk("\t[DEBUG]\tInside snake_write, count is 0\n");
 		return 0;
 	}
 
 	int player_color = ((dev_private_data *)((filptr)->private_data))->player_color;
+	printk("\t[DEBUG]\tInside snake_write, platyer color is %d\n", player_color);
 	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
 
 	//Legal game status checks
 	if (is_played[minor] == PLAYER_LEFT){
-    	return PLAYER_LEFT;
+		printk("\t[DEBUG]\tInside snake_write, PLAYER LEFT condition\n");
+		return PLAYER_LEFT;
     }
 	if (is_played[minor] == GAME_FINISHED){
+		printk("\t[DEBUG]\tInside snake_write, GAME_FINISHED condition\n");
     	return -EACCES;
     }
 
-	//Input checks
-	if (!count){
-		return 0;											//Because the player didn't make any move
-	}
-
     int i;
-
 	for (i = 0; i < count; ++i) {
 
 	    //Synchronization - Check
@@ -260,17 +258,19 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 	    //We need to check again every time we wake up
 		//Legal game status checks
-		if (is_played[minor] == PLAYER_LEFT){
-	    	return PLAYER_LEFT;
+	    //the other player performed illegal move/game was finished/null terminating string input
+	    if ((buffer[i] == '\0')||(is_played[minor] == PLAYER_LEFT) ||(is_played[minor] == GAME_FINISHED)){
+	    	return i;
 	    }
-		if (is_played[minor] == GAME_FINISHED){
-	    	return -EACCES;
-	    }
-
-		if (buffer[i] == '\0'){
-			return i;											//In case it's a null terminating string, we need to return and wait for new input
-		}
-
+//		if (is_played[minor] == GAME_FINISHED){
+//			printk("\t[DEBUG]\tInside snake_write, GAME_FINISHED condition, for loop\n");
+//			return -EACCES;
+//	    }
+//
+//		if (buffer[i] == '\0'){
+//			return i;											//In case it's a null terminating string, we need to return and wait for new input
+//		}
+//
 		//We have to convert the player's color to match HW3Q1.h convention
 		Player playerInGame = convert_player_color(player_color);
 		int move = buffer[i] - '0';									//Loading the move from the input
@@ -278,29 +278,32 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 		if ( (move == DOWN) || (move == LEFT) || (move == RIGHT) || (move == UP) ){
 			//The actual gameplay
 			int res;
-			/*TEST*/printk("\t[Write-DEBUG]\t casting from %c to %d\n",buffer[i],move);
+			/*TEST*/printk("\t[Write-DEBUG]\tcasting from %c to %d\n",buffer[i],move);
 
 			//Calling the gameplay changing function with the data
 			res = Game_Update(&(game_matrix[minor]),playerInGame,move,&(white_counters[minor]), &(black_counters[minor]));
 
-			/*TEST*/printk("\t [Write-DEBUG] \t after game_update");
+			/*TEST*/printk("\t[Write-DEBUG]\tafter game_update\n");
 
 			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
+				printk("\t[DEBUG]\tInside snake_write, inside 'res!=KEEP_PLAYING'\n");
 				switch (res){
 					case WHITE_PLAYER:
+						printk("\t[DEBUG]\tInside snake_write, WhitePlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
 						game_winner[minor] = WHITE_PLAYER;
-						//TODO - need to finish here
 						break;
 
 					case BLACK_PLAYER:
+						printk("\t[DEBUG]\tInside snake_write, BlackPlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
 						game_winner[minor] = BLACK_PLAYER;
-						//TODO - need to finish here
 						break;
 
-					default: return -EIO;		//TODO - return value in case of TIE
+					default:
+						printk("\t[DEBUG]\tInside snake_write, TIE return value\n");
+						return -EIO;		//TODO - return value in case of TIE
 				}
 			}
 
@@ -332,6 +335,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			//Finishing the game because of an illegal move
 			is_played[minor] = GAME_FINISHED;
 			up(&write_sema[minor]);								//We don't want to leave the other player asleep if the game has ended
+			printk("\t[DEBUG]\tInside snake_write, before return EPERM\n");
 			return -EPERM;
 		}
 	}
