@@ -281,7 +281,13 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 	    //We need to check again every time we wake up
 		//Legal game status checks
 	    //the other player performed illegal move/game was finished/null terminating string input
-	    if ((buffer[i] == '\0')||(is_played[minor] == PLAYER_LEFT) ||(is_played[minor] == GAME_FINISHED)){
+	    if ((buffer[i] == '\0') ||(is_played[minor] == GAME_FINISHED)){
+	    	return i;
+	    }
+	    if (is_played[minor] == PLAYER_LEFT){
+	    	if (!i){
+	    		return PLAYER_LEFT;
+	    	}
 	    	return i;
 	    }
 		//We have to convert the player's color to match HW3Q1.h convention
