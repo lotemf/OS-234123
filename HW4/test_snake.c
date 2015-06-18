@@ -1797,24 +1797,24 @@ int main(){
 		char* running = "_n________________________\n|_|______________________|_|\n|  ,--------------------.  |\n|  |********************|  |\n|  |********************|  |\n|  |********************|  |\n|  |***--------------***|  |\n|  |**-[RUNNING TEST]-**|  |\n|  |***--------------***|  |\n|  |********************|  |\n|  |********************|  |\n|  |********************|  |\n|  `--------------------'  |\n|      _  GAME BOY         |\n|    _| |_         ,-.     |\n|   |_ O _|   ,-. \"._,\"    |\n|     |_|    \"._,\"   A     |\n|       _  _    B          |\n|      // //               |\n|     // //     \\\\\\\\\\\\     |\n|     `  `       \\\\\\\\\\\\    ,\n|___________...__________,\"\n";
 		printf("%s\n", running);
 		printf("\n\n");
-//        RUN_TEST(CreateNewGameTest);
-//        RUN_TEST(CreateGameSameModuleAfterCancelTest);
-//        RUN_TEST(CreateGameWithThreePlayersTest);
-//        RUN_TEST(PrintBoardTest);
-//        RUN_TEST(MyFirstMoveTest);
-//        RUN_TEST(MakeMoveCrashWallTest);
-//        RUN_TEST(MakeMoveIlligalCharacterTest);
-//        RUN_TEST(MakeMultipleMovesTest);
-//        RUN_TEST(MakeMoveCrashSnakeTest);
-//        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
-//        RUN_TEST(SnakeGetColorTest);
-//        RUN_TEST(GetWinnerWhiteWinTest);			//Check From this test on...
-//        RUN_TEST(GetWinnerBlackWinTest);
-//        RUN_TEST(GetWinnerGameInProgressTest);
-//        RUN_TEST(TreeGamesAtTheSameTime);
+        RUN_TEST(CreateNewGameTest);
+        RUN_TEST(CreateGameSameModuleAfterCancelTest);
+        RUN_TEST(CreateGameWithThreePlayersTest);
+        RUN_TEST(PrintBoardTest);
+        RUN_TEST(MyFirstMoveTest);
+        RUN_TEST(MakeMoveCrashWallTest);
+        RUN_TEST(MakeMoveIlligalCharacterTest);
+        RUN_TEST(MakeMultipleMovesTest);
+        RUN_TEST(MakeMoveCrashSnakeTest);
+        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
+        RUN_TEST(SnakeGetColorTest);
+        RUN_TEST(GetWinnerWhiteWinTest);			//Check From this test on...
+        RUN_TEST(GetWinnerBlackWinTest);
+        RUN_TEST(GetWinnerGameInProgressTest);
+        RUN_TEST(TreeGamesAtTheSameTime);
         RUN_TEST(TwoWhitesAgainstOneBlackTest);
-//        RUN_TEST(ThreeAgainstThreeTest);
-//        RUN_TEST(AgressiveReadWriteTest);
+        RUN_TEST(ThreeAgainstThreeTest);
+        RUN_TEST(AgressiveReadWriteTest);
         
 	}
 	else if (answer == 'a' || answer == 'A')
