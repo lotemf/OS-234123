@@ -149,7 +149,8 @@ int snake_open(struct inode* inode, struct file* fileptr){
 int snake_release(struct inode* inode, struct file* filp){
 
 	int minor = MINOR(inode->i_rdev);
-
+	printk("\t[DEBUG-SNAKE_RELEASE]:\tnumber of whites on semaphor before is:%d\n", white_write_sema_counter[minor]);
+	printk("\t[DEBUG-SNAKE_RELEASE]:\tnumber of blacks on semaphor before is:%d\n", black_write_sema_counter[minor]);
 	//Update counters:
 	spin_lock(players_lock[minor]);
 	players_num[minor]--;					//TODO - Keep editing the notes
@@ -161,9 +162,14 @@ int snake_release(struct inode* inode, struct file* filp){
 	for (i=0;i<white_write_sema_counter[minor];i++){
 		up(&white_write_sema[minor]);
 	}
+	white_write_sema_counter[minor]=0;
 	for (i=0;i<black_write_sema_counter[minor];i++){
 		up(&black_write_sema[minor]);
 	}
+	black_write_sema_counter[minor]=0;
+
+	printk("\t[DEBUG-SNAKE_RELEASE]:\tnumber of whites on semaphor after FOR is:%d\n", white_write_sema_counter[minor]);
+	printk("\t[DEBUG-SNAKE_RELEASE]:\tnumber of blacks on semaphor after FOR is:%d\n", black_write_sema_counter[minor]);
 	kfree(filp->private_data);
 
 	return 0;

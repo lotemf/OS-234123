@@ -1335,6 +1335,7 @@ bool TwoWhitesAgainstOneBlackTest()
 			nextMove[4] = '\0'; 
 
 			int writeval = write(a, nextMove, 4);	
+			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == 2); // <------ i did 2 good moves, give me a break
 			_exit(0);
 		}
@@ -1348,6 +1349,7 @@ bool TwoWhitesAgainstOneBlackTest()
 			nextMove[3] = LEFT; 
 			nextMove[4] = '\0'; 
 			int writeval = write(a, nextMove, 4);			
+			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == -1); // <------ should be in the game after its already finished
 
 			doLongTask();
@@ -1367,6 +1369,7 @@ bool TwoWhitesAgainstOneBlackTest()
 			ASSERT(b>=0);
 
 			int writeval = write(b, &nextMove, 1);	
+			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == 1);
 
 			doLongTask();
@@ -1807,9 +1810,9 @@ int main(){
 //        RUN_TEST(SnakeGetColorTest);
 //        RUN_TEST(GetWinnerWhiteWinTest);			//Check From this test on...
 //        RUN_TEST(GetWinnerBlackWinTest);
-        RUN_TEST(GetWinnerGameInProgressTest);
+//        RUN_TEST(GetWinnerGameInProgressTest);
 //        RUN_TEST(TreeGamesAtTheSameTime);
-//        RUN_TEST(TwoWhitesAgainstOneBlackTest);
+        RUN_TEST(TwoWhitesAgainstOneBlackTest);
 //        RUN_TEST(ThreeAgainstThreeTest);
 //        RUN_TEST(AgressiveReadWriteTest);
         
