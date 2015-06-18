@@ -63,20 +63,20 @@ int CheckOpen()
     return retval;
 }
 
-int SecondTest()
+int CheckBadInput()
 {
 
 	char board[120];
 	int retval = 1;
 
-	int player1;
-	int player2;
+	int player1,player2;
+	int unauthorized;
 	int status;
 
 	int pid1 = fork();
 	if(pid1 == 0) {
 		//player 1 (white)
-		player1=open("/dev/snake0", O_RDWR);
+		player1=open("/dev/snake1", O_RDWR);
 		printf("player1 has finished opening...\n");
 
 //		retval = read(player1, board, 120);
@@ -104,7 +104,7 @@ int SecondTest()
 		int pid2 = fork();
 		if(pid2 == 0) {
 			//player 2 (black)
-			player2=open("/dev/snake0", O_RDWR);
+			player2=open("/dev/snake2", O_RDWR);
 			printf("player2 has finished opening...\n");
 			retval = read(player2, board, 120);
 			printf("The return value of read is: %d\n",retval);
@@ -122,11 +122,15 @@ int SecondTest()
     close(player1);
     close(player2);
 
+    unauthorized = open("/dev/snake2", O_RDWR);
+
+
+
     return retval;
 }
 
 int main(){
         CheckOpen();
-        SecondTest();
+        CheckBadInput();
         return 0;
 }
