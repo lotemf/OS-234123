@@ -1,9 +1,4 @@
-/*
- * test_module.c
- *
- *  Created on: 7 áéðå 2015
- *      Author: alon
- */
+
 #include <asm/errno.h>
 extern int errno;
 #include <stdio.h>
@@ -16,6 +11,7 @@ extern int errno;
 #include <sys/wait.h>
 #include <assert.h>
 #include <unistd.h>
+#include <sys/ioctl.h>
 
 /*========================[instructions]========================*/
 	// compile this test with:
@@ -163,6 +159,7 @@ extern int errno;
 	  	char* deadSnake = "|      _______ **** __     |\n|     /       \\ ** /  \\    |\n|    /  /~~~\\  \\  (X  X)   |\n|    |  |   |  |   |  |    |\n|   (X  X)  \\  \\___/  /    |\n|    \\__/ ** \\       /     |\n|     |  **** ~~~~~~~      |\n|     ^                    |\n|   * SNAKES  CRASHED! *   |\n";
 		printf("%s\n",deadSnake);   		
 	}
+
 
 
 	void printGameOver()
@@ -641,7 +638,6 @@ bool MyFirstMoveTest()
 	if(pid1 == 0) {
 		//player 1 (white)
 		a=open(moduleName, O_RDWR);
-
 		ASSERT(a>=0);
 
 		//board before
@@ -678,6 +674,59 @@ bool MyFirstMoveTest()
 		}
 		wait(&status);
 	}	
+    return true;
+}
+
+bool BlackMakeMoveFirstTest()
+{
+	char* moduleName = getModule();
+	char board[BUFFER_SIZE+1];
+	board[BUFFER_SIZE]='\0'; // <---- might be redundant but i cant leave it like that! it's a disturbia
+	int a;
+	int b;
+	int status;
+	int pid1 = fork();
+	if(pid1 == 0) {
+		//player 1 (white)
+		char nextMove = DOWN;
+		a=open(moduleName, O_RDWR);
+		ASSERT(a>=0);
+
+		doLongTask();
+		doLongTask();
+
+		int writeval = write(a, &nextMove, 1);
+		ASSERT(writeval == 1);
+
+		//board after move
+		int readRes = read(a, board, BUFFER_SIZE);
+		ASSERT(readRes == BUFFER_SIZE);
+		printf("board after move is:\n");
+		printBoard(board);
+
+		doLongTask();
+		close(a);
+		_exit(0);
+	} else {
+		int pid2 = fork();
+		if(pid2 == 0) {
+			char nextMove = UP;
+			doLongTask();
+			//player 2 (black)
+			b=open(moduleName, O_RDWR);
+			ASSERT(b>=0);
+
+			int writeval = write(b, &nextMove, 1);
+			ASSERT(writeval == 1);
+
+			doLongTask();
+			close(b);
+			_exit(0);
+		} else {
+			wait(&status);
+		}
+		wait(&status);
+	}
     return true;
 }
 
@@ -867,8 +916,7 @@ bool MakeMoveCrashSnakeTest()
 		ASSERT(a>=0);
 
 		int writeval = write(a, nextMove, 3);
-		printf("\t[DEBUG]\tA my write value is:\t%d\n",writeval);
-		ASSERT(writeval >= 2); // <---- im the one who crashes so i did 2 step successfully
+		ASSERT(writeval == 2); // <---- im the one who crashes so i did 2 step successfully
 
 		doLongTask();
 		doLongTask();
@@ -890,8 +938,7 @@ bool MakeMoveCrashSnakeTest()
 			ASSERT(b>=0);
 
 			int writeval = write(b, nextMove, 3);
-			printf("\t[DEBUG]\tB my write value is:\t%d\n",writeval);
-			ASSERT(writeval >= 1); // <---- we successfully made 1 move inside write, return 1 according to the metargelim
+			ASSERT(writeval == 1); // <---- we successfully made 1 move inside write, return 1 according to the metargelim
 
 			printDeadSnake();
 
@@ -928,7 +975,6 @@ bool MakeMultipleMovesWithIlligalMoveTest()
 		ASSERT(a>=0);
 
 		int writeval = write(a, nextMove, 5);
-		printf("\t[DEBUG]\tmy write value is:\t%d\n",writeval);
 		ASSERT(writeval == -1); // <----- return -1 according to the metargelim for illigal move inside buffer
 
 		doLongTask();
@@ -949,7 +995,6 @@ bool MakeMultipleMovesWithIlligalMoveTest()
 			ASSERT(b>=0);
 
 			int writeval = write(b, nextMove, 3);
-			printf("\t[DEBUG]\tmy write value is:\t%d\n",writeval);
 			ASSERT(writeval == 2); // <----- return 2 cause i did 2 moves succesfully, according to the metargelim
 
 			doLongTask();
@@ -1025,11 +1070,9 @@ bool GetWinnerWhiteWinTest()
 		ASSERT(a>=0);
 
 		int writeval = write(a, nextMove, 4);	
-		printf("\t[DEBUG]\tmy write value is:\t%d\n",writeval);
 		ASSERT(writeval == 2);  // <----- return 2 cause i did 2 moves succesfully, according to the metargelim
 
 		int ioctl_retval = ioctl(a, SNAKE_GET_WINNER);
-		printf("The return value of ioctl is: %d\n",ioctl_retval);
         ASSERT(ioctl_retval == 4);
 
 		doLongTask();
@@ -1051,7 +1094,6 @@ bool GetWinnerWhiteWinTest()
 			ASSERT(b>=0);
 
 			int writeval = write(b, nextMove, 4);	
-			printf("\t[DEBUG]\tmy write value is:\t%d\n",writeval);
 			ASSERT(writeval == 2); // <----- return 2 cause i did 2 moves succesfully, according to the metargelim
 
 			int ioctl_retval = ioctl(b, SNAKE_GET_WINNER);
@@ -1087,7 +1129,6 @@ bool GetWinnerBlackWinTest()
 		ASSERT(a>=0);
 
 		int writeval = write(a, nextMove, 4);	
-		printf("\t[DEBUG]\tmy write value is:\t%d\n",writeval);
 		ASSERT(writeval == 2); // <----- return 2 cause i did 2 moves succesfully, according to the metargelim
 
 		int ioctl_retval = ioctl(a, SNAKE_GET_WINNER);
@@ -1335,7 +1376,6 @@ bool TwoWhitesAgainstOneBlackTest()
 			nextMove[4] = '\0'; 
 
 			int writeval = write(a, nextMove, 4);	
-			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == 2); // <------ i did 2 good moves, give me a break
 			_exit(0);
 		}
@@ -1349,7 +1389,6 @@ bool TwoWhitesAgainstOneBlackTest()
 			nextMove[3] = LEFT; 
 			nextMove[4] = '\0'; 
 			int writeval = write(a, nextMove, 4);			
-			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == -1); // <------ should be in the game after its already finished
 
 			doLongTask();
@@ -1369,7 +1408,6 @@ bool TwoWhitesAgainstOneBlackTest()
 			ASSERT(b>=0);
 
 			int writeval = write(b, &nextMove, 1);	
-			printf("\t[DEBUG]\twriteval is:\t%d\n", writeval);
 			ASSERT(writeval == 1);
 
 			doLongTask();
@@ -1797,18 +1835,20 @@ int main(){
 		char* running = "_n________________________\n|_|______________________|_|\n|  ,--------------------.  |\n|  |********************|  |\n|  |********************|  |\n|  |********************|  |\n|  |***--------------***|  |\n|  |**-[RUNNING TEST]-**|  |\n|  |***--------------***|  |\n|  |********************|  |\n|  |********************|  |\n|  |********************|  |\n|  `--------------------'  |\n|      _  GAME BOY         |\n|    _| |_         ,-.     |\n|   |_ O _|   ,-. \"._,\"    |\n|     |_|    \"._,\"   A     |\n|       _  _    B          |\n|      // //               |\n|     // //     \\\\\\\\\\\\     |\n|     `  `       \\\\\\\\\\\\    ,\n|___________...__________,\"\n";
 		printf("%s\n", running);
 		printf("\n\n");
-//        RUN_TEST(CreateNewGameTest);
-//        RUN_TEST(CreateGameSameModuleAfterCancelTest);
-//        RUN_TEST(CreateGameWithThreePlayersTest);
-//        RUN_TEST(PrintBoardTest);
-//        RUN_TEST(MyFirstMoveTest);
-//        RUN_TEST(MakeMoveCrashWallTest);
-//        RUN_TEST(MakeMoveIlligalCharacterTest);
-//        RUN_TEST(MakeMultipleMovesTest);
-//        RUN_TEST(MakeMoveCrashSnakeTest);
-//        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
+        RUN_TEST(CreateNewGameTest);
+        RUN_TEST(CreateGameSameModuleAfterCancelTest);
+        RUN_TEST(CreateGameWithThreePlayersTest);
+        RUN_TEST(PrintBoardTest);
+        RUN_TEST(PrintBoardSmallCountTest);
+        RUN_TEST(MyFirstMoveTest);
+        RUN_TEST(BlackMakeMoveFirstTest);
+        RUN_TEST(MakeMoveCrashWallTest);
+        RUN_TEST(MakeMoveIlligalCharacterTest);
+        RUN_TEST(MakeMultipleMovesTest);
+        RUN_TEST(MakeMoveCrashSnakeTest);
+        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
         RUN_TEST(SnakeGetColorTest);
-        RUN_TEST(GetWinnerWhiteWinTest);			//Check From this test on...
+        RUN_TEST(GetWinnerWhiteWinTest);
         RUN_TEST(GetWinnerBlackWinTest);
         RUN_TEST(GetWinnerGameInProgressTest);
         RUN_TEST(TreeGamesAtTheSameTime);
