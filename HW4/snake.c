@@ -47,6 +47,7 @@ int* players_num;						//The data of every game, that is not tethered
 int* is_played;							//to a specific player, will be held in these
 int* game_winner;						//data structures
 int* next_players_turn;
+int* white_counters,*black_counters;
 
 //Locks
 struct semaphore* game_sema, *write_sema;
@@ -60,7 +61,7 @@ MODULE_PARM(maxGames,"i");				//This is the only input needed for the module
 typedef struct {
     int minor;							//Saving the minor inside the PLAYER's private_data
     int player_color;					//to allow different functions this player is using
-} dev_private_data;						//to know to which game it is connected
+ } dev_private_data;						//to know to which game it is connected
 
 /*******************************************************************************
  * static int convert_player_color - Converts the player's color from the define
@@ -132,6 +133,7 @@ int snake_open(struct inode* inode, struct file* fileptr){
     if (is_played[minor] == GAME_NOT_STARTED){					//This check is done outside of the spinlock
     	down_interruptible(&game_sema[minor]);					//to make sure we will not send a player to sleep while holding the CPU
     }
+	printk("\t[DEBUG]:\tFinished Driver open - Snake_Open\n");
     return 0;
 }
 /*******************************************************************************
@@ -165,7 +167,7 @@ int snake_release(struct inode* inode, struct file* filp){
 	**NOTICE - We still need to synchronize (maybe...)
 *******************************************************************************/
 ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_pos){	//This function should be planned carefully
-	/*TEST*/printk("[HW4-DEBUG]->Inside snake_read\n");
+	printk("\t[DEBUG]\tInside snake_read\n");
 
 	//Input Checks
 	if (!count){
@@ -173,8 +175,7 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 	}
 
 	if (!buffer){
-		/*TEST*/printk("\t\t[HW4-DEBUG]->Inside Buffer condition NULL\n");
-
+		printk("\t[DEBUG]\tInside snake_read, buffer is NULL\n");
 		return -EFAULT;
 	}
 
@@ -187,31 +188,26 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
 
 	int board_print_size = 0;
 	//Creating a new, temp buffer
-	char* temp_buffer = kmalloc(sizeof(char)*count ,GFP_KERNEL);
+	char* temp_buffer = kmalloc(sizeof(char)*100 ,GFP_KERNEL);
+	int idx;
+	for(idx=0;idx<100;idx++){
+		temp_buffer[idx] = '\0';
+	}
 
 	//Extracting the board print from the game to the buffer supplied
-	if ( (players_num[minor] == 2) && (is_played[minor]) ){				//This means it's a legit game (finished/still playing) and we can do a read
+	if (players_num[minor] == 2){				//This means it's a legit game (finished/still playing) and we can do a read
+		printk("\t[DEBUG]\tInside snake_read BEFORE game_print\n");
 		Game_Print(&game_matrix[minor],temp_buffer,&board_print_size);	//Calling hw3q1.c function to print the board to the temp_buffer
-		/*TEST*/printk("[Read-DEBUG]->The size if the board to print is: %d \n",board_print_size);
-
-		//Adding /0 for the unused spaces in the buffer
-		int need_upholster = count - board_print_size;
-		int i;
-		for (i=0;i<need_upholster;i++){
-			temp_buffer[board_print_size + i] = '\0';
-		}
-
+		printk("\t[DEBUG]\tInside snake_read AFTER game_print\n");
 		//Copying the temp_buffer that we got form user space to kernel space
 		int left_to_copy;
 		left_to_copy = copy_to_user(buffer,temp_buffer,count);			//Copying the data to the user space
 		kfree(temp_buffer);
-		/*TEST*/printk("\t\t[Read-DEBUG]->The size of left_to_copy is: %d \n",left_to_copy);
+		printk("\t[DEBUG]\tInside snake_read AFTER copy_to_user\n");
 		return (count - left_to_copy);									//Returns the amount of bytes copied
 	}
 
-	//TODO - Not sure about this error return value
-	/*TEST*/printk("\t\t[Read-DEBUG]-> Before -ENXIO\n");
-
+	printk("\t[DEBUG]\tInside snake_read Before -ENXIO\n");
 	kfree(temp_buffer);
 	return -ENXIO;				//Because there is no game (device) for it
 }
@@ -230,6 +226,11 @@ ssize_t snake_read(struct file* filptr, char* buffer, size_t count, loff_t* f_po
  	 	 	 	  	  	    at once, and we need to handle this...
 *******************************************************************************/
 ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_t* f_pos){
+
+	//Input Checks
+	if (!count){
+		return 0;
+	}
 
 	int player_color = ((dev_private_data *)((filptr)->private_data))->player_color;
 	int minor = ((dev_private_data *)((filptr)->private_data))->minor;
@@ -280,7 +281,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			/*TEST*/printk("\t[Write-DEBUG]\t casting from %c to %d\n",buffer[i],move);
 
 			//Calling the gameplay changing function with the data
-			res = Game_Update(&(game_matrix[minor]),playerInGame,move);
+			res = Game_Update(&(game_matrix[minor]),playerInGame,move,&(white_counters[minor]), &(black_counters[minor]));
 
 			/*TEST*/printk("\t [Write-DEBUG] \t after game_update");
 
@@ -477,7 +478,23 @@ int init_module(void){
     	kfree(game_winner);
      	return -ENOMEM;
     }
-	//   -- Should we allocate each array as the size of the maxGames we get in the input?
+
+    white_counters = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    black_counters = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+      if (!white_counters || !black_counters){
+      	kfree(players_lock);
+      	kfree(game_sema);
+      	kfree(write_sema);
+      	kfree(players_num);
+      	kfree(is_played);
+      	kfree(game_matrix);
+      	kfree(game_winner);
+      	kfree(next_players_turn);
+       	return -ENOMEM;
+      }
+
+
+    //   -- Should we allocate each array as the size of the maxGames we get in the input?
 
 	int i;
 	for (i=0;i<maxGames;i++){
@@ -488,6 +505,8 @@ int init_module(void){
 		next_players_turn[i] = WHITE_PLAYER;		//According to the PDF the white player starts first
         sema_init(&game_sema[i], 0);				//We initialize the semaphores with 0 so a player will immediately go to sleep
         sema_init(&write_sema[i], 0);
+        white_counters[i] = K;
+        black_counters[i] = K;
 
 	// -- Still need to add some more variables here
 	}
@@ -516,6 +535,8 @@ void cleanup_module(void){
     kfree(game_winner);
     kfree(game_matrix);
     kfree(next_players_turn);
+    kfree(white_counters);
+    kfree(black_counters);
 
 
     /*Test*/printk("Goodbye, Cruel World!\n");
