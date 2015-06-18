@@ -63,6 +63,17 @@ typedef struct {
 } dev_private_data;						//to know to which game it is connected
 
 /*******************************************************************************
+ * static int convert_player_color - Converts the player's color from the define
+ * 									 in snake.c to the define in hw3q1.h
+ * 									 (Because of the inconsistency)
+*******************************************************************************/
+static int convert_player_color (int player_color){
+	if (player_color == WHITE_PLAYER){
+		return WHITE_PLAYER_IN_GAME;
+	}
+	return BLACK_PLAYER_IN_GAME;
+}
+/*******************************************************************************
  * snake_open - Opens a new game on the Snake device.
  	 	 	 	The process that opens the device will get an automatic
  	 	 	 	white color if it's the first process, or automatically a black
@@ -236,7 +247,6 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 		return 0;											//Because the player didn't make any move
 	}
 
-    //Legal move check
     int i;
 
 	for (i = 0; i < count; ++i) {
@@ -260,18 +270,19 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			return i;											//In case it's a null terminating string, we need to return and wait for new input
 		}
 
+		//We have to convert the player's color to match HW3Q1.h convention
+		Player playerInGame = convert_player_color(player_color);
 		int move = buffer[i] - '0';									//Loading the move from the input
-
+	    //Legal move check
 		if ( (move == DOWN) || (move == LEFT) || (move == RIGHT) || (move == UP) ){
 			//The actual gameplay
 			int res;
-			Player player;
 			/*TEST*/printk("\t[Write-DEBUG]\t casting from %c to %d\n",buffer[i],move);
 
 			//Calling the gameplay changing function with the data
-			res = Game_Update(&(game_matrix[minor]),player_color,move);
+			res = Game_Update(&(game_matrix[minor]),playerInGame,move);
 
-			/*TEST*/printk("\t[Write-DEBUG]\t after game_update);
+			/*TEST*/printk("\t [Write-DEBUG] \t after game_update");
 
 			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
