@@ -23,7 +23,7 @@ void doMediumTask()
 }
 
 
-int FirstTest()
+int CheckOpen()
 {
 	char board[1024];
 	int retval = 1;
@@ -31,19 +31,19 @@ int FirstTest()
 	int player1;
 	int b;
 	int status;
-	printf("making fork\n");
+
 	int pid1 = fork();
 	if(pid1 == 0) {
-		//player 1 (white)
-		player1=open("/dev/snake0", O_RDWR);
+
+		player1=open("/dev/snake0", O_RDWR);				//White Player
 		printf("process player1 has finished opening...\n");
 		_exit(0);
 	}
 	else {
 		int pid2 = fork();
 		if(pid2 == 0) {
-			//player 2 (black)
-			player2=open("/dev/snake0", O_RDWR);
+
+			player2=open("/dev/snake0", O_RDWR);			//Black Player
 			printf("process player2 has finished opening...\n");
 			retval = read(player2, board, 1024);
 			printf("%d\n",retval);
@@ -57,8 +57,8 @@ int FirstTest()
 	}
 
 
-    close(a);
-    close(b);
+    close(player1);
+    close(player2);
 
     return retval;
 }
@@ -72,7 +72,7 @@ int SecondTest()
 	int player1;
 	int player2;
 	int status;
-	printf("making fork\n");
+
 	int pid1 = fork();
 	if(pid1 == 0) {
 		//player 1 (white)
@@ -126,7 +126,7 @@ int SecondTest()
 }
 
 int main(){
-        FirstTest();
-//        SecondTest();
+        CheckOpen();
+        SecondTest();
         return 0;
 }
