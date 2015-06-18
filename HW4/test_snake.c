@@ -1800,7 +1800,7 @@ int main(){
 //        RUN_TEST(MyFirstMoveTest);
 //        RUN_TEST(MakeMoveCrashWallTest);
 //        RUN_TEST(MakeMoveIlligalCharacterTest);
-        RUN_TEST(MakeMultipleMovesTest);
+//        RUN_TEST(MakeMultipleMovesTest);
         RUN_TEST(MakeMoveCrashSnakeTest);//check from here
 //        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
 //        RUN_TEST(SnakeGetColorTest);

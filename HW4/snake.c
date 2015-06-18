@@ -50,7 +50,8 @@ int* next_players_turn;
 int* white_counters,*black_counters;
 
 //Locks
-struct semaphore* game_sema, *write_sema;
+struct semaphore* game_sema, *white_write_sema, *black_write_sema;
+int * white_write_sema_counter, *black_write_sema_counter;
 spinlock_t* players_lock;			 	//The spinlock is used to check the legal
 									   	// number of players for each device (which is 2 players)
 
@@ -252,8 +253,14 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 	    //Synchronization - Check
 	    if (player_color != next_players_turn[minor]){
-			printk("\t[Write-DEBUG]\t Before Going to sleep, player color is: %d\n", player_color);
-	    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
+	    	if (player_color == WHITE_PLAYER){
+				printk("\t[Write-DEBUG]\t White player just went to sleep on the white sema\n");
+				white_write_sema_counter[minor]++;
+		    	down_interruptible(&white_write_sema[minor]);
+	    	}
+			printk("\t[Write-DEBUG]\t Black player just went to sleep on the black sema\n");
+			black_write_sema_counter[minor]++;
+			down_interruptible(&black_write_sema[minor]);				//If it's not the player's turn he goes to sleep
 	    }
 
 	    //We need to check again every time we wake up
@@ -278,47 +285,55 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
-				printk("\t[DEBUG]\tInside snake_write, inside 'res!=KEEP_PLAYING'\n");
+				printk("\t[Write-DEBUG]\tInside snake_write, inside 'res!=KEEP_PLAYING'\n");
 				switch (res){
 					case WHITE_PLAYER:
-						printk("\t[DEBUG]\tInside snake_write, WhitePlayer finished\n");
+						printk("\t[Write-DEBUG]\tInside snake_write, WhitePlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
 						game_winner[minor] = WHITE_PLAYER;
 						break;
 
 					case BLACK_PLAYER:
-						printk("\t[DEBUG]\tInside snake_write, BlackPlayer finished\n");
+						printk("\t[Write-DEBUG]\tInside snake_write, BlackPlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
 						game_winner[minor] = BLACK_PLAYER;
 						break;
 
 					default:
-						printk("\t[DEBUG]\tInside snake_write, TIE return value\n");
+						printk("\t[Write-DEBUG]\tInside snake_write, TIE return value\n");
 						return -EIO;		//TODO - return value in case of TIE
 				}
 			}
 
 			//Synchronization - Set the next turn if the game hasn't ended yet
 			if (is_played[minor] == GAME_STILL_PLAYING){
-				printk("\t[DEBUG]\tInside snake_write, in for loop - sync block,GAME_STILL_PLAYING\n");
+				printk("\t[Write-DEBUG]\t , in for loop - sync block,GAME_STILL_PLAYING\n");
 				spin_lock(players_lock[minor]);
 				if (player_color == WHITE_PLAYER){
-					printk("\t[DEBUG]\tInside snake_write, determining next turn to black\n");
+					printk("\t[Write-DEBUG]\t, determining next turn to black\n");
 					next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
 				} else {
-					printk("\t[DEBUG]\tInside snake_write, determining next turn to white\n");
+					printk("\t[Write-DEBUG]\t , determining next turn to white\n");
 					next_players_turn[minor] = WHITE_PLAYER;
 				}
 				spin_unlock(players_lock[minor]);
 			}
 
 			//Waking up the other player to play his turn
-			up(&write_sema[minor]);
+			if(player_color == WHITE_PLAYER){
+				printk("\t[Write-DEBUG]\t The WHITE player just woke up the Black sema -1\n");
+				black_write_sema_counter[minor]--;
+				up(&black_write_sema[minor]);
+			} else {
+				printk("\t[Write-DEBUG]\t The BLACK player just woke up the White sema -1\n");
+				white_write_sema_counter[minor]--;
+				up(&white_write_sema[minor]);
+			}
 
 		} else {												//If there was an illegal input, the player who made it loses the game
 
 			//Setting the winner
-			/*TEST*/printk("\t[DEBUG]\t The contents of the buffer from the input is: %c\n",buffer[i]);
+			/*TEST*/printk("\t[Write-DEBUG]\t The contents of the buffer from the input is: %c\n",buffer[i]);
 			if (player_color == BLACK_PLAYER){
 				game_winner[minor] = WHITE_PLAYER;
 			} else {
@@ -328,8 +343,19 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 			//Finishing the game because of an illegal move
 			is_played[minor] = GAME_FINISHED;
-			up(&write_sema[minor]);								//We don't want to leave the other player asleep if the game has ended
-			printk("\t[DEBUG]\tInside snake_write, before return EPERM\n");
+
+			//We don't want to leave the other player asleep if the game has ended
+			if(player_color == WHITE_PLAYER){
+				printk("\t[Write-DEBUG]\t The WHITE player just woke up the Black sema -1\n");
+				black_write_sema_counter[minor]--;
+				up(&black_write_sema[minor]);
+			} else {
+				printk("\t[Write-DEBUG]\t The BLACK player just woke up the White sema -1\n");
+				white_write_sema_counter[minor]--;
+				up(&white_write_sema[minor]);
+			}
+
+			printk("\t[Write-DEBUG]\tInside snake_write, before return EPERM\n");
 			return -EPERM;
 		}
 	}
@@ -425,8 +451,10 @@ int init_module(void){
     	kfree(players_lock);
      	return -ENOMEM;
     }
-    write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//Not sure about the syntax here //semaphores array
-    if (!write_sema){
+    white_write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//Not sure about the syntax here //semaphores array
+    black_write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//Not sure about the syntax here //semaphores array
+
+    if (!white_write_sema || !black_write_sema){
     	kfree(players_lock);
     	kfree(game_sema);
      	return -ENOMEM;
@@ -435,14 +463,16 @@ int init_module(void){
     if (!players_num){
     	kfree(players_lock);
     	kfree(game_sema);
-    	kfree(write_sema);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
      	return -ENOMEM;
     }
     is_played = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
     if (!is_played){
     	kfree(players_lock);
     	kfree(game_sema);
-    	kfree(write_sema);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
     	kfree(players_num);
      	return -ENOMEM;
     }
@@ -450,7 +480,8 @@ int init_module(void){
     if (!game_matrix){
     	kfree(players_lock);
     	kfree(game_sema);
-    	kfree(write_sema);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
     	kfree(players_num);
     	kfree(is_played);
      	return -ENOMEM;
@@ -459,7 +490,8 @@ int init_module(void){
     if (!game_winner){
     	kfree(players_lock);
     	kfree(game_sema);
-    	kfree(write_sema);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
     	kfree(players_num);
     	kfree(is_played);
     	kfree(game_matrix);
@@ -469,7 +501,8 @@ int init_module(void){
     if (!next_players_turn){
     	kfree(players_lock);
     	kfree(game_sema);
-    	kfree(write_sema);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
     	kfree(players_num);
     	kfree(is_played);
     	kfree(game_matrix);
@@ -482,14 +515,32 @@ int init_module(void){
       if (!white_counters || !black_counters){
       	kfree(players_lock);
       	kfree(game_sema);
-      	kfree(write_sema);
-      	kfree(players_num);
+    	kfree(white_write_sema);
+    	kfree(black_write_sema);
+    	kfree(players_num);
       	kfree(is_played);
       	kfree(game_matrix);
       	kfree(game_winner);
       	kfree(next_players_turn);
        	return -ENOMEM;
       }
+
+      white_write_sema_counter = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+      black_write_sema_counter = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+        if (!white_write_sema_counter || !black_write_sema_counter){
+        	kfree(players_lock);
+        	kfree(game_sema);
+        	kfree(white_write_sema);
+        	kfree(black_write_sema);
+        	kfree(players_num);
+        	kfree(is_played);
+        	kfree(game_matrix);
+        	kfree(game_winner);
+        	kfree(next_players_turn);
+        	kfree(white_counters);
+        	kfree(black_counters);
+         	return -ENOMEM;
+        }
 
 
     //   -- Should we allocate each array as the size of the maxGames we get in the input?
@@ -502,17 +553,17 @@ int init_module(void){
 		players_num[i] = 0;
 		next_players_turn[i] = WHITE_PLAYER;		//According to the PDF the white player starts first
         sema_init(&game_sema[i], 0);				//We initialize the semaphores with 0 so a player will immediately go to sleep
-        sema_init(&write_sema[i], 0);
+        sema_init(&white_write_sema[i], 0);
+        white_write_sema_counter[i]=0;
+        sema_init(&black_write_sema[i], 0);
+        black_write_sema_counter[i]=0;
         white_counters[i] = K;
         black_counters[i] = K;
 
-	// -- Still need to add some more variables here
 	}
 
 	/*Test*/printk("Hello, World!\n");
-//	/*Test*/if ((game_sema[0].count) == 0){
-//		printk("The number of waiting processes on the first semaphore is: 0\n");
-//	}
+
 	return 0;
 }
 /*******************************************************************************
@@ -527,7 +578,8 @@ void cleanup_module(void){
     //Freeing all of the arrays
     kfree(players_lock);
     kfree(game_sema);
-    kfree(write_sema);
+    kfree(white_write_sema);
+    kfree(black_write_sema);
     kfree(players_num);
     kfree(is_played);
     kfree(game_winner);
