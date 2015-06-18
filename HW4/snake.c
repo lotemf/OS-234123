@@ -252,7 +252,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 	    //Synchronization - Check
 	    if (player_color != next_players_turn[minor]){
-			/*TEST*/printk("\t[Write-DEBUG]\t Before Going to sleep \n");
+			printk("\t[Write-DEBUG]\t Before Going to sleep, player color is: %d\n", player_color);
 	    	down_interruptible(&write_sema[minor]);				//If it's not the player's turn he goes to sleep
 	    }
 
@@ -262,15 +262,6 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 	    if ((buffer[i] == '\0')||(is_played[minor] == PLAYER_LEFT) ||(is_played[minor] == GAME_FINISHED)){
 	    	return i;
 	    }
-//		if (is_played[minor] == GAME_FINISHED){
-//			printk("\t[DEBUG]\tInside snake_write, GAME_FINISHED condition, for loop\n");
-//			return -EACCES;
-//	    }
-//
-//		if (buffer[i] == '\0'){
-//			return i;											//In case it's a null terminating string, we need to return and wait for new input
-//		}
-//
 		//We have to convert the player's color to match HW3Q1.h convention
 		Player playerInGame = convert_player_color(player_color);
 		int move = buffer[i] - '0';									//Loading the move from the input
@@ -283,7 +274,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 			//Calling the gameplay changing function with the data
 			res = Game_Update(&(game_matrix[minor]),playerInGame,move,&(white_counters[minor]), &(black_counters[minor]));
 
-			/*TEST*/printk("\t[Write-DEBUG]\tafter game_update\n");
+			/*TEST*/printk("\t[Write-DEBUG]\tafter game_update, player color is: %d\n", player_color);
 
 			//Only if the game has ended for some reason we enter this part of the code
 			if (res != KEEP_PLAYING){
@@ -309,10 +300,13 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 
 			//Synchronization - Set the next turn if the game hasn't ended yet
 			if (is_played[minor] == GAME_STILL_PLAYING){
+				printk("\t[DEBUG]\tInside snake_write, in for loop - sync block,GAME_STILL_PLAYING\n");
 				spin_lock(players_lock[minor]);
 				if (player_color == WHITE_PLAYER){
+					printk("\t[DEBUG]\tInside snake_write, determining next turn to black\n");
 					next_players_turn[minor] = BLACK_PLAYER;	//We need to change the next turn
 				} else {
+					printk("\t[DEBUG]\tInside snake_write, determining next turn to white\n");
 					next_players_turn[minor] = WHITE_PLAYER;
 				}
 				spin_unlock(players_lock[minor]);
