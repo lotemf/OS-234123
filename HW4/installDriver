@@ -59,9 +59,11 @@ mknod /dev/snake24 c 254 24
 mknod /dev/snake25 c 254 25
 
 
-
+#Edited to work with Dori's test...
+gcc -L. -lpthread -Wall test_snake_dori.c -o test_snake_dori
 
 #gcc -Wall HW4-Test.c -o test_snake
-gcc -Wall test_snake.c -o test_snake
+#gcc -Wall test_snake.c -o test_snake
 
-./test_snake
+./test_snake_dori
+#./test_snake
