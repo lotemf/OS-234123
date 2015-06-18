@@ -20,8 +20,8 @@ white snake is  1   2
 black snake is -1  -2  -3 */
 #define WHITE ( 1) /* id to the white player */
 #define BLACK (-1) /* id to the black player */
-#define WHITEWINNER ( 2) /* winner return value for the white player */
-#define BLACKWINNER ( 4) /* winner return value for the black player */
+#define WHITEWINNER ( 4) /* winner return value for the white player */
+#define BLACKWINNER ( 2) /* winner return value for the black player */
 #define EMPTY ( 0) /* to describe an empty point */
 #define KEEP_PLAYING ( 0) /* return value for Game_Update*/
 #define ITS_A_TIE ( -1) /* return value for Game_Update*/
