@@ -1,11 +1,17 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <assert.h>
 #include <asm/errno.h>
-#include <string.h>
-#include <unistd.h>
-#include <sys/wait.h>
+extern int errno;
+#include <stdio.h>
 #include <fcntl.h>
+#include <string.h>
+#include <stdbool.h>
+#include <stdlib.h>
+#include <sys/mman.h>
+#include "snake.h"
+#include <sys/wait.h>
+#include <assert.h>
+#include <unistd.h>
+#include <sys/ioctl.h>
+
 
 void doMediumTask()
 {
@@ -16,43 +22,30 @@ void doMediumTask()
    }
 }
 
-void doLongTask()
-{
-   long i;
-   for (i=1; i != 0; i++)
-   {
-      ;
-   }
-}
 
 int FirstTest()
 {
-
 	char board[1024];
 	int retval = 1;
 
-	int a;
+	int player1;
 	int b;
 	int status;
 	printf("making fork\n");
 	int pid1 = fork();
 	if(pid1 == 0) {
 		//player 1 (white)
-		a=open("/dev/snake0", O_RDWR);
-		printf("process a has finished opening...\n");
-//		retval = read(a, board, 1024);
-//		printf("%d\n",retval);
-//		printf("Board: \n %s", board);
-//		doMediumTask();
+		player1=open("/dev/snake0", O_RDWR);
+		printf("process player1 has finished opening...\n");
 		_exit(0);
 	}
 	else {
 		int pid2 = fork();
 		if(pid2 == 0) {
 			//player 2 (black)
-			b=open("/dev/snake0", O_RDWR);
-			printf("process b has finished opening...\n");
-			retval = read(b, board, 1024);
+			player2=open("/dev/snake0", O_RDWR);
+			printf("process player2 has finished opening...\n");
+			retval = read(player2, board, 1024);
 			printf("%d\n",retval);
 			printf("Board: \n%s", board);
 			doMediumTask();
