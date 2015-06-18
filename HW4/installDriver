@@ -10,6 +10,13 @@ rm /dev/snake7
 rm /dev/snake8
 rm /dev/snake9
 rm /dev/snake10
+rm /dev/snake11
+rm /dev/snake12
+rm /dev/snake13
+rm /dev/snake14
+rm /dev/snake15
+rm /dev/snake16
+rm /dev/snake17
 
 rmmod snake
 
@@ -26,6 +33,14 @@ mknod /dev/snake7 c 254 7
 mknod /dev/snake8 c 254 8
 mknod /dev/snake9 c 254 9
 mknod /dev/snake10 c 254 10
+mknod /dev/snake11 c 254 11
+mknod /dev/snake12 c 254 12
+mknod /dev/snake13 c 254 13
+mknod /dev/snake14 c 254 14
+mknod /dev/snake15 c 254 15
+mknod /dev/snake16 c 254 16
+mknod /dev/snake17 c 254 17
+
 
 #gcc -Wall HW4-Test.c -o test_snake
 gcc -Wall test_snake.c -o test_snake
