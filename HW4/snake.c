@@ -265,10 +265,11 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 				printk("\t[Write-DEBUG]\t White player just went to sleep on the white sema\n");
 				white_write_sema_counter[minor]++;
 		    	down_interruptible(&white_write_sema[minor]);
+	    	} else {
+	    		printk("\t[Write-DEBUG]\t Black player just went to sleep on the black sema\n");
+	    		black_write_sema_counter[minor]++;
+	    		down_interruptible(&black_write_sema[minor]);				//If it's not the player's turn he goes to sleep
 	    	}
-			printk("\t[Write-DEBUG]\t Black player just went to sleep on the black sema\n");
-			black_write_sema_counter[minor]++;
-			down_interruptible(&black_write_sema[minor]);				//If it's not the player's turn he goes to sleep
 	    }
 
 	    //We need to check again every time we wake up
