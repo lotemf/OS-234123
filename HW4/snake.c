@@ -299,13 +299,13 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 					case WHITE_PLAYER:
 						printk("\t[Write-DEBUG]\tInside snake_write, WhitePlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
-						game_winner[minor] = WHITE_PLAYER;
+						game_winner[minor] = BLACK_PLAYER;
 						break;
 
 					case BLACK_PLAYER:
 						printk("\t[Write-DEBUG]\tInside snake_write, BlackPlayer finished\n");
 						is_played[minor] = GAME_FINISHED;
-						game_winner[minor] = BLACK_PLAYER;
+						game_winner[minor] = WHITE_PLAYER;
 						break;
 
 					default:
