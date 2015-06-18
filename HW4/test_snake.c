@@ -1029,6 +1029,7 @@ bool GetWinnerWhiteWinTest()
 		ASSERT(writeval == 2);  // <----- return 2 cause i did 2 moves succesfully, according to the metargelim
 
 		int ioctl_retval = ioctl(a, SNAKE_GET_WINNER);
+		printf("The return value of ioctl is: %d\n",ioctl_retval);
         ASSERT(ioctl_retval == 4);
 
 		doLongTask();
@@ -1801,12 +1802,12 @@ int main(){
 //        RUN_TEST(MakeMoveCrashWallTest);
 //        RUN_TEST(MakeMoveIlligalCharacterTest);
 //        RUN_TEST(MakeMultipleMovesTest);
-        RUN_TEST(MakeMoveCrashSnakeTest);//check from here
+//        RUN_TEST(MakeMoveCrashSnakeTest);
 //        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
 //        RUN_TEST(SnakeGetColorTest);
-//        RUN_TEST(GetWinnerWhiteWinTest);
+//        RUN_TEST(GetWinnerWhiteWinTest);			//Check From this test on...
 //        RUN_TEST(GetWinnerBlackWinTest);
-//        RUN_TEST(GetWinnerGameInProgressTest);
+        RUN_TEST(GetWinnerGameInProgressTest);
 //        RUN_TEST(TreeGamesAtTheSameTime);
 //        RUN_TEST(TwoWhitesAgainstOneBlackTest);
 //        RUN_TEST(ThreeAgainstThreeTest);
