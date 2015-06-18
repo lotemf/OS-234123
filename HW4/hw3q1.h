@@ -57,13 +57,13 @@ typedef int ErrorCode;
 typedef int Matrix[N][N];
 
 bool Game_Init(Matrix* matrix); /* initialize the board. return false if the board is illegal (should not occur, affected by N, M parameters) */
-int Game_Update(Matrix *matrix, Player player,int move);/* handle all updating to this player. returns whether to continue or not. */
+int Game_Update(Matrix *matrix, Player player,int move, int* white_counter, int* black_counter);/* handle all updating to this player. returns whether to continue or not. */
 void Game_Print(Matrix* matrix,char* buffer,int* board_size);/* prints the state of the board */
 Point GetInputLoc(Matrix*, Player,int);/* calculates the location that the player wants to go to */
 bool CheckTarget(Matrix*, Player, Point);/* checks if the player can move to the specified location */
 Point GetSegment(Matrix*, int);/* gets the location of a segment which is numbered by the value */
 bool IsAvailable(Matrix*, Point);/* returns if the point wanted is in bounds and not occupied by any snake */
-ErrorCode CheckFoodAndMove(Matrix*, Player, Point);/* handle food and advance the snake accordingly */
+ErrorCode CheckFoodAndMove(Matrix*, Player, Point, int*, int*);/* handle food and advance the snake accordingly */
 ErrorCode RandFoodLocation(Matrix*);/* randomize a location for food. return ERR_BOARD_FULL if the board is full */
 void AdvancePlayer(Matrix*, Player, Point);/* advance the snake */
 void IncSizePlayer(Matrix*, Player, Point);/* advance the snake and increase it's size */
@@ -110,7 +110,7 @@ bool Game_Init(Matrix* matrix)
 	return TRUE;
 }
 
-int Game_Update(Matrix *matrix, Player player,int move)
+int Game_Update(Matrix *matrix, Player player,int move, int* white_counter, int* black_counter)
 {
 	ErrorCode e;
 	Point p = GetInputLoc(matrix, player,move);
@@ -119,7 +119,7 @@ int Game_Update(Matrix *matrix, Player player,int move)
 	{
 		return Loser_To_Winner(player);
 	}
-	e = CheckFoodAndMove(matrix, player, p);
+	e = CheckFoodAndMove(matrix, player, p, white_counter, black_counter);
 	if (e == ERR_BOARD_FULL)
 	{
 //		printf("the board is full, tie");
@@ -145,27 +145,7 @@ int Game_Update(Matrix *matrix, Player player,int move)
 
 Point GetInputLoc(Matrix *matrix, Player player,int move)
 {
-//	Direction dir;
 	Point p;
-
-	//The input check isn't needed here...
-//	printk("% d, please enter your move(DOWN2, LEFT4, RIGHT6, UP8):\n", player);
-//	do
-//	{
-//		if (scanf("%d", &dir) < 0)
-//		{
-//			printf("an error occurred, the program will now exit.\n");
-//			exit(1);
-//		}
-//		if (move != UP   && move != DOWN && move != LEFT && move != RIGHT)
-//		{
-//			printf("invalid input, please try again\n");
-//		}
-//		else
-//		{
-//			break;
-//		}
-//	} while (TRUE);
 
 	p = GetSegment(matrix, player);
 
@@ -216,7 +196,7 @@ bool CheckTarget(Matrix *matrix, Player player, Point p)
 {
 	/* is empty or is the tail of the snake (so it will move the next
 	to make place) */
-	return IsAvailable(matrix, p) || ((*matrix)[p.y][p.x] == player * GetSize(matrix, player));
+	return (IsAvailable(matrix, p) || ((*matrix)[p.y][p.x] == player * GetSize(matrix, player)));
 }
 
 bool IsAvailable(Matrix *matrix, Point p)
@@ -229,15 +209,15 @@ bool IsAvailable(Matrix *matrix, Point p)
 		((*matrix)[p.y][p.x] != EMPTY && (*matrix)[p.y][p.x] != FOOD));
 }
 
-ErrorCode CheckFoodAndMove(Matrix *matrix, Player player, Point p)
+ErrorCode CheckFoodAndMove(Matrix *matrix, Player player, Point p, int* white_counter, int* black_counter)
 {
-	static int white_counter = K;
-	static int black_counter = K;
+	*white_counter = K;
+	*black_counter = K;
 	/* if the player did come to the place where there is food */
 	if ((*matrix)[p.y][p.x] == FOOD)
 	{
-		if (player == BLACK) black_counter = K;
-		if (player == WHITE) white_counter = K;
+		if (player == BLACK) *black_counter = K;
+		if (player == WHITE) *white_counter = K;
 
 		IncSizePlayer(matrix, player, p);
 
@@ -246,9 +226,9 @@ ErrorCode CheckFoodAndMove(Matrix *matrix, Player player, Point p)
 	}
 	else /* check hunger */
 	{
-		if (player == BLACK && --black_counter == 0)
+		if (player == BLACK && --(*black_counter) == 0)
 			return ERR_SNAKE_IS_TOO_HUNGRY;
-		if (player == WHITE && --white_counter == 0)
+		if (player == WHITE && --(*white_counter) == 0)
 			return ERR_SNAKE_IS_TOO_HUNGRY;
 
 		AdvancePlayer(matrix, player, p);
@@ -320,7 +300,7 @@ bool IsMatrixFull(Matrix *matrix)
 }
 
 void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state of the board */
-
+	printk("\t[DEBUG]\tIn Game_Print method\n");
 	//Making the buffer an empty string	- Lotem
 	buffer[0] = '\0';
 	int i;
@@ -367,33 +347,71 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 		strcat(buffer,"---");
 	strcat(buffer,"\n");
 
-
-//	//Printing the Board in the kernel To check if the problem is in the transfer
-//	for (i = 0; i < N + 1; ++i)
-//		printk("---");
-//	printk("\n");
-//	for (p.y = 0; p.y < N; ++p.y)
-//	{
-//		printk("|");
-//		for (p.x = 0; p.x < N; ++p.x)
-//		{
-//			switch ((*matrix)[p.y][p.x])
-//			{
-//			case FOOD:  printk("  *"); break;
-//			case EMPTY: printk("  ."); break;
-//			default:    printk("% 3d", (int)(*matrix)[p.y][p.x]);
-//			}
-//		}
-//		printk(" |\n");
-//	}
-//	for (i = 0; i < N + 1; ++i)
-//		printk("---");
-//	printk("\n");
-
-
-
 	//Calculating the length of the buffer
 	*board_size = strlen(buffer);
+	printk("\t[DEBUG]:\tThis is the kernel print\n%s\n",buffer);
+
+	/*
+	 * Alternatice impl
+	 */
+/*
+	Point p;
+		char tmp_buff[3*N*N + 10*N + 10]; //3*N*N + 10*N + 8 = (3N+4)(N+2)= (#cols)*(#rows)
+		int tmp_buff_size = 3*N*N + 10*N + 10;
+		int i = 0, tmp_buff_curr = 0;
+
+		for(i = 0; i < tmp_buff_size; i++)
+			tmp_buff[i] = 0;
+		for(i = 0; i < count; i++)
+			buff[i] = 0;
+
+		for (i = 0; i < N + 1; ++i){
+			strncpy(tmp_buff+tmp_buff_curr,"---",3);
+			tmp_buff_curr+=3;
+		}
+		strncpy(tmp_buff+tmp_buff_curr,"\n",1);
+		tmp_buff_curr+=1;
+
+		for (p.y = 0; p.y < N; ++p.y)
+		{
+			strncpy(tmp_buff+tmp_buff_curr,"|",1);
+			tmp_buff_curr+=1;
+			for (p.x = 0; p.x < N; ++p.x)
+			{
+				switch ((*matrix)[p.y][p.x])
+				{
+				case FOOD:
+					strncpy(tmp_buff+tmp_buff_curr,"  *",3);
+					tmp_buff_curr+=3;
+					break;
+				case EMPTY:
+					strncpy(tmp_buff+tmp_buff_curr,"  .",3);
+					tmp_buff_curr+=3;
+					break;
+				default: //printf("% 3d", (*matrix)[p.y][p.x]);
+					tmp_buff[tmp_buff_curr++]=' ';
+					int num = (*matrix)[p.y][p.x];
+					if(num < 0){
+						tmp_buff[tmp_buff_curr++] = '-';
+						num *= -1;
+					}
+					else tmp_buff[tmp_buff_curr++] = ' ';
+					tmp_buff[tmp_buff_curr++] = num + '0';
+				}
+			}
+			strncpy(tmp_buff+tmp_buff_curr," |\n",3);
+			tmp_buff_curr+=3;
+		}
+
+		for (i = 0; i < N + 1; ++i){
+			strncpy(tmp_buff+tmp_buff_curr,"---",3);
+			tmp_buff_curr+=3;
+		}
+		strncpy(tmp_buff+tmp_buff_curr,"\n",1);
+		tmp_buff_curr+=1;
+
+		strncpy(buff, tmp_buff, count);
+*/
 }
 
 #endif /* _HW3Q1_H_ */
