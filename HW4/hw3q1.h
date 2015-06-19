@@ -122,9 +122,6 @@ int Game_Update(Matrix *matrix, Player player,int move, int* white_counter, int*
 	e = CheckFoodAndMove(matrix, player, p, white_counter, black_counter);
 	if (e == ERR_BOARD_FULL)
 	{
-//		printf("the board is full, tie");
-//		return FALSE;
-		//TODO - what do I need to return here???
 		return ITS_A_TIE;
 	}
 	if (e == ERR_SNAKE_IS_TOO_HUNGRY)
@@ -134,9 +131,6 @@ int Game_Update(Matrix *matrix, Player player,int move, int* white_counter, int*
 	// only option is that e == ERR_OK
 	if (IsMatrixFull(matrix))
 	{
-//		printf("the board is full, tie");
-//		return FALSE;
-		//TODO - what do I need to return here???
 		return ITS_A_TIE;
 	}
 
@@ -300,7 +294,6 @@ bool IsMatrixFull(Matrix *matrix)
 }
 
 void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state of the board */
-	printk("\t[DEBUG]\tIn Game_Print method\n");
 	//Making the buffer an empty string	- Lotem
 	buffer[0] = '\0';
 	int i;
@@ -349,69 +342,7 @@ void Game_Print(Matrix* matrix,char* buffer,int* board_size){/* prints the state
 
 	//Calculating the length of the buffer
 	*board_size = strlen(buffer);
-	printk("\t[DEBUG]:\tThis is the kernel print\n%s\n",buffer);
 
-	/*
-	 * Alternatice impl
-	 */
-/*
-	Point p;
-		char tmp_buff[3*N*N + 10*N + 10]; //3*N*N + 10*N + 8 = (3N+4)(N+2)= (#cols)*(#rows)
-		int tmp_buff_size = 3*N*N + 10*N + 10;
-		int i = 0, tmp_buff_curr = 0;
-
-		for(i = 0; i < tmp_buff_size; i++)
-			tmp_buff[i] = 0;
-		for(i = 0; i < count; i++)
-			buff[i] = 0;
-
-		for (i = 0; i < N + 1; ++i){
-			strncpy(tmp_buff+tmp_buff_curr,"---",3);
-			tmp_buff_curr+=3;
-		}
-		strncpy(tmp_buff+tmp_buff_curr,"\n",1);
-		tmp_buff_curr+=1;
-
-		for (p.y = 0; p.y < N; ++p.y)
-		{
-			strncpy(tmp_buff+tmp_buff_curr,"|",1);
-			tmp_buff_curr+=1;
-			for (p.x = 0; p.x < N; ++p.x)
-			{
-				switch ((*matrix)[p.y][p.x])
-				{
-				case FOOD:
-					strncpy(tmp_buff+tmp_buff_curr,"  *",3);
-					tmp_buff_curr+=3;
-					break;
-				case EMPTY:
-					strncpy(tmp_buff+tmp_buff_curr,"  .",3);
-					tmp_buff_curr+=3;
-					break;
-				default: //printf("% 3d", (*matrix)[p.y][p.x]);
-					tmp_buff[tmp_buff_curr++]=' ';
-					int num = (*matrix)[p.y][p.x];
-					if(num < 0){
-						tmp_buff[tmp_buff_curr++] = '-';
-						num *= -1;
-					}
-					else tmp_buff[tmp_buff_curr++] = ' ';
-					tmp_buff[tmp_buff_curr++] = num + '0';
-				}
-			}
-			strncpy(tmp_buff+tmp_buff_curr," |\n",3);
-			tmp_buff_curr+=3;
-		}
-
-		for (i = 0; i < N + 1; ++i){
-			strncpy(tmp_buff+tmp_buff_curr,"---",3);
-			tmp_buff_curr+=3;
-		}
-		strncpy(tmp_buff+tmp_buff_curr,"\n",1);
-		tmp_buff_curr+=1;
-
-		strncpy(buff, tmp_buff, count);
-*/
 }
 
 #endif /* _HW3Q1_H_ */
