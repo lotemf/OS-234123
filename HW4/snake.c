@@ -434,7 +434,7 @@ int snake_ioctl(struct inode* inode, struct file* filptr, unsigned int command, 
 							return TIE;
 				}
 				/*TEST*/if (is_played[minor] == GAME_NOT_STARTED){			//Not suppose to happen...
-					return -ENXIO;;
+					return -ENXIO;
 				}
 				if ( (is_played[minor] == GAME_FINISHED) && !game_winner[minor]){
 					return -ENXIO;							//If the game hasn't started or finished with no winner

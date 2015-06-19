@@ -60,9 +60,7 @@ mknod /dev/snake25 c 254 25
 
 
 #gcc -Wall HW4-Test.c -o hw4_test
-#gcc -Wall test_snake.c -o test_snake
-gcc -Wall test_snake_jacob.c -o test_snake_jacob
+gcc -Wall test_snake.c -o test_snake
 
 #./hw4_test
-#./test_snake
-./test_snake_jacob
+./test_snake
