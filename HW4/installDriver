@@ -59,8 +59,8 @@ mknod /dev/snake24 c 254 24
 mknod /dev/snake25 c 254 25
 
 
-#gcc -Wall HW4-Test.c -o hw4_test
+#gcc -Wall Roy-Test.c -o Roy_Test
 gcc -Wall test_snake.c -o test_snake
 
-#./hw4_test
+#./Roy_Test
 ./test_snake
