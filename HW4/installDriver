@@ -26,10 +26,10 @@ rm /dev/snake23
 rm /dev/snake24
 rm /dev/snake25
 
-
 rmmod snake
 
 make
+
 insmod ./snake.o maxGames=25
 mknod /dev/snake0 c 254 0
 mknod /dev/snake1 c 254 1
@@ -59,11 +59,10 @@ mknod /dev/snake24 c 254 24
 mknod /dev/snake25 c 254 25
 
 
-#Edited to work with Dori's test...
-gcc -L. -lpthread -Wall test_snake_dori.c -o test_snake_dori
-
-#gcc -Wall HW4-Test.c -o test_snake
+#gcc -Wall HW4-Test.c -o hw4_test
 #gcc -Wall test_snake.c -o test_snake
+gcc -Wall test_snake_jacob.c -o test_snake_jacob
 
-./test_snake_dori
+#./hw4_test
 #./test_snake
+./test_snake_jacob

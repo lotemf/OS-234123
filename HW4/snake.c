@@ -251,7 +251,7 @@ ssize_t snake_write(struct file* filptr, const char* buffer, size_t count, loff_
 	if (!buffer){
 		//DEBUG PRINT - printk("\t[DEBUG]\tInside snake_read, buffer is NULL\n");
 		return -EFAULT;
-
+	}
 
 	int player_color = ((dev_private_data *)((filptr)->private_data))->player_color;
 	//DEBUG PRINT - printk("\t[DEBUG]\tInside snake_write, platyer color is %d\n", player_color);
