@@ -1,4 +1,5 @@
 #!/bin/bash
+
 rm /dev/snake0
 rm /dev/snake1
 rm /dev/snake2
@@ -58,9 +59,9 @@ mknod /dev/snake23 c 254 23
 mknod /dev/snake24 c 254 24
 mknod /dev/snake25 c 254 25
 
+#gcc -Wall test_snake.c -o test_snake
+#./test_snake
 
-#gcc -Wall Roy-Test.c -o Roy_Test
-gcc -Wall test_snake.c -o test_snake
+gcc -Wall Roy_Test.c -o Roy_Test
+./Roy_Test
 
-#./Roy_Test
-./test_snake
