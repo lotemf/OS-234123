@@ -1845,16 +1845,16 @@ int main(){
         RUN_TEST(MakeMoveCrashWallTest);
         RUN_TEST(MakeMoveIlligalCharacterTest);
         RUN_TEST(MakeMultipleMovesTest);
-        RUN_TEST(MakeMoveCrashSnakeTest);
-        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
-        RUN_TEST(SnakeGetColorTest);
-        RUN_TEST(GetWinnerWhiteWinTest);
-        RUN_TEST(GetWinnerBlackWinTest);
-        RUN_TEST(GetWinnerGameInProgressTest);
-        RUN_TEST(TreeGamesAtTheSameTime);
-        RUN_TEST(TwoWhitesAgainstOneBlackTest);
-        RUN_TEST(ThreeAgainstThreeTest);
-        RUN_TEST(AgressiveReadWriteTest);
+//        RUN_TEST(MakeMoveCrashSnakeTest);
+//        RUN_TEST(MakeMultipleMovesWithIlligalMoveTest);
+//        RUN_TEST(SnakeGetColorTest);
+//        RUN_TEST(GetWinnerWhiteWinTest);
+//        RUN_TEST(GetWinnerBlackWinTest);
+//        RUN_TEST(GetWinnerGameInProgressTest);
+//        RUN_TEST(TreeGamesAtTheSameTime);
+//        RUN_TEST(TwoWhitesAgainstOneBlackTest);
+//        RUN_TEST(ThreeAgainstThreeTest);
+//        RUN_TEST(AgressiveReadWriteTest);
         
 	}
 	else if (answer == 'a' || answer == 'A')

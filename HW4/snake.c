@@ -39,7 +39,7 @@ MODULE_LICENSE("GPL");
 *******************************************************************************/
 static int major = -1;
 struct file_operations fops;
-int maxGames = 0;
+int max_games = 0;
 
 //Arrays of the module for each of the devices (Games)
 Matrix* game_matrix;
@@ -55,7 +55,7 @@ int * white_write_sema_counter, *black_write_sema_counter;
 spinlock_t* players_lock;			 	//The spinlock is used to check the legal
 									   	// number of players for each device (which is 2 players)
 
-MODULE_PARM(maxGames,"i");				//This is the only input needed for the module
+MODULE_PARM(max_games,"i");				//This is the only input needed for the module
 										//But still it is unclear how we receive this param
 										//(maybe in the makefile...)
 
@@ -431,23 +431,23 @@ int init_module(void){
 	}
 
 	//Using kmallock because we don't know how many instances (games) we are going to have of the same device
-    players_lock = kmalloc(sizeof(spinlock_t)*maxGames, GFP_KERNEL);			//Spinlocks array
+    players_lock = kmalloc(sizeof(spinlock_t)*max_games, GFP_KERNEL);			//Spinlocks array
     if (!players_lock){
     	return -ENOMEM;
     }
-    game_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);			//Open semaphores array (making it a blocking function)
+    game_sema = kmalloc(sizeof(struct semaphore)*max_games, GFP_KERNEL);			//Open semaphores array (making it a blocking function)
     if (!game_sema){
     	kfree(players_lock);
      	return -ENOMEM;
     }
-    white_write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//White players semaphores array
-    black_write_sema = kmalloc(sizeof(struct semaphore)*maxGames, GFP_KERNEL);	//Black players semaphores array
+    white_write_sema = kmalloc(sizeof(struct semaphore)*max_games, GFP_KERNEL);	//White players semaphores array
+    black_write_sema = kmalloc(sizeof(struct semaphore)*max_games, GFP_KERNEL);	//Black players semaphores array
     if (!white_write_sema || !black_write_sema){
     	kfree(players_lock);
     	kfree(game_sema);
      	return -ENOMEM;
     }
-    players_num = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);					//Number of players for each game
+    players_num = kmalloc(sizeof(int)*max_games, GFP_KERNEL);					//Number of players for each game
     if (!players_num){
     	kfree(players_lock);
     	kfree(game_sema);
@@ -455,7 +455,7 @@ int init_module(void){
     	kfree(black_write_sema);
      	return -ENOMEM;
     }
-    is_played = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    is_played = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
     if (!is_played){
     	kfree(players_lock);
     	kfree(game_sema);
@@ -464,7 +464,7 @@ int init_module(void){
     	kfree(players_num);
      	return -ENOMEM;
     }
-    game_matrix = kmalloc(sizeof(Matrix)*maxGames, GFP_KERNEL);
+    game_matrix = kmalloc(sizeof(Matrix)*max_games, GFP_KERNEL);
     if (!game_matrix){
     	kfree(players_lock);
     	kfree(game_sema);
@@ -474,7 +474,7 @@ int init_module(void){
     	kfree(is_played);
      	return -ENOMEM;
     }
-    game_winner = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    game_winner = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
     if (!game_winner){
     	kfree(players_lock);
     	kfree(game_sema);
@@ -485,7 +485,7 @@ int init_module(void){
     	kfree(game_matrix);
      	return -ENOMEM;
     }
-    next_players_turn = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    next_players_turn = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
     if (!next_players_turn){
     	kfree(players_lock);
     	kfree(game_sema);
@@ -497,8 +497,8 @@ int init_module(void){
     	kfree(game_winner);
      	return -ENOMEM;
     }
-    white_counters = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
-    black_counters = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    white_counters = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
+    black_counters = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
     if (!white_counters || !black_counters){
       	kfree(players_lock);
       	kfree(game_sema);
@@ -511,8 +511,8 @@ int init_module(void){
       	kfree(next_players_turn);
        	return -ENOMEM;
     }
-    white_write_sema_counter = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
-    black_write_sema_counter = kmalloc(sizeof(int)*maxGames, GFP_KERNEL);
+    white_write_sema_counter = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
+    black_write_sema_counter = kmalloc(sizeof(int)*max_games, GFP_KERNEL);
     if (!white_write_sema_counter || !black_write_sema_counter){
         	kfree(players_lock);
         	kfree(game_sema);
@@ -529,7 +529,7 @@ int init_module(void){
     }
 
 	int i;
-	for (i=0;i<maxGames;i++){
+	for (i=0;i<max_games;i++){
 		spin_lock_init(&players_lock[i]);
 		is_played[i] = GAME_NOT_STARTED;
 		game_winner[i] = GAME_NOT_STARTED;
